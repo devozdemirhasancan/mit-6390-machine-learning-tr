@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+
+<html lang="tr" xml:lang="tr" xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta charset="utf-8"/>
+<meta content="quarto-1.10.18" name="generator"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=yes" name="viewport"/>
+<title>3  Gradient Descent – 6.390 - Machine Learning'e Giriş</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta content="./" name="quarto:offset"/>
+<link href="./classification.html" rel="next"/>
+<link href="./regression.html" rel="prev"/>
+<link href="./assets/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet"/>
+<link class="quarto-color-scheme" href="site_libs/quarto-html/quarto-syntax-highlighting-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<link class="quarto-color-scheme quarto-color-alternate" href="site_libs/quarto-html/quarto-syntax-highlighting-dark-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<link class="quarto-color-scheme-extra" href="site_libs/quarto-html/quarto-syntax-highlighting-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet"/>
+<link append-hash="true" class="quarto-color-scheme" data-mode="light" href="site_libs/bootstrap/bootstrap-c0d695abc4efa72cfba88dcf11645824.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<link append-hash="true" class="quarto-color-scheme quarto-color-alternate" data-mode="dark" href="site_libs/bootstrap/bootstrap-dark-ad73eeac00dcd6e430ad3806ef4d1812.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<link append-hash="true" class="quarto-color-scheme-extra" data-mode="light" href="site_libs/bootstrap/bootstrap-c0d695abc4efa72cfba88dcf11645824.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<script src="site_libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.js"></script>
+<link href="site_libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.css" rel="stylesheet"/>
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Sonuç yok",
+    "search-matching-documents-text": "eşleşen belgeler",
+    "search-copy-link-title": "Aramak için bağlantıyı kopyalayın",
+    "search-hide-matches-text": "Ek eşleşmeleri gizle",
+    "search-more-match-text": "bu belgede bir tane daha eşleşme",
+    "search-more-matches-text": "bu belgede daha fazla eşleşme",
+    "search-clear-button-title": "Temizle",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "İptal et",
+    "search-submit-button-title": "Gönder",
+    "search-label": "Ara"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+<link href="assets/style.css" rel="stylesheet"/>
+<meta content="3  Gradient Descent – 6.390 - Machine Learning’e Giriş" name="twitter:title"/>
+<meta content="" name="twitter:description"/>
+<meta content="summary" name="twitter:card"/>
+</head>
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+<div id="quarto-search-results"></div>
+<header class="headroom fixed-top" id="quarto-header">
+<nav class="quarto-secondary-nav">
+<div class="container-fluid d-flex">
+<button aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Kenar çubuğunu değiştir" class="quarto-btn-toggle btn" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="button" type="button">
+<i class="bi bi-layout-text-sidebar-reverse"></i>
+</button>
+<nav aria-label="breadcrumb" class="quarto-page-breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./gradient_descent.html"><span class="chapter-number">3</span>  <span class="chapter-title">Gradient Descent</span></a></li></ol></nav>
+<a aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Kenar çubuğunu değiştir" class="flex-grow-1" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="navigation">
+</a>
+<button aria-label="Ara" class="btn quarto-search-button" onclick="window.quartoOpenSearch();" type="button">
+<i class="bi bi-search"></i>
+</button>
+</div>
+</nav>
+</header>
+<!-- content -->
+<div class="quarto-container page-columns page-rows-contents page-layout-article" id="quarto-content">
+<!-- sidebar -->
+<nav class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" id="quarto-sidebar">
+<div class="pt-lg-2 mt-2 text-left sidebar-header">
+<div class="sidebar-title mb-0 py-0">
+<a href="./">6.390 - Machine Learning’e Giriş</a>
+<div class="sidebar-tools-main tools-wide">
+<a aria-label="English Original" class="quarto-navigation-tool px-1" href="https://introml.mit.edu/notes/" title="English Original"><i class="bi bi-translate"></i></a>
+<a aria-label="Accessibility" class="quarto-navigation-tool px-1" href="https://accessibility.mit.edu/" title="Accessibility"><i class="bi bi-universal-access"></i></a>
+<a aria-label="Kaynak Kodu" class="quarto-navigation-tool px-1" href="https://github.com/390introml/notes" title="Kaynak Kodu"><i class="bi bi-github"></i></a>
+<div class="dropdown">
+<a aria-expanded="false" aria-label="Share" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" href="" id="quarto-navigation-tool-dropdown-0" role="link" title="Share"><i class="bi bi-share"></i></a>
+<ul aria-labelledby="quarto-navigation-tool-dropdown-0" class="dropdown-menu">
+<li>
+<a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+<i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+</li>
+<li>
+<a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+<i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+</li>
+</ul>
+</div>
+<a class="quarto-color-scheme-toggle quarto-navigation-tool px-1" href="" onclick="window.quartoToggleColorScheme(); return false;" title="Karanlık modu değiştir"><i class="bi"></i></a>
+<a class="quarto-reader-toggle quarto-navigation-tool px-1" href="" onclick="window.quartoToggleReader(); return false;" title="Okuyucu modunu değiştir">
+<div class="quarto-reader-toggle-btn">
+<i class="bi"></i>
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class="mt-2 flex-shrink-0 align-items-center">
+<div class="sidebar-search">
+<div class="" id="quarto-search" title="Ara"></div>
+</div>
+</div>
+<div class="sidebar-menu-container">
+<ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./index.html">
+<span class="menu-text"><span class="chapter-number">1</span>  <span class="chapter-title">Giriş</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./regression.html">
+<span class="menu-text"><span class="chapter-number">2</span>  <span class="chapter-title">Regression</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link active" href="./gradient_descent.html">
+<span class="menu-text"><span class="chapter-number">3</span>  <span class="chapter-title">Gradient Descent</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./classification.html">
+<span class="menu-text"><span class="chapter-number">4</span>  <span class="chapter-title">Classification</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./feature_representation.html">
+<span class="menu-text"><span class="chapter-number">5</span>  <span class="chapter-title">Feature Representation</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./neural_networks.html">
+<span class="menu-text"><span class="chapter-number">6</span>  <span class="chapter-title">Sinir Ağları</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./convolutional_neural_networks.html">
+<span class="menu-text"><span class="chapter-number">7</span>  <span class="chapter-title">Evrişimsel Sinir Ağları</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./representation.html">
+<span class="menu-text"><span class="chapter-number">8</span>  <span class="chapter-title">Representation Learning</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./transformers.html">
+<span class="menu-text"><span class="chapter-number">9</span>  <span class="chapter-title">Transformatörler</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./non_parametric.html">
+<span class="menu-text"><span class="chapter-number">10</span>  <span class="chapter-title">Non-parametric Models</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./mdp.html">
+<span class="menu-text"><span class="chapter-number">11</span>  <span class="chapter-title">Markov Karar Süreçleri</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./reinforcement_learning.html">
+<span class="menu-text"><span class="chapter-number">12</span>  <span class="chapter-title">Reinforcement Learning</span></span></a>
+</div>
+</li>
+<li class="sidebar-item sidebar-item-section">
+<div class="sidebar-item-container">
+<a aria-expanded="true" class="sidebar-item-text sidebar-link text-start" data-bs-target="#quarto-sidebar-section-1" data-bs-toggle="collapse" role="navigation">
+<span class="menu-text">Ekler</span></a>
+<a aria-expanded="true" aria-label="Bölümü değiştir" class="sidebar-item-toggle text-start" data-bs-target="#quarto-sidebar-section-1" data-bs-toggle="collapse" role="navigation">
+<i class="bi bi-chevron-right ms-2"></i>
+</a>
+</div>
+<ul class="collapse list-unstyled sidebar-section depth1 show" id="quarto-sidebar-section-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./matrix_calculus.html">
+<span class="menu-text"><span class="chapter-number">A</span>  <span class="chapter-title">Matrix Calculus</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./neural_network_appendix.html">
+<span class="menu-text"><span class="chapter-number">B</span>  <span class="chapter-title">Sinir Ağlarını Optimize Etme</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./nutshell.html">
+<span class="menu-text"><span class="chapter-number">C</span>  <span class="chapter-title">Genel durum</span></span></a>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="quarto-sidebar-footer"><div class="sidebar-footer-item">
+<p><small>© MIT ve 6.390 (eski adıyla 6.036) ders ekibi. <a href="https://introml.mit.edu/notes/">English original</a>. Hasan için hazırlanmış Türkçe çeviri/uyarlamadır; MIT tarafından onaylandığı anlamına gelmez. <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> ile lisanslanmıştır.</small></p>
+</div></div></nav>
+<div class="quarto-sidebar-collapse-item" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" id="quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+<div class="sidebar margin-sidebar" id="quarto-margin-sidebar">
+<nav class="toc-active" id="TOC" role="doc-toc">
+<h2 id="toc-title">İçindekiler</h2>
+<ul>
+<li><a class="nav-link active" data-scroll-target="#sec-gd_onedim" href="#sec-gd_onedim" id="toc-sec-gd_onedim"><span class="header-section-number">3.1</span> Gradient descent tek boyutlu</a></li>
+<li><a class="nav-link" data-scroll-target="#sec-gd" href="#sec-gd" id="toc-sec-gd"><span class="header-section-number">3.2</span> Birden fazla boyut</a></li>
+<li><a class="nav-link" data-scroll-target="#sec-gd_ridge" href="#sec-gd_ridge" id="toc-sec-gd_ridge"><span class="header-section-number">3.3</span> ridge regression uygulaması</a>
+<ul>
+<li><a class="nav-link" data-scroll-target="#ridge-regression" href="#ridge-regression" id="toc-ridge-regression"><span class="header-section-number">3.3.1</span> Ridge regression</a></li>
+</ul></li>
+<li><a class="nav-link" data-scroll-target="#sec-sgd" href="#sec-sgd" id="toc-sec-sgd"><span class="header-section-number">3.4</span> Stochastic gradient descent</a></li>
+<li><a class="nav-link" data-scroll-target="#sec-minibatch" href="#sec-minibatch" id="toc-sec-minibatch"><span class="header-section-number">3.5</span> Mini-batch gradient descent</a></li>
+</ul>
+</nav>
+</div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+<header class="quarto-title-block default" id="title-block-header">
+<div class="quarto-title">
+<h1 class="title"><span class="quarto-section-identifier" id="sec-gradient"><span class="chapter-number">3</span>  <span class="chapter-title">Gradient Descent</span></span></h1>
+</div>
+<div class="quarto-title-meta">
+</div>
+</header>
+<p>Önceki bölümde, machine learning için ilginç bir objective function’in nasıl tanımlanacağını gösterdik, ancak özellikle objective function analitik optimizasyona uygun olmadığında en uygun <span class="math inline">\(\Theta^* = {\rm arg}\min_{\Theta} J(\Theta)\)</span>’i bulmanın bir yoluna ihtiyacımız var. Örneğin, <span class="math inline">\(J(\Theta)\)</span> daha karmaşık bir loss function veya regularization’in daha genel formlarını içerdiğinde bu durum meydana gelebilir. Hesaplamalı olarak mümkün olması için öğrenilecek çok fazla parametrenin olması da söz konusu olabilir.</p>
+<p>Optimizasyonun matematiksel ve algoritmik temelleri üzerine çok büyük ve büyüleyici bir literatür var, ancak bu class için <em>gradient descent.</em> adı verilen en basit yöntemlerden birini ele alacağız.</p>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Bir gün optimizasyon üzerine çalışmayı düşünebilirsiniz! machine learning’i mümkün kılan temel araçlardan biridir ve güzel ve derin bir alandır.</p>
+</div></div><p>Sezgisel olarak, bir veya iki boyutta, <span class="math inline">\(J(\Theta)\)</span>’in <span class="math inline">\(\Theta\)</span> üzerinden bir yüzey tanımladığını kolaylıkla düşünebiliriz; aynı fikir daha yüksek boyutlara da uzanıyor. Şimdi amacımız bu yüzeydeki en alçak noktada <span class="math inline">\(\Theta\)</span> value’i bulmak. gradient descent’i düşünmenin bir yolu, yüzeydeki herhangi bir noktadan başlamak, “tepenin” hangi yöne en dik şekilde indiğini görmek, o yönde küçük bir adım atmak, bir sonraki en dik iniş yönünü belirlemek, başka bir küçük adım atmak vb.</p>
+<p>Aşağıda, tek ve çok boyutlu amaç fonksiyonları (<a class="quarto-xref" href="#sec-gd_onedim"><span>Bölüm 3.1</span></a> ve <a class="quarto-xref" href="#sec-gd"><span>Bölüm 3.2</span></a>) için gradient descent algoritmalarını açıkça veriyoruz. Daha sonra gradient descent’in, yalnızca squared loss (<a class="quarto-xref" href="#sec-gd_ridge"><span>Bölüm 3.3</span></a>) anlamına gelmeyen bir loss function’e uygulanmasını gösteriyoruz. Ve <em>stochastic gradient descent</em> (<a class="quarto-xref" href="#sec-sgd"><span>Bölüm 3.4</span></a>) olarak bilinen, özellikle veri kümelerinin tek bir grupta indirilemeyecek kadar büyük olduğu durumlarda kullanışlı olan ve kendine ait bazı önemli davranışlara sahip önemli bir yöntem sunuyoruz.</p>
+<section class="level2" data-number="3.1" id="sec-gd_onedim">
+<h2 class="anchored" data-anchor-id="sec-gd_onedim" data-number="3.1"><span class="header-section-number">3.1</span> Gradient descent tek boyutlu</h2>
+<p>gradient descent’i tek boyutta ele alarak başlıyoruz. <span class="math inline">\(\Theta \in \mathbb{R}\)</span>’i ve <span class="math inline">\(\Theta\)</span>, <span class="math inline">\(J'(\Theta)\)</span>’e göre hem <span class="math inline">\(J(\Theta)\)</span>’i hem de onun ilk derivative’ini bildiğimizi varsayalım. Burada isteğe bağlı bir <span class="math inline">\(f\)</span> işlevindeki gradient descent için sahte kod verilmiştir. <span class="math inline">\(f\)</span> ve gradient <span class="math inline">\(\nabla_{\Theta}f\)</span> (scalar <span class="math inline">\(\Theta\)</span> durumunda, derivative <span class="math inline">\(f'\)</span> ile aynıdır) ile birlikte bazı hiper parametreler belirtmemiz gerekir. Bu hiper parametreler arasında parameter <span class="math inline">\(\Theta\)</span> için başlangıç value, bir <em>learning rate</em> hyper-parameter <span class="math inline">\(\eta\)</span> ve <em>accuracy</em> hyper-parameter <span class="math inline">\(\epsilon\)</span>.</p>
+<p>Basitlik açısından, aşağıdaki sözde kodda olduğu gibi <span class="math inline">\(\eta\)</span> bir sabit olarak alınabilir; ve yakında uyarlanabilir (sabit olmayan) öğrenme oranlarını göreceğiz. Ancak dikkat edilmesi gereken önemli nokta, <span class="math inline">\(\eta\)</span> sabit olsa bile, <span class="math inline">\(\Theta\)</span>’teki değişikliğin gerçek büyüklüğünün sabit olmayabileceğidir çünkü bu değişiklik gradient’in kendisinin büyüklüğüne de bağlıdır.</p>
+<div class="pseudocode-container quarto-float" data-caption-prefix="Algorithm" data-chapter-level="3" data-comment-delimiter="//" data-indent-size="1.2em" data-line-number="true" data-line-number-punc=":" data-no-end="false" data-pseudocode-number="1">
+<div class="pseudocode">
+\begin{algorithm} \begin{algorithmic} \Procedure{1D-Gradient-Descent}{$\Theta_{init}, \eta, f, f', \epsilon$} \State $\Theta^{(0)} \gets \Theta_{init}$ \State $t \gets 0$ \Repeat \State $t \gets t+1$ \State $\Theta^{(t)} = \Theta^{(t-1)} - \eta \, f'(\Theta^{(t-1)})$ \Until{$\left|f(\Theta^{(t)}) - f(\Theta^{(t-1)})\right| &lt; \epsilon$} \Return{$\Theta^{(t)}$} \EndProcedure \end{algorithmic} \end{algorithm}
+</div>
+</div>
+<p>objective function’in value’indeki değişiklik yeterince küçük olduğunda bu algorithm’in sonlandırıldığını unutmayın. Fesih kararı vermenin aşağıdakiler de dahil olmak üzere birçok makul yolu vardır:</p>
+<ul>
+<li><p>Sabit sayıda yinelemeden sonra durma <span class="math inline">\(T\)</span>, yani <span class="math inline">\(t = T\)</span> olduğunda. Pratik olarak bu en yaygın seçimdir.</p></li>
+<li><p><span class="math inline">\(f\)</span>’in derivative’i yeterince küçük olduğunda, yani <span class="math inline">\(\left|f'(\Theta^{(t)})\right| &lt; \epsilon\)</span> olduğunda durun.</p></li>
+<li><p>parameter <span class="math inline">\(\Theta\)</span>’in value’indeki değişiklik yeterince küçük olduğunda, yani <span class="math inline">\(\left| \Theta^{(t)} - \Theta^{(t-1)} \right| &lt; \epsilon\)</span> olduğunda durun.</p></li>
+</ul>
+<div class="study-question-callout">
+<p><code>1D-Gradient-Descent</code> için hem algorithm’te göründüğü hem de daha sonra ayrı olarak listelendiği tüm potansiyel durdurma kriterlerini göz önünde bulundurun. Kriterlerden herhangi ikisinin birbiriyle ilişkili yollarını düşünebiliyor musunuz?</p>
+</div>
+<div class="theorem" id="thm-gd">
+<p><span class="theorem-title"><strong>Teorem 3.1</strong></span> <em><span class="math inline">\(\tilde{\epsilon} &gt; 0\)</span> herhangi bir küçük mesafeyi seçin. <span class="math inline">\(f\)</span>’in bir minimuma sahip olduğunu, yeterince “pürüzsüz” olduğunu ve convex olduğunu varsayarsak ve learning rate <span class="math inline">\(\eta\)</span> yeterince küçükse, gradient descent küresel bir optimum noktanın <span class="math inline">\(\tilde{\epsilon}\)</span> dahilinde bir noktaya ulaşacaktır <span class="math inline">\(\Theta\)</span>.</em></p>
+</div>
+<p>Ancak learning rate’i seçerken yavaş convergence’i, minimum etrafında yakınsamayan salınımı veya sapmayı önlemek için dikkatli olmalıyız.</p>
+<p>Aşağıdaki grafik convex function <span class="math inline">\(f(x) = (x - 2)^2\)</span>’yi göstermektedir; gradient descent, <span class="math inline">\(x_\textrm{init} = 4.0\)</span> noktasında <span class="math inline">\(1/2\)</span> learning rate ile başlatılmıştır. Son derece düzenli davranır!</p>
+<div class="imagify">
+<p><a class="lightbox" data-gallery="quarto-lightbox-gallery-1" href="data:image/svg+xml,%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0D%0A%3Csvg%20version%3D%271.1%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20xmlns%3Axlink%3D%27http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%27%20width%3D%27327.513265pt%27%20height%3D%27255.557858pt%27%20viewBox%3D%27-72.000004%20-72.000001%20218.342177%20170.371905%27%3E%0D%0A%3Cstyle%20type%3D%27text%2Fcss%27%3E%0D%0A%3C%21%5BCDATA%5B%40font-face%7Bfont-family%3Almmi10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAUEAA0AAAAABowAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj9U9TLzIAAAFMAAAAQgAAAFZWWV8FY21hcAAAAZAAAABMAAABSgOfCBNjdnQgAAAB3AAAAAQAAAAEACECeWdhc3AAAAHgAAAACAAAAAj%2F%2FwADZ2x5ZgAAAegAAAGuAAAB%2FATvmsJoZWFkAAADmAAAADIAAAA2LrdINWhoZWEAAAPMAAAAIAAAACQFRgE3aG10eAAAA%2BwAAAAUAAAAFAbfAHNsb2NhAAAEAAAAAAwAAAAMALoBUm1heHAAAAQMAAAAHwAAACAASQCBbmFtZQAABCwAAAC%2BAAABIKOs5ldwb3N0AAAE7AAAABYAAAAsAFEAXXjaY2BgYGQAgsvb7s0A0c9WNq2D0QBcaQh%2FAAB42mNgZBJmnMDAysDA1MW0h4GBoQdCMz5gMGRkAooysDIzwAAjAxIISHNNAVJpDBVM7%2F6zMUQxHWQ4C1MDAL6QCwoAAHjaY2BgYGaAYBkGRgYQcAHyGMF8FgYNIM0GpBkZmBjSGCr%2B%2FwfywfT%2Fuf97oOqBgJGNAc5hZAISTAyogJGBSoAZQ4SFYXAAAJlVCbYAIQJ5AAAAAf%2F%2FAAJ42lWPu27UQBRA7x3v2uvHOut3kN8zsbMEQYK9thPWbEgEJBIhKZAQoqHLH4QqP5Aqff5it6SjSsMn8AE0SDR0QBi7QKIYzeicmdE9QCAFwC1yAwJI8GiJsN2upAF8L5bi8Gu7Egg%2FwlLo8LDDK0nEX%2B0KO14aqbFZGixF%2BdvtLbn5fZ6SdwAEqruSTMlneAlH%2FPdZzqgoiRKjOjq2O0dBFxjdXGDVG47Kom4WpLHKooMPcIFN3dRl4fUPuK3ItKLs2JbXX2jKSJscvpJVx7dCK7rnrjl0lmZPTD0YY%2FuWa%2F%2FNUBENaRJHVthrcplk5WF6ibI8Gvy52Hm8H5iEGRMr9ZOszYIPcxmfoqyo4W74XqemQHsH0LWEdz%2FJGn6CUzgDyGaMSjoymlezffw3IR%2BwS5H40onjFc0CyyLipr%2F7fynvjLDbKvyhKYJ7mvqBQf3j0OFBOZvTg2l4tnGQu5pKvNdUc%2B1aK5PQsX1P95K9zJv6mqDsbm08y91rRT1q88B%2BfvVxPEhM3Yl9Fp%2Bc3K931M6MEp9%2B2d4bDyLbNOh6Qp3YkOKHneZpfwFEiU4ZAAB42mNgZGBgAOIrM3lWxfPbfGXgZn4BFGF4trJpHZyW%2FW%2FMpMF0EMjlYGACiQIAabIMfwAAeNpjYGRgYDr435ghismGgeH%2FISYNBqAICmAFAHQnBIABbAAhAAAAAAFNAAAB6gA1AjwAHQAAACoAKgAqAJAA%2FnjaY2BkYGBgZQhgYGIAARDJyAASc2DQAwkAAAukAMsAeNpNjU0KwjAQhT%2F%2FFUVcicvgvqXJQsW1eAAXLoUuYin0B2J7AI%2FhATyBF3SiQcwwzJeZx3vAmCsd%2FOsyYhG4x5pL4AFTHoGHUi%2B5dvoT0c8%2FSs89DqwCD1hyDzxkxpMTloyWghQHJ5u1RSpwpKai%2BUwnCovCEJPI3EsXlFI5%2BrfRbInYSRvZGTZiUlfNsXaZVSZO1F4VZZlrD3ob7SKTGNGcxdpxEysf6G18CGfrbnldKR3L5z%2BMrwlveZ8nbwAAeNpjYGLAD1iBmJGBicGTIRoAAgAArwAA%29%20format%28%27woff%27%29%3B%7D%0D%0A%40font-face%7Bfont-family%3Arm-lmr10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAb0AA0AAAAACOwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj9U9TLzIAAAFMAAAAQgAAAFZWcV7hY21hcAAAAZAAAABTAAABShBbDvJjdnQgAAAB5AAAAAQAAAAEACECeWdhc3AAAAHoAAAACAAAAAj%2F%2FwADZ2x5ZgAAAfAAAAN0AAAELLSKpqRoZWFkAAAFZAAAADEAAAA2LmVINGhoZWEAAAWYAAAAHgAAACQFIQEBaG10eAAABbgAAAAiAAAAIgguAXJsb2NhAAAF3AAAABgAAAAYBCQFQG1heHAAAAX0AAAAHwAAACAAUQBwbmFtZQAABhQAAAC6AAABJo5Vwjpwb3N0AAAG0AAAACEAAAA4AFsAU3jaY2BgYGQAgsvb7s0A0c9WNq2D0QBcaQh%2FAAB42mNgZLzBOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqQ0GMyYpf%2BbMEQxvWP4BVMDAOrKCv4AAHja3Yq5DYBADATHvsM8NVDAEZJQAf1HZBRjDJxAtMBI692RDCTujAgna5hcninRFi0oE4t7eGF29923%2Bh%2BI8YhoHOWLvDPlOhpru37gLxwvQAllAAAhAnkAAAAB%2F%2F8AAnjaVZLdb9NWGMbPsRPbddKmduKPJv6obWrnoySd7SRrmrqBiKhqaKHaEKUgykdHNaR10tgH027WXSHxHzB12sSQNiGhtdofsGoSU2G7HbvY%2FSQk0C64QiPsPWkzaXfnvDrn9z7v87yIQhZCuEDdQTRiUXkHo0pzl42hZ%2F4OE%2F%2BzuUtTcEQ7NCnHSXmXZfA%2FzV1M6oFgCV4gOBbm%2Fnr4kLrz6ppFrSBEoauvGdylniMFqQjFQ88VRuu1aujYI5hlpIxiUIFfxV1h%2B5thnvW7ubnjuYUplv87LnyFa7j6bTLOFy9N3%2Fr%2Bh1tvXsjzCBHmNDCtAXMi9MqUYwNKFkYJMvAjDC2wdUBKfzkgvzxgxMXt3qPe4%2F%2FIB8xzMPtdmF0GKrKqju1WhdB1GEfy60KGKWGp5iv47nhLZ4To5qnQmBt3eo4pGtQbItcys69eGqJJ032WD6w9YE2io6DPYVj4Xo9iVeDZINDAgV%2FrX9gIjrKUSeERLFl1vDeW5NmVH683wpYq3rywfF0TWcHRxnhaWJhsdd79iaPxDe1Bd4TbCKbaxZpx5r33O2Manc1JJp6qXWpvfPw7lxAfgIbi66d4HzTMooh45HoRHvSX%2B%2B2dw94syHNIdQaTKwOTe3Ltf2%2Fx%2FvmT0dLmQveaLitaJC06bkMzG2oqNZSanGl2SoUVNedZimx%2F8tbqZ%2FfnNlKZyzPNpVPTqqbLvqUHs%2B2KT9EUz9HnFs8vHMnHTC1raEZ79cYSQjGkgV9PqHtIRwbsoA16q47QxGUMDoEv0oH9ga%2BQWGZx4DlpAT9ZjzFMkuv9hnk1lAoX1wpSqK7ff%2FHinol%2FGWI5KtkrmWd1Eoop6mdN%2FFHvNskGfCHZNMEZ4gu0qMKQEU12EpywK9iWBDJ3nXTsG9S3BIwgryGoQ1P2Nk93w1LRaU3aozwdb8135pJ8jGeZqeVpTVTz7eryMJNQcjmFT2feOb3yxf7qVvDzcFozlFiC1jVa7f2RSgx1WsW314rHjpcpPa8zWenEB1sXwZNBfjZyUA3V%2B1pBahjRoMoehHi4UBS5eH2lZcpz4RXua8f7H35XyHmBl46ydU0cNdrNja%2Fd1gn3zKerwnhbdpVhWpQbxcgUf137%2FKo6vzkzkcgflVU5W5nd2167PT%2B%2BdRlfOXJM1CSucqW02Igm1mHF%2FwXLBMvyeNpjYGRgYADi2oNSOfH8Nl8ZuJmfA0UYnq1sWgenZf6zMV5negfkcjAwgUQBYQMMzAAAAHjaY2BkYGB695%2BNIYrxCwMQMF5nYGRABWwAbXUEJQAAAWsAIQAAAAABTQAAAYUAYwGFADkB9ABZADIAKgAcADIAKgAAAAAAKgAqACoAVAB%2BAKQA5gE8AXIBxgIWeNpjYGRgYOBmsGdgYQABJiBmZACJOTDogQQACssAwgB42l2NPQ6CQBCFP0WIf4WxsN7CFsJuIYQDEE9AZYuEhJ9k8QIewwN4Bq%2FngGti3GQy37x9Mw9YcmXG%2BOb4bB17HLk49tnwcByI%2FyW%2Fs8VK%2FOvJObLHmb1jnwN3xwE7njS0WDQxNK3V0nJ6Om5Tt1SUKAyROBSZlJWN8Gfvo2oSUVMpI5rhJIf67pb3tiqViWKVKduGU4SgTsI0NLERVyEBloF6ih0PjVEUpR3qvlM6kuE%2Fku8p3pqUJ8EAAHjaY2BiwA%2B4gZiRgQlI8zCIMIgyiDGIM0gwSAIABiAArwAAAA%3D%3D%29%20format%28%27woff%27%29%3B%7D%0D%0A%40font-face%7Bfont-family%3Almsy10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAPAAA0AAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj9U9TLzIAAAFMAAAAQwAAAFZ2Q39oY21hcAAAAZAAAAA%2BAAABQgAPJb1jdnQgAAAB0AAAAAQAAAAEACEBnWdhc3AAAAHUAAAACAAAAAj%2F%2FwADZ2x5ZgAAAdwAAAB8AAAAfOJdIJJoZWFkAAACWAAAADEAAAA2L0hH%2FmhoZWEAAAKMAAAAHgAAACQEzwMPaG10eAAAAqwAAAAQAAAAEAkeAHRsb2NhAAACvAAAAAoAAAAKAGgAVG1heHAAAALIAAAAHwAAACAASAA6bmFtZQAAAugAAAC%2FAAABILm8%2FHNwb3N0AAADqAAAABYAAAAqAPYAA3jaY2BgYGQAgsvb7s0A0c9WNq2D0QBcaQh%2FAAB42mNgZOZinMDAysDA1Mm0m4GBoRtCM95nMGRkAooysHIyIAMHGCMgzTWFgUFJSEmIcd%2Ff6wxRjPvAwowgAgC9QQqYAHjaY2BgYGaAYBkGRgYQsAHyGMF8FgYFIM0ChEC%2BktD%2F%2FxDy7keoSgZGNgYYk4GRCUgwMaACRoZhDwB2iAbuAAAAIQGdAAAAAf%2F%2FAAIAAgAhAAABKQG%2BAAMABwAusQEALzyyBwQA7TKxBgXcPLIDAgDtMgCxAwAvPLIFBADtMrIHBgH8PLIBAgDtMjMRIREnMxEjIQEI58bGAb7%2BQiEBfAAAAgBTAOYCtgEOAAcACAAAJDQjISIUMyE3ArYh%2Fd8hIQIhIeYoKBQAeNpjYGRgYADi9ZOTguL5bb4ycDM%2FB4owPFvZtA5OKzIwMG1j3AfkcjAwgUQBVjsLrQAAAHjaY2BkYGDcx8DAEMXMBSQZmLYxMDKgAhYAL%2B4B5QAAAwoAIQAAAAADCgAAAwoAUwAAACoAKgAqAD4AAHjaY2BkYGBgYeBkYGIAARDJyAASc2DQAwkAAASaAIMAeNpNjT0KwkAQhT%2F%2FFUWsxHKxT8huYYK1eAALS8FiDUJMYKOFpcfwAJ7ACzobF3GWYb6ZfbwHDDnRwlebAbPAHZYcAvcY8wzcl%2FeW31Z3JPppo%2FTcYcMicI85j8B9JrzYYcm5UXDEwc7mt%2BIosKWi5NpMJwqLwhCTyFxLF1youaN%2FF01KRCZt5GZYiUlVXreVy60ycaLWqrjUd%2B1Bp1EWmcSIZi%2FWTqzOTaC38SHsravPVal0LMt%2FGF8TPownJ8cAeNpjYGJABowM6IAFLMrE8B4AAbUA%2BgAA%29%20format%28%27woff%27%29%3B%7D%0D%0Atext.f0%20%7Bfont-family%3Almsy10%3Bfont-size%3A9.96264px%7D%0D%0Atext.f1%20%7Bfont-family%3Almmi10%3Bfont-size%3A9.96264px%7D%0D%0Atext.f2%20%7Bfont-family%3Arm-lmr10%3Bfont-size%3A9.96264px%7D%0D%0A%5D%5D%3E%0D%0A%3C%2Fstyle%3E%0D%0A%3Cg%20id%3D%27page1%27%3E%0D%0A%3Cg%20stroke-miterlimit%3D%2710%27%20transform%3D%27matrix%28.996264%200%200%20-.996264%20-58.025036%2093.883244%29%27%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cg%20fill%3D%27%23fff%27%3E%0D%0A%3Cpath%20d%3D%27M%20-14.02737%20-4.5055%20M%20-14.02737%20-4.5055%20L%20-14.02737%20166.50531%20L%20205.13359%20166.50531%20L%20205.13359%20-4.5055%20Z%20M%20205.13359%20166.50531%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke%3D%27none%27%20transform%3D%27matrix%281.00375%200%200%20-1.00375%2058.24263%2094.235306%29%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-9.72188%20-.2%29matrix%281.00375%200%200%20-1.00375%2058.24263%2094.235306%29matrix%28.996264%200%200%20-.996264%20-48.339479%2093.683994%29%27%20stroke%3D%27%23000%27%20stroke-miterlimit%3D%2710%27%20fill%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cg%20stroke-width%3D%270.2%27%20fill%3D%27%23808080%27%20stroke%3D%27%23808080%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%2024.86607%20L%200.0%2029.13385%20M%2055.71289%2024.86607%20L%2055.71289%2029.13385%20M%2083.56934%2024.86607%20L%2083.56934%2029.13385%20M%20111.42578%2024.86607%20L%20111.42578%2029.13385%20M%20139.28223%2024.86607%20L%20139.28223%2029.13385%20M%20167.13867%2024.86607%20L%20167.13867%2029.13385%20M%20194.99512%2024.86607%20L%20194.99512%2029.13385%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke-width%3D%270.2%27%20fill%3D%27%23808080%27%20stroke%3D%27%23808080%27%3E%0D%0A%3Cpath%20d%3D%27M%2025.72252%2080.99991%20L%2029.99036%2080.99991%20M%2025.72252%20134.99985%20L%2029.99036%20134.99985%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%200.0%2026.99997%20L%20192.99515%2026.99997%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28192.99515%2026.99997%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%201.99997%200.0%20L%20-1.19998%201.59998%20L%200.0%200.0%20L%20-1.19998%20-1.59998%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2027.85645%200.0%20L%2027.85645%20159.99985%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%280%201%20-1%200%2027.85645%20159.99985%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%201.99997%200.0%20L%20-1.19998%201.59998%20L%200.0%200.0%20L%20-1.19998%20-1.59998%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-6.3889%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E%E2%88%92%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-40.590731%27%20y%3D%2793.683994%27%3E1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2853.21289%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2881.06934%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E2%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28108.92578%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E3%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28136.78223%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E4%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28164.63867%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E5%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28192.49512%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E6%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2817.18954%2077.85129%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E2%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2817.18954%20131.85123%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E4%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3CclipPath%20id%3D%27pgfcp1%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%200.0%20L%20194.99512%200.0%20L%20194.99512%20161.99982%20L%200.0%20161.99982%20Z%27%2F%3E%20%3C%2FclipPath%3E%0D%0A%3Cg%20clip-path%3D%27url%28%23pgfcp1%29%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%20269.9997%20L%201.9696%20258.68027%20L%203.93922%20247.63086%20L%205.90884%20236.85135%20L%207.87846%20226.34186%20L%209.84808%20216.10254%20L%2011.81769%20206.13295%20L%2013.78731%20196.43333%20L%2015.75693%20187.00366%20L%2017.72655%20177.844%20L%2019.69617%20168.95427%20L%2021.66579%20160.33452%20L%2023.6354%20151.98491%20L%2025.60503%20143.90506%20L%2027.57465%20136.09518%20L%2029.54425%20128.5553%20L%2031.51387%20121.28534%20L%2033.48349%20114.28539%20L%2035.45311%20107.55537%20L%2037.42273%20101.09534%20L%2039.39235%2094.90541%20L%2041.36195%2088.98528%20L%2043.33157%2083.33513%20L%2045.3012%2077.95494%20L%2047.27081%2072.84471%20L%2049.24043%2068.00447%20L%2051.21005%2063.43419%20L%2053.17967%2059.13387%20L%2055.14929%2055.10349%20L%2057.1189%2051.34315%20L%2059.08852%2047.85272%20L%2061.05814%2044.63226%20L%2063.02774%2041.68178%20L%2064.99736%2039.00127%20L%2066.96698%2036.59068%20L%2068.93658%2034.45009%20L%2070.9062%2032.57945%20L%2072.87582%2030.97876%20L%2074.84543%2029.64806%20L%2076.81505%2028.58731%20L%2078.78465%2027.7965%20L%2080.75427%2027.27571%20L%2082.72389%2027.02484%20L%2084.6935%2027.04391%20L%2086.66312%2027.33301%20L%2088.63274%2027.89204%20L%2090.60234%2028.72104%20L%2092.57196%2029.81998%20L%2094.54158%2031.18887%20L%2096.51118%2032.82776%20L%2098.4808%2034.73662%20L%20100.45042%2036.91542%20L%20102.42003%2039.36418%20L%20104.38965%2042.08292%20L%20106.35925%2045.0716%20L%20108.32887%2048.33029%20L%20110.2985%2051.85887%20L%20112.2681%2055.65747%20L%20114.23772%2059.72606%20L%20116.20734%2064.0646%20L%20118.17694%2068.67297%20L%20120.14656%2073.55142%20L%20122.11618%2078.69986%20L%20124.08578%2084.11823%20L%20126.0554%2089.80661%20L%20128.02501%2095.76477%20L%20129.99463%20101.99306%20L%20131.96425%20108.49129%20L%20133.93385%20115.25949%20L%20135.90347%20122.2975%20L%20137.8731%20129.60565%20L%20139.8427%20137.18375%20L%20141.81232%20145.0318%20L%20143.78194%20153.14984%20L%20145.75154%20161.53764%20L%20147.72116%20170.19559%20L%20149.69077%20179.1235%20L%20151.66039%20188.3214%20L%20153.63%20197.78928%20L%20155.59961%20207.52707%20L%20157.56923%20217.53465%20L%20159.53885%20227.81236%20L%20161.50845%20238.36009%20L%20163.47807%20249.17775%20L%20165.4477%20260.26514%20L%20167.4173%20271.62276%20L%20169.38692%20283.25029%20L%20171.35654%20295.14781%20L%20173.32614%20307.3154%20L%20175.29576%20319.75287%20L%20177.26537%20332.45978%20L%20179.23499%20345.43736%20L%20181.2046%20358.6848%20L%20183.17421%20372.20209%20L%20185.14383%20385.98882%20L%20187.11345%20400.04622%20L%20189.08305%20414.37347%20L%20191.05267%20428.97058%20L%20193.0223%20443.83754%20L%20194.9919%20458.97476%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20139.28223%20134.99985%20L%2085.71469%2031.15886%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.45842%20-.88867%20.88867%20-.45842%2085.71469%2031.15886%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%3E%0D%0A%3Cpath%20d%3D%27M%2085.06934%2026.99997%20C%2085.06934%2027.8284%2084.39777%2028.49997%2083.56934%2028.49997%20C%2082.7409%2028.49997%2082.06934%2027.8284%2082.06934%2026.99997%20C%2082.06934%2026.17154%2082.7409%2025.49997%2083.56934%2025.49997%20C%2084.39777%2025.49997%2085.06934%2026.17154%2085.06934%2026.99997%20Z%20M%2083.56934%2026.99997%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20140.78223%20134.99985%20C%20140.78223%20135.82828%20140.11066%20136.49985%20139.28223%20136.49985%20C%20138.4538%20136.49985%20137.78223%20135.82828%20137.78223%20134.99985%20C%20137.78223%20134.17142%20138.4538%20133.49985%20139.28223%20133.49985%20C%20140.11066%20133.49985%20140.78223%20134.17142%20140.78223%20134.99985%20Z%20M%20139.28223%20134.99985%27%2F%3E%0D%0A%3Cpath%20d%3D%27%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28185.7783%2030.53719%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3Ex%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2831.39474%20150.9899%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3Ef%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-42.389532%27%20y%3D%2793.683994%27%3E%28%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-38.515053%27%20y%3D%2793.683994%27%3Ex%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-32.821121%27%20y%3D%2793.683994%27%3E%29%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke-width%3D%270.4%27%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E"><img class="img-fluid" src="data:image/svg+xml,%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0D%0A%3Csvg%20version%3D%271.1%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20xmlns%3Axlink%3D%27http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%27%20width%3D%27327.513265pt%27%20height%3D%27255.557858pt%27%20viewBox%3D%27-72.000004%20-72.000001%20218.342177%20170.371905%27%3E%0D%0A%3Cstyle%20type%3D%27text%2Fcss%27%3E%0D%0A%3C%21%5BCDATA%5B%40font-face%7Bfont-family%3Almmi10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAUEAA0AAAAABowAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj9U9TLzIAAAFMAAAAQgAAAFZWWV8FY21hcAAAAZAAAABMAAABSgOfCBNjdnQgAAAB3AAAAAQAAAAEACECeWdhc3AAAAHgAAAACAAAAAj%2F%2FwADZ2x5ZgAAAegAAAGuAAAB%2FATvmsJoZWFkAAADmAAAADIAAAA2LrdINWhoZWEAAAPMAAAAIAAAACQFRgE3aG10eAAAA%2BwAAAAUAAAAFAbfAHNsb2NhAAAEAAAAAAwAAAAMALoBUm1heHAAAAQMAAAAHwAAACAASQCBbmFtZQAABCwAAAC%2BAAABIKOs5ldwb3N0AAAE7AAAABYAAAAsAFEAXXjaY2BgYGQAgsvb7s0A0c9WNq2D0QBcaQh%2FAAB42mNgZBJmnMDAysDA1MW0h4GBoQdCMz5gMGRkAooysDIzwAAjAxIISHNNAVJpDBVM7%2F6zMUQxHWQ4C1MDAL6QCwoAAHjaY2BgYGaAYBkGRgYQcAHyGMF8FgYNIM0GpBkZmBjSGCr%2B%2FwfywfT%2Fuf97oOqBgJGNAc5hZAISTAyogJGBSoAZQ4SFYXAAAJlVCbYAIQJ5AAAAAf%2F%2FAAJ42lWPu27UQBRA7x3v2uvHOut3kN8zsbMEQYK9thPWbEgEJBIhKZAQoqHLH4QqP5Aqff5it6SjSsMn8AE0SDR0QBi7QKIYzeicmdE9QCAFwC1yAwJI8GiJsN2upAF8L5bi8Gu7Egg%2FwlLo8LDDK0nEX%2B0KO14aqbFZGixF%2BdvtLbn5fZ6SdwAEqruSTMlneAlH%2FPdZzqgoiRKjOjq2O0dBFxjdXGDVG47Kom4WpLHKooMPcIFN3dRl4fUPuK3ItKLs2JbXX2jKSJscvpJVx7dCK7rnrjl0lmZPTD0YY%2FuWa%2F%2FNUBENaRJHVthrcplk5WF6ibI8Gvy52Hm8H5iEGRMr9ZOszYIPcxmfoqyo4W74XqemQHsH0LWEdz%2FJGn6CUzgDyGaMSjoymlezffw3IR%2BwS5H40onjFc0CyyLipr%2F7fynvjLDbKvyhKYJ7mvqBQf3j0OFBOZvTg2l4tnGQu5pKvNdUc%2B1aK5PQsX1P95K9zJv6mqDsbm08y91rRT1q88B%2BfvVxPEhM3Yl9Fp%2Bc3K931M6MEp9%2B2d4bDyLbNOh6Qp3YkOKHneZpfwFEiU4ZAAB42mNgZGBgAOIrM3lWxfPbfGXgZn4BFGF4trJpHZyW%2FW%2FMpMF0EMjlYGACiQIAabIMfwAAeNpjYGRgYDr435ghismGgeH%2FISYNBqAICmAFAHQnBIABbAAhAAAAAAFNAAAB6gA1AjwAHQAAACoAKgAqAJAA%2FnjaY2BkYGBgZQhgYGIAARDJyAASc2DQAwkAAAukAMsAeNpNjU0KwjAQhT%2F%2FFUVcicvgvqXJQsW1eAAXLoUuYin0B2J7AI%2FhATyBF3SiQcwwzJeZx3vAmCsd%2FOsyYhG4x5pL4AFTHoGHUi%2B5dvoT0c8%2FSs89DqwCD1hyDzxkxpMTloyWghQHJ5u1RSpwpKai%2BUwnCovCEJPI3EsXlFI5%2BrfRbInYSRvZGTZiUlfNsXaZVSZO1F4VZZlrD3ob7SKTGNGcxdpxEysf6G18CGfrbnldKR3L5z%2BMrwlveZ8nbwAAeNpjYGLAD1iBmJGBicGTIRoAAgAArwAA%29%20format%28%27woff%27%29%3B%7D%0D%0A%40font-face%7Bfont-family%3Arm-lmr10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAb0AA0AAAAACOwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj9U9TLzIAAAFMAAAAQgAAAFZWcV7hY21hcAAAAZAAAABTAAABShBbDvJjdnQgAAAB5AAAAAQAAAAEACECeWdhc3AAAAHoAAAACAAAAAj%2F%2FwADZ2x5ZgAAAfAAAAN0AAAELLSKpqRoZWFkAAAFZAAAADEAAAA2LmVINGhoZWEAAAWYAAAAHgAAACQFIQEBaG10eAAABbgAAAAiAAAAIgguAXJsb2NhAAAF3AAAABgAAAAYBCQFQG1heHAAAAX0AAAAHwAAACAAUQBwbmFtZQAABhQAAAC6AAABJo5Vwjpwb3N0AAAG0AAAACEAAAA4AFsAU3jaY2BgYGQAgsvb7s0A0c9WNq2D0QBcaQh%2FAAB42mNgZLzBOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqQ0GMyYpf%2BbMEQxvWP4BVMDAOrKCv4AAHja3Yq5DYBADATHvsM8NVDAEZJQAf1HZBRjDJxAtMBI692RDCTujAgna5hcninRFi0oE4t7eGF29923%2Bh%2BI8YhoHOWLvDPlOhpru37gLxwvQAllAAAhAnkAAAAB%2F%2F8AAnjaVZLdb9NWGMbPsRPbddKmduKPJv6obWrnoySd7SRrmrqBiKhqaKHaEKUgykdHNaR10tgH027WXSHxHzB12sSQNiGhtdofsGoSU2G7HbvY%2FSQk0C64QiPsPWkzaXfnvDrn9z7v87yIQhZCuEDdQTRiUXkHo0pzl42hZ%2F4OE%2F%2BzuUtTcEQ7NCnHSXmXZfA%2FzV1M6oFgCV4gOBbm%2Fnr4kLrz6ppFrSBEoauvGdylniMFqQjFQ88VRuu1aujYI5hlpIxiUIFfxV1h%2B5thnvW7ubnjuYUplv87LnyFa7j6bTLOFy9N3%2Fr%2Bh1tvXsjzCBHmNDCtAXMi9MqUYwNKFkYJMvAjDC2wdUBKfzkgvzxgxMXt3qPe4%2F%2FIB8xzMPtdmF0GKrKqju1WhdB1GEfy60KGKWGp5iv47nhLZ4To5qnQmBt3eo4pGtQbItcys69eGqJJ032WD6w9YE2io6DPYVj4Xo9iVeDZINDAgV%2FrX9gIjrKUSeERLFl1vDeW5NmVH683wpYq3rywfF0TWcHRxnhaWJhsdd79iaPxDe1Bd4TbCKbaxZpx5r33O2Manc1JJp6qXWpvfPw7lxAfgIbi66d4HzTMooh45HoRHvSX%2B%2B2dw94syHNIdQaTKwOTe3Ltf2%2Fx%2FvmT0dLmQveaLitaJC06bkMzG2oqNZSanGl2SoUVNedZimx%2F8tbqZ%2FfnNlKZyzPNpVPTqqbLvqUHs%2B2KT9EUz9HnFs8vHMnHTC1raEZ79cYSQjGkgV9PqHtIRwbsoA16q47QxGUMDoEv0oH9ga%2BQWGZx4DlpAT9ZjzFMkuv9hnk1lAoX1wpSqK7ff%2FHinol%2FGWI5KtkrmWd1Eoop6mdN%2FFHvNskGfCHZNMEZ4gu0qMKQEU12EpywK9iWBDJ3nXTsG9S3BIwgryGoQ1P2Nk93w1LRaU3aozwdb8135pJ8jGeZqeVpTVTz7eryMJNQcjmFT2feOb3yxf7qVvDzcFozlFiC1jVa7f2RSgx1WsW314rHjpcpPa8zWenEB1sXwZNBfjZyUA3V%2B1pBahjRoMoehHi4UBS5eH2lZcpz4RXua8f7H35XyHmBl46ydU0cNdrNja%2Fd1gn3zKerwnhbdpVhWpQbxcgUf137%2FKo6vzkzkcgflVU5W5nd2167PT%2B%2BdRlfOXJM1CSucqW02Igm1mHF%2FwXLBMvyeNpjYGRgYADi2oNSOfH8Nl8ZuJmfA0UYnq1sWgenZf6zMV5negfkcjAwgUQBYQMMzAAAAHjaY2BkYGB695%2BNIYrxCwMQMF5nYGRABWwAbXUEJQAAAWsAIQAAAAABTQAAAYUAYwGFADkB9ABZADIAKgAcADIAKgAAAAAAKgAqACoAVAB%2BAKQA5gE8AXIBxgIWeNpjYGRgYOBmsGdgYQABJiBmZACJOTDogQQACssAwgB42l2NPQ6CQBCFP0WIf4WxsN7CFsJuIYQDEE9AZYuEhJ9k8QIewwN4Bq%2FngGti3GQy37x9Mw9YcmXG%2BOb4bB17HLk49tnwcByI%2FyW%2Fs8VK%2FOvJObLHmb1jnwN3xwE7njS0WDQxNK3V0nJ6Om5Tt1SUKAyROBSZlJWN8Gfvo2oSUVMpI5rhJIf67pb3tiqViWKVKduGU4SgTsI0NLERVyEBloF6ih0PjVEUpR3qvlM6kuE%2Fku8p3pqUJ8EAAHjaY2BiwA%2B4gZiRgQlI8zCIMIgyiDGIM0gwSAIABiAArwAAAA%3D%3D%29%20format%28%27woff%27%29%3B%7D%0D%0A%40font-face%7Bfont-family%3Almsy10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAPAAA0AAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj9U9TLzIAAAFMAAAAQwAAAFZ2Q39oY21hcAAAAZAAAAA%2BAAABQgAPJb1jdnQgAAAB0AAAAAQAAAAEACEBnWdhc3AAAAHUAAAACAAAAAj%2F%2FwADZ2x5ZgAAAdwAAAB8AAAAfOJdIJJoZWFkAAACWAAAADEAAAA2L0hH%2FmhoZWEAAAKMAAAAHgAAACQEzwMPaG10eAAAAqwAAAAQAAAAEAkeAHRsb2NhAAACvAAAAAoAAAAKAGgAVG1heHAAAALIAAAAHwAAACAASAA6bmFtZQAAAugAAAC%2FAAABILm8%2FHNwb3N0AAADqAAAABYAAAAqAPYAA3jaY2BgYGQAgsvb7s0A0c9WNq2D0QBcaQh%2FAAB42mNgZOZinMDAysDA1Mm0m4GBoRtCM95nMGRkAooysHIyIAMHGCMgzTWFgUFJSEmIcd%2Ff6wxRjPvAwowgAgC9QQqYAHjaY2BgYGaAYBkGRgYQsAHyGMF8FgYFIM0ChEC%2BktD%2F%2FxDy7keoSgZGNgYYk4GRCUgwMaACRoZhDwB2iAbuAAAAIQGdAAAAAf%2F%2FAAIAAgAhAAABKQG%2BAAMABwAusQEALzyyBwQA7TKxBgXcPLIDAgDtMgCxAwAvPLIFBADtMrIHBgH8PLIBAgDtMjMRIREnMxEjIQEI58bGAb7%2BQiEBfAAAAgBTAOYCtgEOAAcACAAAJDQjISIUMyE3ArYh%2Fd8hIQIhIeYoKBQAeNpjYGRgYADi9ZOTguL5bb4ycDM%2FB4owPFvZtA5OKzIwMG1j3AfkcjAwgUQBVjsLrQAAAHjaY2BkYGDcx8DAEMXMBSQZmLYxMDKgAhYAL%2B4B5QAAAwoAIQAAAAADCgAAAwoAUwAAACoAKgAqAD4AAHjaY2BkYGBgYeBkYGIAARDJyAASc2DQAwkAAASaAIMAeNpNjT0KwkAQhT%2F%2FFUWsxHKxT8huYYK1eAALS8FiDUJMYKOFpcfwAJ7ACzobF3GWYb6ZfbwHDDnRwlebAbPAHZYcAvcY8wzcl%2FeW31Z3JPppo%2FTcYcMicI85j8B9JrzYYcm5UXDEwc7mt%2BIosKWi5NpMJwqLwhCTyFxLF1youaN%2FF01KRCZt5GZYiUlVXreVy60ycaLWqrjUd%2B1Bp1EWmcSIZi%2FWTqzOTaC38SHsravPVal0LMt%2FGF8TPownJ8cAeNpjYGJABowM6IAFLMrE8B4AAbUA%2BgAA%29%20format%28%27woff%27%29%3B%7D%0D%0Atext.f0%20%7Bfont-family%3Almsy10%3Bfont-size%3A9.96264px%7D%0D%0Atext.f1%20%7Bfont-family%3Almmi10%3Bfont-size%3A9.96264px%7D%0D%0Atext.f2%20%7Bfont-family%3Arm-lmr10%3Bfont-size%3A9.96264px%7D%0D%0A%5D%5D%3E%0D%0A%3C%2Fstyle%3E%0D%0A%3Cg%20id%3D%27page1%27%3E%0D%0A%3Cg%20stroke-miterlimit%3D%2710%27%20transform%3D%27matrix%28.996264%200%200%20-.996264%20-58.025036%2093.883244%29%27%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cg%20fill%3D%27%23fff%27%3E%0D%0A%3Cpath%20d%3D%27M%20-14.02737%20-4.5055%20M%20-14.02737%20-4.5055%20L%20-14.02737%20166.50531%20L%20205.13359%20166.50531%20L%20205.13359%20-4.5055%20Z%20M%20205.13359%20166.50531%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke%3D%27none%27%20transform%3D%27matrix%281.00375%200%200%20-1.00375%2058.24263%2094.235306%29%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-9.72188%20-.2%29matrix%281.00375%200%200%20-1.00375%2058.24263%2094.235306%29matrix%28.996264%200%200%20-.996264%20-48.339479%2093.683994%29%27%20stroke%3D%27%23000%27%20stroke-miterlimit%3D%2710%27%20fill%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cg%20stroke-width%3D%270.2%27%20fill%3D%27%23808080%27%20stroke%3D%27%23808080%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%2024.86607%20L%200.0%2029.13385%20M%2055.71289%2024.86607%20L%2055.71289%2029.13385%20M%2083.56934%2024.86607%20L%2083.56934%2029.13385%20M%20111.42578%2024.86607%20L%20111.42578%2029.13385%20M%20139.28223%2024.86607%20L%20139.28223%2029.13385%20M%20167.13867%2024.86607%20L%20167.13867%2029.13385%20M%20194.99512%2024.86607%20L%20194.99512%2029.13385%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke-width%3D%270.2%27%20fill%3D%27%23808080%27%20stroke%3D%27%23808080%27%3E%0D%0A%3Cpath%20d%3D%27M%2025.72252%2080.99991%20L%2029.99036%2080.99991%20M%2025.72252%20134.99985%20L%2029.99036%20134.99985%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%200.0%2026.99997%20L%20192.99515%2026.99997%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28192.99515%2026.99997%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%201.99997%200.0%20L%20-1.19998%201.59998%20L%200.0%200.0%20L%20-1.19998%20-1.59998%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2027.85645%200.0%20L%2027.85645%20159.99985%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%280%201%20-1%200%2027.85645%20159.99985%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%201.99997%200.0%20L%20-1.19998%201.59998%20L%200.0%200.0%20L%20-1.19998%20-1.59998%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-6.3889%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E%E2%88%92%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-40.590731%27%20y%3D%2793.683994%27%3E1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2853.21289%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2881.06934%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E2%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28108.92578%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E3%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28136.78223%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E4%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28164.63867%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E5%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28192.49512%2015.03586%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E6%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2817.18954%2077.85129%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E2%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2817.18954%20131.85123%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3E4%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3CclipPath%20id%3D%27pgfcp1%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%200.0%20L%20194.99512%200.0%20L%20194.99512%20161.99982%20L%200.0%20161.99982%20Z%27%2F%3E%20%3C%2FclipPath%3E%0D%0A%3Cg%20clip-path%3D%27url%28%23pgfcp1%29%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%20269.9997%20L%201.9696%20258.68027%20L%203.93922%20247.63086%20L%205.90884%20236.85135%20L%207.87846%20226.34186%20L%209.84808%20216.10254%20L%2011.81769%20206.13295%20L%2013.78731%20196.43333%20L%2015.75693%20187.00366%20L%2017.72655%20177.844%20L%2019.69617%20168.95427%20L%2021.66579%20160.33452%20L%2023.6354%20151.98491%20L%2025.60503%20143.90506%20L%2027.57465%20136.09518%20L%2029.54425%20128.5553%20L%2031.51387%20121.28534%20L%2033.48349%20114.28539%20L%2035.45311%20107.55537%20L%2037.42273%20101.09534%20L%2039.39235%2094.90541%20L%2041.36195%2088.98528%20L%2043.33157%2083.33513%20L%2045.3012%2077.95494%20L%2047.27081%2072.84471%20L%2049.24043%2068.00447%20L%2051.21005%2063.43419%20L%2053.17967%2059.13387%20L%2055.14929%2055.10349%20L%2057.1189%2051.34315%20L%2059.08852%2047.85272%20L%2061.05814%2044.63226%20L%2063.02774%2041.68178%20L%2064.99736%2039.00127%20L%2066.96698%2036.59068%20L%2068.93658%2034.45009%20L%2070.9062%2032.57945%20L%2072.87582%2030.97876%20L%2074.84543%2029.64806%20L%2076.81505%2028.58731%20L%2078.78465%2027.7965%20L%2080.75427%2027.27571%20L%2082.72389%2027.02484%20L%2084.6935%2027.04391%20L%2086.66312%2027.33301%20L%2088.63274%2027.89204%20L%2090.60234%2028.72104%20L%2092.57196%2029.81998%20L%2094.54158%2031.18887%20L%2096.51118%2032.82776%20L%2098.4808%2034.73662%20L%20100.45042%2036.91542%20L%20102.42003%2039.36418%20L%20104.38965%2042.08292%20L%20106.35925%2045.0716%20L%20108.32887%2048.33029%20L%20110.2985%2051.85887%20L%20112.2681%2055.65747%20L%20114.23772%2059.72606%20L%20116.20734%2064.0646%20L%20118.17694%2068.67297%20L%20120.14656%2073.55142%20L%20122.11618%2078.69986%20L%20124.08578%2084.11823%20L%20126.0554%2089.80661%20L%20128.02501%2095.76477%20L%20129.99463%20101.99306%20L%20131.96425%20108.49129%20L%20133.93385%20115.25949%20L%20135.90347%20122.2975%20L%20137.8731%20129.60565%20L%20139.8427%20137.18375%20L%20141.81232%20145.0318%20L%20143.78194%20153.14984%20L%20145.75154%20161.53764%20L%20147.72116%20170.19559%20L%20149.69077%20179.1235%20L%20151.66039%20188.3214%20L%20153.63%20197.78928%20L%20155.59961%20207.52707%20L%20157.56923%20217.53465%20L%20159.53885%20227.81236%20L%20161.50845%20238.36009%20L%20163.47807%20249.17775%20L%20165.4477%20260.26514%20L%20167.4173%20271.62276%20L%20169.38692%20283.25029%20L%20171.35654%20295.14781%20L%20173.32614%20307.3154%20L%20175.29576%20319.75287%20L%20177.26537%20332.45978%20L%20179.23499%20345.43736%20L%20181.2046%20358.6848%20L%20183.17421%20372.20209%20L%20185.14383%20385.98882%20L%20187.11345%20400.04622%20L%20189.08305%20414.37347%20L%20191.05267%20428.97058%20L%20193.0223%20443.83754%20L%20194.9919%20458.97476%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20139.28223%20134.99985%20L%2085.71469%2031.15886%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.45842%20-.88867%20.88867%20-.45842%2085.71469%2031.15886%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%3E%0D%0A%3Cpath%20d%3D%27M%2085.06934%2026.99997%20C%2085.06934%2027.8284%2084.39777%2028.49997%2083.56934%2028.49997%20C%2082.7409%2028.49997%2082.06934%2027.8284%2082.06934%2026.99997%20C%2082.06934%2026.17154%2082.7409%2025.49997%2083.56934%2025.49997%20C%2084.39777%2025.49997%2085.06934%2026.17154%2085.06934%2026.99997%20Z%20M%2083.56934%2026.99997%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20140.78223%20134.99985%20C%20140.78223%20135.82828%20140.11066%20136.49985%20139.28223%20136.49985%20C%20138.4538%20136.49985%20137.78223%20135.82828%20137.78223%20134.99985%20C%20137.78223%20134.17142%20138.4538%20133.49985%20139.28223%20133.49985%20C%20140.11066%20133.49985%20140.78223%20134.17142%20140.78223%20134.99985%20Z%20M%20139.28223%20134.99985%27%2F%3E%0D%0A%3Cpath%20d%3D%27%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28185.7783%2030.53719%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3Ex%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2831.39474%20150.9899%29matrix%281.00375%200%200%20-1.00375%2048.520752%2094.035309%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-48.339479%27%20y%3D%2793.683994%27%3Ef%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-42.389532%27%20y%3D%2793.683994%27%3E%28%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-38.515053%27%20y%3D%2793.683994%27%3Ex%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-32.821121%27%20y%3D%2793.683994%27%3E%29%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke-width%3D%270.4%27%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E" style="display:block; margin: .5em auto;" title="\begin{tikzpicture}[
+    background rectangle/.style={fill=white},
+    show background rectangle
+  ]
+    \begin{axis}[
+        axis lines=middle,
+        xmin=-1, xmax=6,
+        ymin=-1, ymax=5,
+        xlabel={$x$}, ylabel={$f(x)$},
+      ]
+      \addplot [domain=-1:6, samples=100] {(x-2)^2};
+      \addplot [only marks,color=black,mark=*,mark size=1.5pt] coordinates {
+          (2,0)
+          (4,4)};
+      \draw[-latex,blue,thick] (axis cs: 4,4) -- (axis cs: 2,0);
+    \end{axis}
+  \end{tikzpicture}"/></a></p>
+</div>
+<p><span class="math inline">\(f\)</span>, convex değilse, burada gradient descent’in yakınsaması <span class="math inline">\(x_{\it init}\)</span>’e bağlıdır. Öncelikle bazı tanımlar oluşturalım. <span class="math inline">\(f\)</span>’in, <span class="math inline">\(D\)</span> etki alanı üzerinde tanımlanan gerçek değerli bir işlev olmasına izin verin. Bir <span class="math inline">\(x_0 \in D\)</span> noktasına, diğer tüm <span class="math inline">\(x \in D\)</span> için <span class="math inline">\(f(x_0) \leq f(x)\)</span> ise, <span class="math inline">\(f\)</span>’in <em>global minimum noktası</em> adı verilir. Bir <span class="math inline">\(x_0 \in D\)</span> noktasına bunun yerine, <span class="math inline">\(f\)</span> fonksiyonunun <em>local minimum noktası</em> adı verilir, eğer <span class="math inline">\(\epsilon &gt; 0\)</span> sabiti varsa, öyle ki tüm <span class="math inline">\(x\)</span> için <span class="math inline">\(d(x,x_0) &lt; \epsilon,\)</span> tarafından tanımlanan aralıkta <span class="math inline">\(f(x_0) \leq f(x)\)</span>; burada <span class="math inline">\(d\)</span> bir mesafe ölçüsüdür, örneğin <span class="math inline">\(d(x,x_0) = || x - x_0 ||.\)</span> Bir global minimum noktası aynı zamanda bir local minimum noktasıdır, ancak bir local minimum noktasının bir global minimum noktası olması gerekmez.</p>
+<div class="study-question-callout">
+<p>Bu örnekte çok küçük <span class="math inline">\(\eta\)</span> ile ne olur? Çok büyük <span class="math inline">\(\eta\)</span> ile mi?</p>
+</div>
+<p><span class="math inline">\(f\)</span>, convex değilse (ve yeterince düzgünse), gradient descent’in (yeterince küçük learning rate ile yeterince uzun süre çalışır) gradient’in sıfır olduğu bir noktaya çok yaklaşması beklenir, ancak bir global minimum noktasına yakınsayacağını garanti edemeyiz.</p>
+<p>Bu sağduyulu beklentinin iki önemli istisnası vardır: Birincisi, gradient descent, local minimum veya maksimum olmayan ancak <span class="math inline">\(f'(x)=0\)</span>’i karşılayan bir <span class="math inline">\(x\)</span> noktasına yaklaşırken durabilir. Örneğin, <span class="math inline">\(f(x)=x^3\)</span> için, gradient descent’i ilk tahmin olan <span class="math inline">\(x_{\it init}=1\)</span>’ten başlatmak, learning rate <span class="math inline">\(\eta&lt;1/3\)</span> kullanırken <span class="math inline">\(x^{(k)}\)</span>’in <span class="math inline">\(k\to\infty\)</span> olarak sıfıra yakınsamasına yol açacaktır. İkincisi, <span class="math inline">\(f(x)=\exp(-x)\)</span> gibi minimum noktaları olmayan işlevler (convex olanlar bile) vardır; bunlar için pozitif learning rate’li gradient descent, <span class="math inline">\(+\infty\)</span>’e yakınsar.</p>
+<p>Aşağıdaki çizim iki farklı <span class="math inline">\(x_{\it init}\)</span>’i ve gradient descent’in her noktadan nasıl iki farklı yerel optimum noktaya doğru ilerlediğini göstermektedir.</p>
+<div class="imagify">
+<p><a class="lightbox" data-gallery="quarto-lightbox-gallery-2" href="data:image/svg+xml,%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0D%0A%3Csvg%20version%3D%271.1%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20xmlns%3Axlink%3D%27http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%27%20width%3D%27327.517838pt%27%20height%3D%27288.751412pt%27%20viewBox%3D%27-72.000004%20-72%20218.345225%20192.500941%27%3E%0D%0A%3Cstyle%20type%3D%27text%2Fcss%27%3E%0D%0A%3C%21%5BCDATA%5B%40font-face%7Bfont-family%3Almmi10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAUEAA0AAAAABowAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj%2F09TLzIAAAFMAAAAQgAAAFZWWV8FY21hcAAAAZAAAABMAAABSgOfCBNjdnQgAAAB3AAAAAQAAAAEACECeWdhc3AAAAHgAAAACAAAAAj%2F%2FwADZ2x5ZgAAAegAAAGuAAAB%2FATvmsJoZWFkAAADmAAAADEAAAA2LrdIP2hoZWEAAAPMAAAAIAAAACQFRgE3aG10eAAAA%2BwAAAAUAAAAFAbfAHNsb2NhAAAEAAAAAAwAAAAMALoBUm1heHAAAAQMAAAAHwAAACAASQCBbmFtZQAABCwAAAC%2BAAABIKOs5ldwb3N0AAAE7AAAABYAAAAsAFEAXXjaY2BgYGQAgsvb7s0A0c9WNm2G0QBcmwiJAAB42mNgZBJmnMDAysDA1MW0h4GBoQdCMz5gMGRkAooysDIzwAAjAxIISHNNAVJpDBVM7%2F6zMUQxHWQ4C1MDAL6QCwoAAHjaY2BgYGaAYBkGRgYQcAHyGMF8FgYNIM0GpBkZmBjSGCr%2B%2FwfywfT%2Fuf97oOqBgJGNAc5hZAISTAyogJGBSoAZQ4SFYXAAAJlVCbYAIQJ5AAAAAf%2F%2FAAJ42lWPu27UQBRA7x3v2uvHOut3kN8zsbMEQYK9thPWbEgEJBIhKZAQoqHLH4QqP5Aqff5it6SjSsMn8AE0SDR0QBi7QKIYzeicmdE9QCAFwC1yAwJI8GiJsN2upAF8L5bi8Gu7Egg%2FwlLo8LDDK0nEX%2B0KO14aqbFZGixF%2BdvtLbn5fZ6SdwAEqruSTMlneAlH%2FPdZzqgoiRKjOjq2O0dBFxjdXGDVG47Kom4WpLHKooMPcIFN3dRl4fUPuK3ItKLs2JbXX2jKSJscvpJVx7dCK7rnrjl0lmZPTD0YY%2FuWa%2F%2FNUBENaRJHVthrcplk5WF6ibI8Gvy52Hm8H5iEGRMr9ZOszYIPcxmfoqyo4W74XqemQHsH0LWEdz%2FJGn6CUzgDyGaMSjoymlezffw3IR%2BwS5H40onjFc0CyyLipr%2F7fynvjLDbKvyhKYJ7mvqBQf3j0OFBOZvTg2l4tnGQu5pKvNdUc%2B1aK5PQsX1P95K9zJv6mqDsbm08y91rRT1q88B%2BfvVxPEhM3Yl9Fp%2Bc3K931M6MEp9%2B2d4bDyLbNOh6Qp3YkOKHneZpfwFEiU4ZAAB42mNgZGBgAOIrM3ma4vltvjJwM78AijA8W9m0GU7L%2Fjdm0mA6CORyMDCBRAFj4AxhAAAAeNpjYGRgYDr435ghismGgeH%2FISYNBqAICmAFAHQnBIABbAAhAAAAAAFNAAAB6gA1AjwAHQAAACoAKgAqAJAA%2FnjaY2BkYGBgZQhgYGIAARDJyAASc2DQAwkAAAukAMsAeNpNjU0KwjAQhT%2F%2FFUVcicvgvqXJQsW1eAAXLoUuYin0B2J7AI%2FhATyBF3SiQcwwzJeZx3vAmCsd%2FOsyYhG4x5pL4AFTHoGHUi%2B5dvoT0c8%2FSs89DqwCD1hyDzxkxpMTloyWghQHJ5u1RSpwpKai%2BUwnCovCEJPI3EsXlFI5%2BrfRbInYSRvZGTZiUlfNsXaZVSZO1F4VZZlrD3ob7SKTGNGcxdpxEysf6G18CGfrbnldKR3L5z%2BMrwlveZ8nbwAAeNpjYGLAD1iBmJGBicGTIRoAAgAArwAA%29%20format%28%27woff%27%29%3B%7D%0D%0A%40font-face%7Bfont-family%3Arm-lmr10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAdsAA0AAAAACYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj%2F09TLzIAAAFMAAAAQgAAAFZWcV7mY21hcAAAAZAAAABdAAABWhGiIE9jdnQgAAAB8AAAAAQAAAAEACECeWdhc3AAAAH0AAAACAAAAAj%2F%2FwADZ2x5ZgAAAfwAAAPbAAAEqI56f9JoZWFkAAAF2AAAADEAAAA2LmVIPmhoZWEAAAYMAAAAHgAAACQFIQEBaG10eAAABiwAAAAkAAAAJAhjAVxsb2NhAAAGUAAAABoAAAAaBm4FOm1heHAAAAZsAAAAHwAAACAAVABwbmFtZQAABowAAAC6AAABJo5Vwjpwb3N0AAAHSAAAACMAAAA6AHQAUXjaY2BgYGQAgsvb7s0A0c9WNm2G0QBcmwiJAAB42mNgZLzNOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqQ0GCyYpf%2BbMEQxvWP4BVMDAOvpCwMAAHja3Y1bDkBADEXPPDDYggXw50NkFmLn%2BLKYKjMRtuA0fdybNgUcKTsMF4sqc2tP1N4QsBoDEzNRRL2eMc1yyC6brPk2Y0oew1gtli%2BvbedTL8oq1Pqs5R%2BcryQOGAAAAAAhAnkAAAAB%2F%2F8AAnjaVZPdT9tWGMbPsYntOl%2FYie0QnBjHxE7Ct%2B04IQSTNIJGpFBYhEqhlFJQ2dDGJrVd6ai0j6tKXGzaVE3qRLWpq9SpUjXQ%2FoBx04mN3a43u580adMuelWt6c4JDdLuzjmyf%2B%2FzPs%2F7AgKoAMA0cQ%2BQgAb9exAMFPfpNvCXuUd5fi%2FukwQ6gj0SP3vw8z5NwX%2BL%2BxC%2FW5zKGRanqZD54%2BlT4t7LqyoxDwABVl9RsEb8DSQQAcBjGzrXnnOytpYIQJoSwlKcsMwsrHG73%2FhZ2qx1jp3unByk2X883H3owOy3Pg%2BbuTx857vv7%2BQvplgAMHMYMdUWM2kb%2FYSWQCiRa8dIy3QhKgHVY1Loqxb5xTHDw%2B82fm78ckLGzDZgvPoTHqHeeRACaZBBThxzj0VCy0RII0wHoJbQDT1r51zSMkVJFOBRShh3oh%2FYyb7YYt%2BWk6x72UoqWfF5GVpJyX5tws%2FC0t25Xidwc%2BaL%2B%2FVc%2F%2FWZz32flsrFfLn45SdOJi8ydjm%2Fg%2Fq6gKo%2BQBpE1BlQs6hSlrN1jdIEM8eFqR4oOKYEH3SVYhTnbp2z42NdWkNT%2BDgxxDMlJfryRZxXSLLpkYlYB4jVC%2FqQRxpFo99zblsW8RKoJdyR07zQLjqKQjgIA1BQc%2FCgw8fS8z9sFOxShN%2B6OLsh8zSnyR0syU32libe%2BpEh4TX5SS3ArFuDlYwTn3vn3YkOmYx2CgocdC5X1t%2F%2FjfHyT5CGDPL0EGkYBS7OSTdc2KovNstrr2vTSJ6GX0cgvlLYY9H537fwcPGsO705WbsaEyXZFaY0vSArhUgweCrYO1Kc6EnPRzoNVRITN%2BsL24%2FH1oPhlZHi9LnhiBwTTTVmjVYGTIIkWIa8MLU42Z1qU%2BRoXI5XFq5N4%2Fxl5Ncz4iGIgTjagwTSm9W4IuxHedPIF%2BHYfsuUcCyj0DK0EAefrbVRlI9p%2FArZiC2kLy2nBTuy9vj584cK%2FOkUzRC%2BRo9yPoZDUfjYeQXeaOygWi1fEkADDsg1vUnQWRuPlJRomfM6KAJf0OQhU%2FoJPHnYMzx3h9cfpTsNywi50ZzMt8crxfWv9dK4PndrgeuqiLrkJ3mxkHEV%2Fmj5o9VIdXMk6U31iRExOjB6sLu8U%2B36eAVe6S7zssAMXOmZKrjJNbwL1Ik%2BvF8a6EazZDX3TDdOZEmi1EqGDNNYloOTDDWzQ9shxUmkcCg0c%2Bvtam2j1%2Bt%2Bdrs%2Bt31m9bY5m8vPCpfGyks3tts5OfBo3BFMd%2Bl0fWVidMiXqb53dmVzBi69UZhRB%2FsKZ7KND51q3X2zPO31x7oFJO8%2Fnf%2FpqwB42mNgZGBgAOJDsk5B8fw2Xxm4mZ8DRRierWzaDKdl%2FrMxXmd6B%2BRyMDCBRAFT%2FQyFAAAAeNpjYGRgYHr3n40hivELAxAwXmdgZEAFbABtdQQlAAABawAhAAAAAAFNAAABhQBjAYUAOQH0ACcAWQAyACoAHAAqACoAAAAqACoAKgBUAH4AwADmASgBfgG0AgQCVAAAeNpjYGRgYOBhsGdgYwABJiBmZACJOTDogQQACxQAxQB42l2NPQ6CQBCFP0WIf4WxsN7CFsJuIYQDEE9AZYuEhJ9k8QIewwN4Bq%2FngGti3GQy37x9Mw9YcmXG%2BOb4bB17HLk49tnwcByI%2FyW%2Fs8VK%2FOvJObLHmb1jnwN3xwE7njS0WDQxNK3V0nJ6Om5Tt1SUKAyROBSZlJWN8Gfvo2oSUVMpI5rhJIf67pb3tiqViWKVKduGU4SgTsI0NLERVyEBloF6ih0PjVEUpR3qvlM6kuE%2Fku8p3pqUJ8EAAHjaY2BiwA94gJiRgYmBG8gSZhBhEGUQYxBnkGSQBgAHhQDGAA%3D%3D%29%20format%28%27woff%27%29%3B%7D%0D%0A%40font-face%7Bfont-family%3Almsy10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAPAAA0AAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj%2F09TLzIAAAFMAAAAQwAAAFZ2Q39oY21hcAAAAZAAAAA%2BAAABQgAPJb1jdnQgAAAB0AAAAAQAAAAEACEBnWdhc3AAAAHUAAAACAAAAAj%2F%2FwADZ2x5ZgAAAdwAAAB8AAAAfOJdIJJoZWFkAAACWAAAADEAAAA2L0hICGhoZWEAAAKMAAAAHgAAACQEzwMPaG10eAAAAqwAAAAQAAAAEAkeAHRsb2NhAAACvAAAAAoAAAAKAGgAVG1heHAAAALIAAAAHwAAACAASAA6bmFtZQAAAugAAAC%2FAAABILm8%2FHNwb3N0AAADqAAAABYAAAAqAPYAA3jaY2BgYGQAgsvb7s0A0c9WNm2G0QBcmwiJAAB42mNgZOZinMDAysDA1Mm0m4GBoRtCM95nMGRkAooysHIyIAMHGCMgzTWFgUFJSEmIcd%2Ff6wxRjPvAwowgAgC9QQqYAHjaY2BgYGaAYBkGRgYQsAHyGMF8FgYFIM0ChEC%2BktD%2F%2FxDy7keoSgZGNgYYk4GRCUgwMaACRoZhDwB2iAbuAAAAIQGdAAAAAf%2F%2FAAIAAgAhAAABKQG%2BAAMABwAusQEALzyyBwQA7TKxBgXcPLIDAgDtMgCxAwAvPLIFBADtMrIHBgH8PLIBAgDtMjMRIREnMxEjIQEI58bGAb7%2BQiEBfAAAAgBTAOYCtgEOAAcACAAAJDQjISIUMyE3ArYh%2Fd8hIQIhIeYoKBQAeNpjYGRgYADi9ZOTtOL5bb4ycDM%2FB4owPFvZtBlOKzIwMG1j3AfkcjAwgUQBUGkLjwAAAHjaY2BkYGDcx8DAEMXMBSQZmLYxMDKgAhYAL%2B4B5QAAAwoAIQAAAAADCgAAAwoAUwAAACoAKgAqAD4AAHjaY2BkYGBgYeBkYGIAARDJyAASc2DQAwkAAASaAIMAeNpNjT0KwkAQhT%2F%2FFUWsxHKxT8huYYK1eAALS8FiDUJMYKOFpcfwAJ7ACzobF3GWYb6ZfbwHDDnRwlebAbPAHZYcAvcY8wzcl%2FeW31Z3JPppo%2FTcYcMicI85j8B9JrzYYcm5UXDEwc7mt%2BIosKWi5NpMJwqLwhCTyFxLF1youaN%2FF01KRCZt5GZYiUlVXreVy60ycaLWqrjUd%2B1Bp1EWmcSIZi%2FWTqzOTaC38SHsravPVal0LMt%2FGF8TPownJ8cAeNpjYGJABowM6IAFLMrE8B4AAbUA%2BgAA%29%20format%28%27woff%27%29%3B%7D%0D%0Atext.f0%20%7Bfont-family%3Almsy10%3Bfont-size%3A9.96264px%7D%0D%0Atext.f1%20%7Bfont-family%3Almmi10%3Bfont-size%3A9.96264px%7D%0D%0Atext.f2%20%7Bfont-family%3Arm-lmr10%3Bfont-size%3A9.96264px%7D%0D%0A%5D%5D%3E%0D%0A%3C%2Fstyle%3E%0D%0A%3Cg%20id%3D%27page1%27%3E%0D%0A%3Cg%20stroke-miterlimit%3D%2710%27%20transform%3D%27matrix%28.996264%200%200%20-.996264%20-58.025036%20100.141073%29%27%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cg%20fill%3D%27%23fff%27%3E%0D%0A%3Cpath%20d%3D%27M%20-14.02737%20-20.43622%20M%20-14.02737%20-20.43622%20L%20-14.02737%20172.7866%20L%20205.13664%20172.7866%20L%20205.13664%20-20.43622%20Z%20M%20205.13664%20172.7866%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke%3D%27none%27%20transform%3D%27matrix%281.00375%200%200%20-1.00375%2058.24263%20100.516602%29%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-9.72188%20-16.13072%29matrix%281.00375%200%200%20-1.00375%2058.24263%20100.516602%29matrix%28.996264%200%200%20-.996264%20-48.339479%2084.070615%29%27%20stroke%3D%27%23000%27%20stroke-miterlimit%3D%2710%27%20fill%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cg%20stroke-width%3D%270.2%27%20fill%3D%27%23808080%27%20stroke%3D%27%23808080%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%20-2.13422%20L%200.0%202.13422%20M%2032.4997%20-2.13422%20L%2032.4997%202.13422%20M%2097.49908%20-2.13422%20L%2097.49908%202.13422%20M%20129.99878%20-2.13422%20L%20129.99878%202.13422%20M%20162.49847%20-2.13422%20L%20162.49847%202.13422%20M%20194.99817%20-2.13422%20L%20194.99817%202.13422%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke-width%3D%270.2%27%20fill%3D%27%23808080%27%20stroke%3D%27%23808080%27%3E%0D%0A%3Cpath%20d%3D%27M%2062.86555%2040.49988%20L%2067.13321%2040.49988%20M%2062.86555%2080.99976%20L%2067.13321%2080.99976%20M%2062.86555%20121.49963%20L%2067.13321%20121.49963%20M%2062.86555%20161.99951%20L%2067.13321%20161.99951%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%200.0%200.0%20L%20192.9982%200.0%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28192.9982%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%201.99997%200.0%20L%20-1.19998%201.59998%20L%200.0%200.0%20L%20-1.19998%20-1.59998%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2064.99939%200.0%20L%2064.99939%20159.99954%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%280%201%20-1%200%2064.99939%20159.99954%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%201.99997%200.0%20L%20-1.19998%201.59998%20L%200.0%200.0%20L%20-1.19998%20-1.59998%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-6.3889%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E%E2%88%92%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-40.590731%27%20y%3D%2784.070615%27%3E2%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2826.1108%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E%E2%88%92%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-40.590731%27%20y%3D%2784.070615%27%3E1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2894.99908%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28127.49878%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E2%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28159.99847%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E3%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28192.49817%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E4%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2854.33258%2037.35126%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E4%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2854.33258%2077.85114%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E6%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2854.33258%20118.35101%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E8%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2849.33258%20158.85089%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E10%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3CclipPath%20id%3D%27pgfcp1%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%200.0%20L%20194.99817%200.0%20L%20194.99817%20161.99951%20L%200.0%20161.99951%20Z%27%2F%3E%20%3C%2FclipPath%3E%0D%0A%3Cg%20clip-path%3D%27url%28%23pgfcp1%29%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%20870.74738%20L%201.96964%20793.47385%20L%203.93927%20721.07042%20L%205.9089%20653.35313%20L%207.87856%20590.14052%20L%209.84819%20531.25424%20L%2011.81783%20476.52095%20L%2013.78748%20425.76828%20L%2015.75711%20378.82881%20L%2017.72675%20335.53722%20L%2019.69638%20295.73268%20L%2021.66603%20259.25696%20L%2023.63567%20225.95459%20L%2025.6053%20195.67467%20L%2027.57495%20168.26807%20L%2029.54459%20143.59041%20L%2031.51422%20121.49985%20L%2033.48386%20101.85744%20L%2035.4535%2084.52829%20L%2037.42314%2069.38039%20L%2039.39279%2056.28494%20L%2041.36243%2045.11673%20L%2043.33206%2035.75357%20L%2045.3017%2028.0766%20L%2047.27135%2021.97029%20L%2049.24098%2017.32231%20L%2051.21063%2014.0237%20L%2053.18027%2011.96873%20L%2055.1499%2011.05493%20L%2057.11954%2011.18315%20L%2059.08919%2012.25748%20L%2061.05882%2014.18536%20L%2063.02847%2016.8774%20L%2064.99811%2020.24756%20L%2066.96776%2024.21306%20L%2068.9374%2028.6944%20L%2070.90703%2033.61537%20L%2072.87666%2038.90298%20L%2074.84631%2044.48763%20L%2076.81595%2050.30293%20L%2078.7856%2056.28572%20L%2080.75523%2062.37617%20L%2082.72487%2068.51778%20L%2084.69452%2074.65724%20L%2086.66415%2080.74455%20L%2088.63379%2086.73302%20L%2090.60344%2092.5792%20L%2092.57307%2098.24287%20L%2094.54271%20103.68724%20L%2096.51236%20108.87868%20L%2098.482%20113.78682%20L%20100.45163%20118.3847%20L%20102.42128%20122.64836%20L%20104.39091%20126.55757%20L%20106.36055%20130.09488%20L%20108.3302%20133.24644%20L%20110.29984%20136.00159%20L%20112.26947%20138.35303%20L%20114.2391%20140.29657%20L%20116.20876%20141.83148%20L%20118.17839%20142.96013%20L%20120.14803%20143.68814%20L%20122.11768%20144.02478%20L%20124.08731%20143.9821%20L%20126.05695%20143.57585%20L%20128.02658%20142.82487%20L%20129.99623%20141.75117%20L%20131.96587%20140.38019%20L%20133.9355%20138.7405%20L%20135.90515%20136.8645%20L%20137.87479%20134.78711%20L%20139.84442%20132.54628%20L%20141.81407%20130.18452%20L%20143.7837%20127.74709%20L%20145.75334%20125.28203%20L%20147.72298%20122.84091%20L%20149.69263%20120.47852%20L%20151.66226%20118.25249%20L%20153.6319%20116.22566%20L%20155.60155%20114.46292%20L%20157.57118%20113.03%20L%20159.54082%20112.00037%20L%20161.51045%20111.44814%20L%20163.4801%20111.45073%20L%20165.44974%20112.08879%20L%20167.41937%20113.44757%20L%20169.38902%20115.61545%20L%20171.35866%20118.68071%20L%20173.3283%20122.7417%20L%20175.29793%20127.89317%20L%20177.26758%20134.23566%20L%20179.23721%20141.8743%20L%20181.20685%20150.91608%20L%20183.1765%20161.47128%20L%20185.14613%20173.65431%20L%20187.11577%20187.58328%20L%20189.0854%20203.3758%20L%20191.05505%20221.15892%20L%20193.02469%20241.05989%20L%20194.99432%20263.20248%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%2032.4997%20111.37466%20L%2047.31334%2024.45807%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.168%20-.98573%20.98573%20.168%2047.31334%2024.45808%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%2048.09955%2019.84494%20L%2049.64072%2017.2041%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.50403%20-.86362%20.86362%20.50403%2049.64072%2017.2041%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%2051.99951%2013.16246%20L%2051.83585%2013.25583%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.86832%20-.49593%20.49593%20.86832%2051.83585%2013.25583%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20129.99878%20141.74957%20L%20131.20036%20140.8013%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.78493%20-.6195%20.6195%20.78493%20131.20035%20140.80132%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20134.87373%20137.90208%20L%20139.21744%20133.07747%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.66908%20-.74315%20.74315%20.66908%20139.21742%20133.07747%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20142.34866%20129.59961%20L%20149.10959%20121.4553%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.63869%20-.7694%20.7694%20.63869%20149.10959%20121.45532%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20152.09857%20117.85463%20L%20156.47557%20114.58197%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.80086%20-.5988%20.5988%20.80086%20156.47556%20114.58199%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20160.2235%20111.77965%20L%20157.89107%20112.1948%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.98451%20-.17525%20.17525%20.98451%20157.89105%20112.1948%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%3E%0D%0A%3Cpath%20d%3D%27M%2033.9997%20111.37466%20C%2033.9997%20112.2031%2033.32813%20112.87466%2032.4997%20112.87466%20C%2031.67126%20112.87466%2030.9997%20112.2031%2030.9997%20111.37466%20C%2030.9997%20110.54623%2031.67126%20109.87466%2032.4997%20109.87466%20C%2033.32813%20109.87466%2033.9997%20110.54623%2033.9997%20111.37466%20Z%20M%2032.4997%20111.37466%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%2053.49951%2013.16246%20C%2053.49951%2013.99089%2052.82794%2014.66246%2051.99951%2014.66246%20C%2051.17108%2014.66246%2050.49951%2013.99089%2050.49951%2013.16246%20C%2050.49951%2012.33403%2051.17108%2011.66246%2051.99951%2011.66246%20C%2052.82794%2011.66246%2053.49951%2012.33403%2053.49951%2013.16246%20Z%20M%2051.99951%2013.16246%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20131.49878%20141.74957%20C%20131.49878%20142.578%20130.82721%20143.24957%20129.99878%20143.24957%20C%20129.17035%20143.24957%20128.49878%20142.578%20128.49878%20141.74957%20C%20128.49878%20140.92114%20129.17035%20140.24957%20129.99878%20140.24957%20C%20130.82721%20140.24957%20131.49878%20140.92114%20131.49878%20141.74957%20Z%20M%20129.99878%20141.74957%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20163.99847%20111.37466%20C%20163.99847%20112.2031%20163.3269%20112.87466%20162.49847%20112.87466%20C%20161.67004%20112.87466%20160.99847%20112.2031%20160.99847%20111.37466%20C%20160.99847%20110.54623%20161.67004%20109.87466%20162.49847%20109.87466%20C%20163.3269%20109.87466%20163.99847%20110.54623%20163.99847%20111.37466%20Z%20M%20162.49847%20111.37466%27%2F%3E%0D%0A%3Cpath%20d%3D%27%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28185.78435%203.53297%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3Ex%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2868.54482%20150.99205%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3Ef%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-42.389532%27%20y%3D%2784.070615%27%3E%28%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-38.515053%27%20y%3D%2784.070615%27%3Ex%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-32.821121%27%20y%3D%2784.070615%27%3E%29%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke-width%3D%270.4%27%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E"><img class="img-fluid" src="data:image/svg+xml,%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0D%0A%3Csvg%20version%3D%271.1%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20xmlns%3Axlink%3D%27http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%27%20width%3D%27327.517838pt%27%20height%3D%27288.751412pt%27%20viewBox%3D%27-72.000004%20-72%20218.345225%20192.500941%27%3E%0D%0A%3Cstyle%20type%3D%27text%2Fcss%27%3E%0D%0A%3C%21%5BCDATA%5B%40font-face%7Bfont-family%3Almmi10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAUEAA0AAAAABowAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj%2F09TLzIAAAFMAAAAQgAAAFZWWV8FY21hcAAAAZAAAABMAAABSgOfCBNjdnQgAAAB3AAAAAQAAAAEACECeWdhc3AAAAHgAAAACAAAAAj%2F%2FwADZ2x5ZgAAAegAAAGuAAAB%2FATvmsJoZWFkAAADmAAAADEAAAA2LrdIP2hoZWEAAAPMAAAAIAAAACQFRgE3aG10eAAAA%2BwAAAAUAAAAFAbfAHNsb2NhAAAEAAAAAAwAAAAMALoBUm1heHAAAAQMAAAAHwAAACAASQCBbmFtZQAABCwAAAC%2BAAABIKOs5ldwb3N0AAAE7AAAABYAAAAsAFEAXXjaY2BgYGQAgsvb7s0A0c9WNm2G0QBcmwiJAAB42mNgZBJmnMDAysDA1MW0h4GBoQdCMz5gMGRkAooysDIzwAAjAxIISHNNAVJpDBVM7%2F6zMUQxHWQ4C1MDAL6QCwoAAHjaY2BgYGaAYBkGRgYQcAHyGMF8FgYNIM0GpBkZmBjSGCr%2B%2FwfywfT%2Fuf97oOqBgJGNAc5hZAISTAyogJGBSoAZQ4SFYXAAAJlVCbYAIQJ5AAAAAf%2F%2FAAJ42lWPu27UQBRA7x3v2uvHOut3kN8zsbMEQYK9thPWbEgEJBIhKZAQoqHLH4QqP5Aqff5it6SjSsMn8AE0SDR0QBi7QKIYzeicmdE9QCAFwC1yAwJI8GiJsN2upAF8L5bi8Gu7Egg%2FwlLo8LDDK0nEX%2B0KO14aqbFZGixF%2BdvtLbn5fZ6SdwAEqruSTMlneAlH%2FPdZzqgoiRKjOjq2O0dBFxjdXGDVG47Kom4WpLHKooMPcIFN3dRl4fUPuK3ItKLs2JbXX2jKSJscvpJVx7dCK7rnrjl0lmZPTD0YY%2FuWa%2F%2FNUBENaRJHVthrcplk5WF6ibI8Gvy52Hm8H5iEGRMr9ZOszYIPcxmfoqyo4W74XqemQHsH0LWEdz%2FJGn6CUzgDyGaMSjoymlezffw3IR%2BwS5H40onjFc0CyyLipr%2F7fynvjLDbKvyhKYJ7mvqBQf3j0OFBOZvTg2l4tnGQu5pKvNdUc%2B1aK5PQsX1P95K9zJv6mqDsbm08y91rRT1q88B%2BfvVxPEhM3Yl9Fp%2Bc3K931M6MEp9%2B2d4bDyLbNOh6Qp3YkOKHneZpfwFEiU4ZAAB42mNgZGBgAOIrM3ma4vltvjJwM78AijA8W9m0GU7L%2Fjdm0mA6CORyMDCBRAFj4AxhAAAAeNpjYGRgYDr435ghismGgeH%2FISYNBqAICmAFAHQnBIABbAAhAAAAAAFNAAAB6gA1AjwAHQAAACoAKgAqAJAA%2FnjaY2BkYGBgZQhgYGIAARDJyAASc2DQAwkAAAukAMsAeNpNjU0KwjAQhT%2F%2FFUVcicvgvqXJQsW1eAAXLoUuYin0B2J7AI%2FhATyBF3SiQcwwzJeZx3vAmCsd%2FOsyYhG4x5pL4AFTHoGHUi%2B5dvoT0c8%2FSs89DqwCD1hyDzxkxpMTloyWghQHJ5u1RSpwpKai%2BUwnCovCEJPI3EsXlFI5%2BrfRbInYSRvZGTZiUlfNsXaZVSZO1F4VZZlrD3ob7SKTGNGcxdpxEysf6G18CGfrbnldKR3L5z%2BMrwlveZ8nbwAAeNpjYGLAD1iBmJGBicGTIRoAAgAArwAA%29%20format%28%27woff%27%29%3B%7D%0D%0A%40font-face%7Bfont-family%3Arm-lmr10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAdsAA0AAAAACYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj%2F09TLzIAAAFMAAAAQgAAAFZWcV7mY21hcAAAAZAAAABdAAABWhGiIE9jdnQgAAAB8AAAAAQAAAAEACECeWdhc3AAAAH0AAAACAAAAAj%2F%2FwADZ2x5ZgAAAfwAAAPbAAAEqI56f9JoZWFkAAAF2AAAADEAAAA2LmVIPmhoZWEAAAYMAAAAHgAAACQFIQEBaG10eAAABiwAAAAkAAAAJAhjAVxsb2NhAAAGUAAAABoAAAAaBm4FOm1heHAAAAZsAAAAHwAAACAAVABwbmFtZQAABowAAAC6AAABJo5Vwjpwb3N0AAAHSAAAACMAAAA6AHQAUXjaY2BgYGQAgsvb7s0A0c9WNm2G0QBcmwiJAAB42mNgZLzNOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqQ0GCyYpf%2BbMEQxvWP4BVMDAOvpCwMAAHja3Y1bDkBADEXPPDDYggXw50NkFmLn%2BLKYKjMRtuA0fdybNgUcKTsMF4sqc2tP1N4QsBoDEzNRRL2eMc1yyC6brPk2Y0oew1gtli%2BvbedTL8oq1Pqs5R%2BcryQOGAAAAAAhAnkAAAAB%2F%2F8AAnjaVZPdT9tWGMbPsYntOl%2FYie0QnBjHxE7Ct%2B04IQSTNIJGpFBYhEqhlFJQ2dDGJrVd6ai0j6tKXGzaVE3qRLWpq9SpUjXQ%2FoBx04mN3a43u580adMuelWt6c4JDdLuzjmyf%2B%2FzPs%2F7AgKoAMA0cQ%2BQgAb9exAMFPfpNvCXuUd5fi%2FukwQ6gj0SP3vw8z5NwX%2BL%2BxC%2FW5zKGRanqZD54%2BlT4t7LqyoxDwABVl9RsEb8DSQQAcBjGzrXnnOytpYIQJoSwlKcsMwsrHG73%2FhZ2qx1jp3unByk2X883H3owOy3Pg%2BbuTx857vv7%2BQvplgAMHMYMdUWM2kb%2FYSWQCiRa8dIy3QhKgHVY1Loqxb5xTHDw%2B82fm78ckLGzDZgvPoTHqHeeRACaZBBThxzj0VCy0RII0wHoJbQDT1r51zSMkVJFOBRShh3oh%2FYyb7YYt%2BWk6x72UoqWfF5GVpJyX5tws%2FC0t25Xidwc%2BaL%2B%2FVc%2F%2FWZz32flsrFfLn45SdOJi8ydjm%2Fg%2Fq6gKo%2BQBpE1BlQs6hSlrN1jdIEM8eFqR4oOKYEH3SVYhTnbp2z42NdWkNT%2BDgxxDMlJfryRZxXSLLpkYlYB4jVC%2FqQRxpFo99zblsW8RKoJdyR07zQLjqKQjgIA1BQc%2FCgw8fS8z9sFOxShN%2B6OLsh8zSnyR0syU32libe%2BpEh4TX5SS3ArFuDlYwTn3vn3YkOmYx2CgocdC5X1t%2F%2FjfHyT5CGDPL0EGkYBS7OSTdc2KovNstrr2vTSJ6GX0cgvlLYY9H537fwcPGsO705WbsaEyXZFaY0vSArhUgweCrYO1Kc6EnPRzoNVRITN%2BsL24%2FH1oPhlZHi9LnhiBwTTTVmjVYGTIIkWIa8MLU42Z1qU%2BRoXI5XFq5N4%2Fxl5Ncz4iGIgTjagwTSm9W4IuxHedPIF%2BHYfsuUcCyj0DK0EAefrbVRlI9p%2FArZiC2kLy2nBTuy9vj584cK%2FOkUzRC%2BRo9yPoZDUfjYeQXeaOygWi1fEkADDsg1vUnQWRuPlJRomfM6KAJf0OQhU%2FoJPHnYMzx3h9cfpTsNywi50ZzMt8crxfWv9dK4PndrgeuqiLrkJ3mxkHEV%2Fmj5o9VIdXMk6U31iRExOjB6sLu8U%2B36eAVe6S7zssAMXOmZKrjJNbwL1Ik%2BvF8a6EazZDX3TDdOZEmi1EqGDNNYloOTDDWzQ9shxUmkcCg0c%2Bvtam2j1%2Bt%2Bdrs%2Bt31m9bY5m8vPCpfGyks3tts5OfBo3BFMd%2Bl0fWVidMiXqb53dmVzBi69UZhRB%2FsKZ7KND51q3X2zPO31x7oFJO8%2Fnf%2FpqwB42mNgZGBgAOJDsk5B8fw2Xxm4mZ8DRRierWzaDKdl%2FrMxXmd6B%2BRyMDCBRAFT%2FQyFAAAAeNpjYGRgYHr3n40hivELAxAwXmdgZEAFbABtdQQlAAABawAhAAAAAAFNAAABhQBjAYUAOQH0ACcAWQAyACoAHAAqACoAAAAqACoAKgBUAH4AwADmASgBfgG0AgQCVAAAeNpjYGRgYOBhsGdgYwABJiBmZACJOTDogQQACxQAxQB42l2NPQ6CQBCFP0WIf4WxsN7CFsJuIYQDEE9AZYuEhJ9k8QIewwN4Bq%2FngGti3GQy37x9Mw9YcmXG%2BOb4bB17HLk49tnwcByI%2FyW%2Fs8VK%2FOvJObLHmb1jnwN3xwE7njS0WDQxNK3V0nJ6Om5Tt1SUKAyROBSZlJWN8Gfvo2oSUVMpI5rhJIf67pb3tiqViWKVKduGU4SgTsI0NLERVyEBloF6ih0PjVEUpR3qvlM6kuE%2Fku8p3pqUJ8EAAHjaY2BiwA94gJiRgYmBG8gSZhBhEGUQYxBnkGSQBgAHhQDGAA%3D%3D%29%20format%28%27woff%27%29%3B%7D%0D%0A%40font-face%7Bfont-family%3Almsy10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAPAAA0AAAAABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnj%2F09TLzIAAAFMAAAAQwAAAFZ2Q39oY21hcAAAAZAAAAA%2BAAABQgAPJb1jdnQgAAAB0AAAAAQAAAAEACEBnWdhc3AAAAHUAAAACAAAAAj%2F%2FwADZ2x5ZgAAAdwAAAB8AAAAfOJdIJJoZWFkAAACWAAAADEAAAA2L0hICGhoZWEAAAKMAAAAHgAAACQEzwMPaG10eAAAAqwAAAAQAAAAEAkeAHRsb2NhAAACvAAAAAoAAAAKAGgAVG1heHAAAALIAAAAHwAAACAASAA6bmFtZQAAAugAAAC%2FAAABILm8%2FHNwb3N0AAADqAAAABYAAAAqAPYAA3jaY2BgYGQAgsvb7s0A0c9WNm2G0QBcmwiJAAB42mNgZOZinMDAysDA1Mm0m4GBoRtCM95nMGRkAooysHIyIAMHGCMgzTWFgUFJSEmIcd%2Ff6wxRjPvAwowgAgC9QQqYAHjaY2BgYGaAYBkGRgYQsAHyGMF8FgYFIM0ChEC%2BktD%2F%2FxDy7keoSgZGNgYYk4GRCUgwMaACRoZhDwB2iAbuAAAAIQGdAAAAAf%2F%2FAAIAAgAhAAABKQG%2BAAMABwAusQEALzyyBwQA7TKxBgXcPLIDAgDtMgCxAwAvPLIFBADtMrIHBgH8PLIBAgDtMjMRIREnMxEjIQEI58bGAb7%2BQiEBfAAAAgBTAOYCtgEOAAcACAAAJDQjISIUMyE3ArYh%2Fd8hIQIhIeYoKBQAeNpjYGRgYADi9ZOTtOL5bb4ycDM%2FB4owPFvZtBlOKzIwMG1j3AfkcjAwgUQBUGkLjwAAAHjaY2BkYGDcx8DAEMXMBSQZmLYxMDKgAhYAL%2B4B5QAAAwoAIQAAAAADCgAAAwoAUwAAACoAKgAqAD4AAHjaY2BkYGBgYeBkYGIAARDJyAASc2DQAwkAAASaAIMAeNpNjT0KwkAQhT%2F%2FFUWsxHKxT8huYYK1eAALS8FiDUJMYKOFpcfwAJ7ACzobF3GWYb6ZfbwHDDnRwlebAbPAHZYcAvcY8wzcl%2FeW31Z3JPppo%2FTcYcMicI85j8B9JrzYYcm5UXDEwc7mt%2BIosKWi5NpMJwqLwhCTyFxLF1youaN%2FF01KRCZt5GZYiUlVXreVy60ycaLWqrjUd%2B1Bp1EWmcSIZi%2FWTqzOTaC38SHsravPVal0LMt%2FGF8TPownJ8cAeNpjYGJABowM6IAFLMrE8B4AAbUA%2BgAA%29%20format%28%27woff%27%29%3B%7D%0D%0Atext.f0%20%7Bfont-family%3Almsy10%3Bfont-size%3A9.96264px%7D%0D%0Atext.f1%20%7Bfont-family%3Almmi10%3Bfont-size%3A9.96264px%7D%0D%0Atext.f2%20%7Bfont-family%3Arm-lmr10%3Bfont-size%3A9.96264px%7D%0D%0A%5D%5D%3E%0D%0A%3C%2Fstyle%3E%0D%0A%3Cg%20id%3D%27page1%27%3E%0D%0A%3Cg%20stroke-miterlimit%3D%2710%27%20transform%3D%27matrix%28.996264%200%200%20-.996264%20-58.025036%20100.141073%29%27%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cg%20fill%3D%27%23fff%27%3E%0D%0A%3Cpath%20d%3D%27M%20-14.02737%20-20.43622%20M%20-14.02737%20-20.43622%20L%20-14.02737%20172.7866%20L%20205.13664%20172.7866%20L%20205.13664%20-20.43622%20Z%20M%20205.13664%20172.7866%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke%3D%27none%27%20transform%3D%27matrix%281.00375%200%200%20-1.00375%2058.24263%20100.516602%29%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-9.72188%20-16.13072%29matrix%281.00375%200%200%20-1.00375%2058.24263%20100.516602%29matrix%28.996264%200%200%20-.996264%20-48.339479%2084.070615%29%27%20stroke%3D%27%23000%27%20stroke-miterlimit%3D%2710%27%20fill%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cg%20stroke-width%3D%270.2%27%20fill%3D%27%23808080%27%20stroke%3D%27%23808080%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%20-2.13422%20L%200.0%202.13422%20M%2032.4997%20-2.13422%20L%2032.4997%202.13422%20M%2097.49908%20-2.13422%20L%2097.49908%202.13422%20M%20129.99878%20-2.13422%20L%20129.99878%202.13422%20M%20162.49847%20-2.13422%20L%20162.49847%202.13422%20M%20194.99817%20-2.13422%20L%20194.99817%202.13422%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke-width%3D%270.2%27%20fill%3D%27%23808080%27%20stroke%3D%27%23808080%27%3E%0D%0A%3Cpath%20d%3D%27M%2062.86555%2040.49988%20L%2067.13321%2040.49988%20M%2062.86555%2080.99976%20L%2067.13321%2080.99976%20M%2062.86555%20121.49963%20L%2067.13321%20121.49963%20M%2062.86555%20161.99951%20L%2067.13321%20161.99951%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%200.0%200.0%20L%20192.9982%200.0%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28192.9982%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%201.99997%200.0%20L%20-1.19998%201.59998%20L%200.0%200.0%20L%20-1.19998%20-1.59998%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2064.99939%200.0%20L%2064.99939%20159.99954%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%280%201%20-1%200%2064.99939%20159.99954%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%201.99997%200.0%20L%20-1.19998%201.59998%20L%200.0%200.0%20L%20-1.19998%20-1.59998%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-6.3889%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E%E2%88%92%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-40.590731%27%20y%3D%2784.070615%27%3E2%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2826.1108%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E%E2%88%92%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-40.590731%27%20y%3D%2784.070615%27%3E1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2894.99908%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28127.49878%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E2%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28159.99847%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E3%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28192.49817%20-11.96443%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E4%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2854.33258%2037.35126%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E4%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2854.33258%2077.85114%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E6%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2854.33258%20118.35101%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E8%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2849.33258%20158.85089%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3E10%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3CclipPath%20id%3D%27pgfcp1%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%200.0%20L%20194.99817%200.0%20L%20194.99817%20161.99951%20L%200.0%20161.99951%20Z%27%2F%3E%20%3C%2FclipPath%3E%0D%0A%3Cg%20clip-path%3D%27url%28%23pgfcp1%29%27%3E%0D%0A%3Cpath%20d%3D%27M%200.0%20870.74738%20L%201.96964%20793.47385%20L%203.93927%20721.07042%20L%205.9089%20653.35313%20L%207.87856%20590.14052%20L%209.84819%20531.25424%20L%2011.81783%20476.52095%20L%2013.78748%20425.76828%20L%2015.75711%20378.82881%20L%2017.72675%20335.53722%20L%2019.69638%20295.73268%20L%2021.66603%20259.25696%20L%2023.63567%20225.95459%20L%2025.6053%20195.67467%20L%2027.57495%20168.26807%20L%2029.54459%20143.59041%20L%2031.51422%20121.49985%20L%2033.48386%20101.85744%20L%2035.4535%2084.52829%20L%2037.42314%2069.38039%20L%2039.39279%2056.28494%20L%2041.36243%2045.11673%20L%2043.33206%2035.75357%20L%2045.3017%2028.0766%20L%2047.27135%2021.97029%20L%2049.24098%2017.32231%20L%2051.21063%2014.0237%20L%2053.18027%2011.96873%20L%2055.1499%2011.05493%20L%2057.11954%2011.18315%20L%2059.08919%2012.25748%20L%2061.05882%2014.18536%20L%2063.02847%2016.8774%20L%2064.99811%2020.24756%20L%2066.96776%2024.21306%20L%2068.9374%2028.6944%20L%2070.90703%2033.61537%20L%2072.87666%2038.90298%20L%2074.84631%2044.48763%20L%2076.81595%2050.30293%20L%2078.7856%2056.28572%20L%2080.75523%2062.37617%20L%2082.72487%2068.51778%20L%2084.69452%2074.65724%20L%2086.66415%2080.74455%20L%2088.63379%2086.73302%20L%2090.60344%2092.5792%20L%2092.57307%2098.24287%20L%2094.54271%20103.68724%20L%2096.51236%20108.87868%20L%2098.482%20113.78682%20L%20100.45163%20118.3847%20L%20102.42128%20122.64836%20L%20104.39091%20126.55757%20L%20106.36055%20130.09488%20L%20108.3302%20133.24644%20L%20110.29984%20136.00159%20L%20112.26947%20138.35303%20L%20114.2391%20140.29657%20L%20116.20876%20141.83148%20L%20118.17839%20142.96013%20L%20120.14803%20143.68814%20L%20122.11768%20144.02478%20L%20124.08731%20143.9821%20L%20126.05695%20143.57585%20L%20128.02658%20142.82487%20L%20129.99623%20141.75117%20L%20131.96587%20140.38019%20L%20133.9355%20138.7405%20L%20135.90515%20136.8645%20L%20137.87479%20134.78711%20L%20139.84442%20132.54628%20L%20141.81407%20130.18452%20L%20143.7837%20127.74709%20L%20145.75334%20125.28203%20L%20147.72298%20122.84091%20L%20149.69263%20120.47852%20L%20151.66226%20118.25249%20L%20153.6319%20116.22566%20L%20155.60155%20114.46292%20L%20157.57118%20113.03%20L%20159.54082%20112.00037%20L%20161.51045%20111.44814%20L%20163.4801%20111.45073%20L%20165.44974%20112.08879%20L%20167.41937%20113.44757%20L%20169.38902%20115.61545%20L%20171.35866%20118.68071%20L%20173.3283%20122.7417%20L%20175.29793%20127.89317%20L%20177.26758%20134.23566%20L%20179.23721%20141.8743%20L%20181.20685%20150.91608%20L%20183.1765%20161.47128%20L%20185.14613%20173.65431%20L%20187.11577%20187.58328%20L%20189.0854%20203.3758%20L%20191.05505%20221.15892%20L%20193.02469%20241.05989%20L%20194.99432%20263.20248%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%2032.4997%20111.37466%20L%2047.31334%2024.45807%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.168%20-.98573%20.98573%20.168%2047.31334%2024.45808%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%2048.09955%2019.84494%20L%2049.64072%2017.2041%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.50403%20-.86362%20.86362%20.50403%2049.64072%2017.2041%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%2051.99951%2013.16246%20L%2051.83585%2013.25583%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.86832%20-.49593%20.49593%20.86832%2051.83585%2013.25583%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20129.99878%20141.74957%20L%20131.20036%20140.8013%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.78493%20-.6195%20.6195%20.78493%20131.20035%20140.80132%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20134.87373%20137.90208%20L%20139.21744%20133.07747%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.66908%20-.74315%20.74315%20.66908%20139.21742%20133.07747%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20142.34866%20129.59961%20L%20149.10959%20121.4553%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.63869%20-.7694%20.7694%20.63869%20149.10959%20121.45532%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20152.09857%20117.85463%20L%20156.47557%20114.58197%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.80086%20-.5988%20.5988%20.80086%20156.47556%20114.58199%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%2300f%27%20stroke%3D%27%2300f%27%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20160.2235%20111.77965%20L%20157.89107%20112.1948%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.98451%20-.17525%20.17525%20.98451%20157.89105%20112.1948%29%27%3E%0D%0A%3Cpath%20d%3D%27%20M%204.6799%200.0%20C%203.29324%200.26%201.03998%201.03998%20-0.51999%201.94995%20L%20-0.51999%20-1.94995%20C%201.03998%20-1.03998%203.29324%20-0.26%204.6799%200.0%20%20%27%20stroke%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%3E%0D%0A%3Cpath%20d%3D%27M%2033.9997%20111.37466%20C%2033.9997%20112.2031%2033.32813%20112.87466%2032.4997%20112.87466%20C%2031.67126%20112.87466%2030.9997%20112.2031%2030.9997%20111.37466%20C%2030.9997%20110.54623%2031.67126%20109.87466%2032.4997%20109.87466%20C%2033.32813%20109.87466%2033.9997%20110.54623%2033.9997%20111.37466%20Z%20M%2032.4997%20111.37466%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%2053.49951%2013.16246%20C%2053.49951%2013.99089%2052.82794%2014.66246%2051.99951%2014.66246%20C%2051.17108%2014.66246%2050.49951%2013.99089%2050.49951%2013.16246%20C%2050.49951%2012.33403%2051.17108%2011.66246%2051.99951%2011.66246%20C%2052.82794%2011.66246%2053.49951%2012.33403%2053.49951%2013.16246%20Z%20M%2051.99951%2013.16246%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20131.49878%20141.74957%20C%20131.49878%20142.578%20130.82721%20143.24957%20129.99878%20143.24957%20C%20129.17035%20143.24957%20128.49878%20142.578%20128.49878%20141.74957%20C%20128.49878%20140.92114%20129.17035%20140.24957%20129.99878%20140.24957%20C%20130.82721%20140.24957%20131.49878%20140.92114%20131.49878%20141.74957%20Z%20M%20129.99878%20141.74957%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20163.99847%20111.37466%20C%20163.99847%20112.2031%20163.3269%20112.87466%20162.49847%20112.87466%20C%20161.67004%20112.87466%20160.99847%20112.2031%20160.99847%20111.37466%20C%20160.99847%20110.54623%20161.67004%20109.87466%20162.49847%20109.87466%20C%20163.3269%20109.87466%20163.99847%20110.54623%20163.99847%20111.37466%20Z%20M%20162.49847%20111.37466%27%2F%3E%0D%0A%3Cpath%20d%3D%27%27%20fill%3D%27none%27%2F%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28185.78435%203.53297%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3Ex%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2868.54482%20150.99205%29matrix%281.00375%200%200%20-1.00375%2048.520752%2084.38588%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-48.339479%27%20y%3D%2784.070615%27%3Ef%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-42.389532%27%20y%3D%2784.070615%27%3E%28%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%27-38.515053%27%20y%3D%2784.070615%27%3Ex%3C%2Ftext%3E%0D%0A%3Ctext%20class%3D%27f2%27%20x%3D%27-32.821121%27%20y%3D%2784.070615%27%3E%29%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke-width%3D%270.4%27%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E" style="display:block; margin: .5em auto;" title="\begin{tikzpicture}[
+    background rectangle/.style={fill=white},
+    show background rectangle
+  ]
+    \begin{axis}[
+        axis lines=middle,
+        xmin=-2, xmax=4,
+        ymin=2, ymax=10,
+        xlabel={$x$}, ylabel={$f(x)$},
+      ]
+      \addplot [domain=-2:4, samples=100] {0.5*x^4 - 3*x^3 + 4*x^2 + 3*x + 3};
+      \draw[-latex,blue,thick] (axis cs: -1,7.5) -- (axis cs: -0.52,2.98);
+      \draw[-latex,blue,thick] (axis cs: -.52,2.98) -- (axis cs: -0.40, 2.65);
+      \draw[-latex,blue,thick] (axis cs: -0.40, 2.65) -- (axis cs: -0.28, 2.54);
+
+      \draw[-latex,blue,thick] (axis cs: 2,9) -- (axis cs: 2.15,8.81);
+      \draw[-latex,blue,thick] (axis cs: 2.15,8.81) -- (axis cs: 2.38,8.40);
+      \draw[-latex,blue,thick] (axis cs: 2.38,8.40) -- (axis cs: 2.68, 7.82);
+      \draw[-latex,blue,thick] (axis cs: 2.68, 7.82) -- (axis cs: 2.93, 7.52);
+      \draw[-latex,blue,thick] (axis cs: 2.93, 7.52) -- (axis cs: 3, 7.5);
+
+      \addplot [only marks,color=black,mark=*,mark size=1.5pt] coordinates {
+          (-1, 7.5)
+          (-.4, 2.65)
+          (2, 9)
+          (3, 7.5)};
+    \end{axis}
+  \end{tikzpicture}"/></a></p>
+</div>
+</section>
+<section class="level2" data-number="3.2" id="sec-gd">
+<h2 class="anchored" data-anchor-id="sec-gd" data-number="3.2"><span class="header-section-number">3.2</span> Birden fazla boyut</h2>
+<p>Çok boyutlu <span class="math inline">\(\Theta\)</span> durumunun genişletilmesi basittir. <span class="math inline">\(\Theta \in \mathbb{R}^m\)</span> olduğunu varsayalım, yani <span class="math inline">\(f: \mathbb{R}^m
+  \rightarrow \mathbb{R}\)</span>.</p>
+<p><span class="math inline">\(f\)</span>’in <span class="math inline">\(\Theta\)</span>’e göre gradient’i şöyledir:</p>
+<p><span class="math display">\[
+  \nabla_\Theta f =
+  \begin{bmatrix}
+    \partial f / \partial \Theta_1 \\
+    \vdots                         \\
+    \partial f / \partial \Theta_m
+  \end{bmatrix}
+  \]</span></p>
+<p>algorithm, 5. satırdaki güncelleme adımının şu şekilde olması dışında aynı kalır: <span class="math display">\[
+\Theta^{(t)} = \Theta^{(t-1)} - \eta\nabla_\Theta f(\Theta^{(t-1)})
+\]</span> ve <span class="math inline">\(\Theta\)</span>’in boyutuna bağlı tüm sonlandırma kriterlerinin değişmesi gerekecektir. En kolay şey, testi <span class="math inline">\(\left|f(\Theta^{(t)}) - f(\Theta^{(t-1)}) \right| &lt; \epsilon\)</span> olarak 6. satırda tutmaktır; bu, <span class="math inline">\(\Theta\)</span>’in boyutu ne olursa olsun mantıklıdır.</p>
+<div class="study-question-callout">
+<p>1D durumundaki hangi sonlandırma kriterleri <span class="math inline">\(\Theta\)</span>’in tek boyutlu olduğunu varsayacak şekilde tanımlandı?</p>
+</div>
+</section>
+<section class="level2 page-columns page-full" data-number="3.3" id="sec-gd_ridge">
+<h2 class="anchored" data-anchor-id="sec-gd_ridge" data-number="3.3"><span class="header-section-number">3.3</span> ridge regression uygulaması</h2>
+<p>Önceki bölümdeki Recall, bir loss function seçmenin, bir makine öğrenimi problemini bir optimizasyon problemi olarak formüle etmenin ilk adımı olduğunu ve regression için kaybı <span class="math inline">\(({\rm guess} - {\rm actual})^2\)</span> olarak yakalayan ortalama-squared loss’i inceledik. Bu, <em>ordinary least squares</em> hedefine götürür</p>
+<p><span class="math display">\[J(\theta) = \frac{1}{n}\sum_{i =
+    1}^n\left(\theta^Tx^{(i)} - y^{(i)}\right)^2 \;\;.   
+\]</span></p>
+<p>Parametrelere göre hedefin gradient’ini kullanırız:</p>
+<p>linear regression sorununa analitik bir çözüm elde etmek için <span class="math display">\[\nabla_{\theta}J = \frac{2}{n}\underbrace{{X}^T}_{d \times
+    n}\underbrace{({X}\theta - {Y})}_{n \times 1}\;\;,
+\]</span>{#eq-reg_gd_deriv}. Gradient descent, update rule kullanılarak bir çözümü sayısal olarak hesaplamak için de uygulanabilir. <span class="math display">\[
+\theta^{(t)} = \theta^{(t-1)} - \eta \frac{2}{n} \sum_{i=1}^{n} \left( \left[ \theta^{(t-1)}\right]^T x^{(i)} - y^{(i)} \right) x^{(i)}
+  \,.
+\]</span></p>
+<section class="level3 page-columns page-full" data-number="3.3.1" id="ridge-regression">
+<h3 class="anchored" data-anchor-id="ridge-regression" data-number="3.3.1"><span class="header-section-number">3.3.1</span> Ridge regression</h3>
+<p>Şimdi, ridge-regression’i elde etmek için regularization terimini ekleyelim. amaç: <span class="math display">\[
+J_{\text{ridge}}(\theta, \theta_0) = \frac{1}{n}\sum_{i = 1}^n\left(\theta^Tx^{(i)} + \theta_0 - y^{(i)}\right)^2 + \lambda\|\theta\|^2 \;\;.
+\]</span>  </p>
+<p>Recall, sıradan least squares’te, tüm 1’lere ekstra bir boyut ekleyerek <span class="math inline">\(\theta_0\)</span>’i işleme konusunda ustalaştık. ridge regression’te, gerçekten parameter vector <span class="math inline">\(\theta\)</span>’i <span class="math inline">\(\theta_0\)</span> uzaklığından ayırmamız gerekiyor ve bu nedenle, genel amaçlı gradient descent yöntemimiz açısından, tüm parameter setimiz <span class="math inline">\(\Theta\)</span> tanımlanır <span class="math inline">\(\Theta = (\theta, \theta_0)\)</span> olacak. Devam edip her biri için gradyanları ayrı ayrı bulacağız:</p>
+<p><span class="math display">\[\begin{aligned}
+  \nabla_\theta J_\text{ridge}(\theta, \theta_0)                      &amp; =  \frac{2}{n}\sum_{i=1}^n
+  \left(\theta^Tx^{(i)} + \theta_0 -
+  y^{(i)}\right) x^{(i)}
+  + 2\lambda\theta                                                                                 \\
+  \frac{\partial J_\text{ridge}(\theta, \theta_0)}{\partial \theta_0} &amp; =
+  \frac{2}{n}\sum_{i=1}^n
+  \left(\theta^Tx^{(i)} + \theta_0 -
+  y^{(i)} \right) \;\;.
+\end{aligned}
+\]</span></p>
+<p>Burada <span class="math inline">\(\theta_0\)</span>’i <span class="math inline">\(\theta\)</span>’ten ayırdığımız için <span class="math inline">\(\nabla_\theta J_\text{ridge}\)</span>’in <span class="math inline">\(d \times 1\)</span> şeklinde olacağını ve <span class="math inline">\(\partial J_\text{ridge}/\partial \theta_0\)</span>’in bir scalar olduğunu unutmayın.</p>
+<div class="study-question-callout">
+<p>Kendinizi tüm bunların boyutlarına ikna edin. <span class="math inline">\(\theta\)</span>’in <span class="math inline">\(d olduğu varsayımıyla miktarlar doğrudur
+    \times 1\)</span>. How does <span class="math inline">\(d\)</span> relate to <span class="math inline">\(m\)</span> as discussed for <span class="math inline">\(\Theta\)</span> önceki bölüm?</p>
+</div>
+<div class="study-question-callout">
+<p><span class="math inline">\(\nabla_\theta ||\theta||^2\)</span>’i bularak hesaplayın Kısmi türevlerin vector’i <span class="math inline">\((\partial ||\theta||^2 / \partial
+    \theta_1, \ldots, \partial ||\theta||^2 / \partial
+    \theta_d)\)</span>. What is the shape of <span class="math inline">\(\nabla_\theta ||\theta||^2\)</span>?</p>
+</div>
+<div class="study-question-callout">
+<p>Hesapla <span class="math inline">\(\nabla_\theta J_\text{ridge}(
+    \theta^T x + \theta_0, y)\)</span> değerini bularak Kısmi türevlerin vector’i <span class="math inline">\((\partial J_\text{ridge}(
+    \theta^T x + \theta_0, y)/ \partial \theta_1, \ldots,
+    \partial J_\text{ridge}(
+    \theta^T x + \theta_0, y) / \partial
+    \theta_d)\)</span>.</p>
+</div>
+<div class="study-question-callout">
+<p>Yukarıdaki türetmemizi doğrulamak için bu son iki sonucu kullanın.</p>
+</div>
+<p>Her şeyi bir araya getirdiğimizde, ridge regression için gradient descent algorithm ürünümüz şuna dönüşür:</p>
+<div class="pseudocode-container quarto-float" data-caption-prefix="Algorithm" data-chapter-level="3" data-comment-delimiter="//" data-indent-size="1.2em" data-line-number="true" data-line-number-punc=":" data-no-end="false" data-pseudocode-number="1">
+<div class="pseudocode">
+\begin{algorithm} \begin{algorithmic} \Procedure{RR-Gradient-Descent}{$\theta_{\it init}, \theta_{0 {\it init}},\eta,\epsilon$} \State $\theta^{(0)} \gets \theta_{\it init}$ \State $\theta_0^{(0)} \gets \theta_{0 {\it init}}$ \State $t \gets 0$ \Repeat \State $t \gets t+1$ \State $\theta^{(t)} = \theta^{(t-1)} - \eta\left(\frac{1}{n}\sum_{i=1}^n \left({{\theta}^{(t-1)}}^T {x}^{(i)} + {\theta_0}^{(t-1)} - {y}^{(i)}\right) {x}^{(i)} + \lambda{\theta}^{(t-1)} \right)$ \State $\theta_0^{(t)} = \theta_0^{(t-1)} - \eta\left(\frac{1}{n}\sum_{i=1}^n \left({{\theta}^{(t-1)}}^T {x}^{(i)} + {\theta_0}^{(t-1)} - {y}^{(i)} \right) \right)$ \Until{$\left| J_{\text{ridge}}(\theta^{(t)},\theta_0^{(t)}) - J_{\text{ridge}}(\theta^{(t-1)},\theta_0^{(t-1)}) \right| &lt;\epsilon$} \Return{$\theta^{(t)},\theta_0^{(t)}$} \EndProcedure \end{algorithmic} \end{algorithm}
+</div>
+</div>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Çift üst simgeye dikkat edin! <span class="math inline">\(\left[ \theta \right]^T\)</span>, vector <span class="math inline">\(\theta\)</span>’in transpose’idir.</p>
+</div></div><div class="study-question-callout">
+<p><span class="math inline">\(\lambda\)</span>’in 8. satırda görünmemesi sorun olur mu?</p>
+</div>
+<div class="study-question-callout">
+<p>gradient tanımlarındaki 2’lerin algorithm’te görünmemesi sorun olur mu?</p>
+</div>
+</section>
+</section>
+<section class="level2" data-number="3.4" id="sec-sgd">
+<h2 class="anchored" data-anchor-id="sec-sgd" data-number="3.4"><span class="header-section-number">3.4</span> Stochastic gradient descent</h2>
+<p>gradient’in biçimi bir toplam olduğunda, gradient yönünde büyük(imsi) bir adım atmak yerine, toplamın bir terimini rastgele seçip o yönde çok küçük bir adım atabiliriz. Bu biraz çılgınca görünebilir, ancak tek bir yerde kalırsanız, tüm küçük adımların ortalama olarak büyük adımla aynı yöne gideceğini unutmayın. Elbette orada kalmıyorsunuz, bu yüzden beklenti içinde gradient yönünde hareket ediyorsunuz.</p>
+<p>machine learning’teki amaç fonksiyonlarının çoğu, veri noktaları üzerinden ortalama olarak yazılabilir; bu durumda stochastic gradient descent (SGD), veri kümesinden rastgele bir veri noktası seçilerek, gradient’i veri kümesinde yalnızca bir nokta varmış gibi hesaplayarak ve olumsuz yönde küçük bir adım atarak uygulanır.</p>
+<p>Hedefimizin şu şekilde olduğunu varsayalım:</p>
+<p><span class="math display">\[J(\Theta) = \frac{1}{n}\sum_{i = 1}^n J_i(\Theta)
+  \;\;,
+\]</span> burada <span class="math inline">\(n\)</span>, hedefte kullanılan veri noktalarının sayısıdır (ve bu, tüm veri setinde mevcut olan noktaların sayısından farklı olabilir).</p>
+<p>SGD’i böyle bir nesnel <span class="math inline">\(J\)</span>’e uygulamak için sözde kod aşağıda verilmiştir; biçimini bildiğimizi varsayar <span class="math inline">\(\nabla_\Theta J_i\)</span>, <span class="math inline">\(1\ldots n\)</span>’teki tüm <span class="math inline">\(i\)</span> için. Standart gradient descent’in aksine, learning rate <span class="math inline">\(\eta(t)\)</span>’in artık <span class="math inline">\(t\)</span> yinelemesi tarafından indekslendiğini ve zamanla azalmasına olanak sağladığını unutmayın:</p>
+<div class="pseudocode-container quarto-float" data-caption-prefix="Algorithm" data-chapter-level="3" data-comment-delimiter="//" data-indent-size="1.2em" data-line-number="true" data-line-number-punc=":" data-no-end="false" data-pseudocode-number="1">
+<div class="pseudocode">
+\begin{algorithm} \begin{algorithmic} \Procedure{Stochastic-Gradient-Descent}{$\Theta_{init},\eta,\{J_i\}_{i=1}^n,\epsilon$} \State $\Theta^{(0)} \gets \Theta_{\it init}$ \State $t \gets 0$ \Repeat \State $t \gets t+1$ \State randomly select $i \in \{1, 2, \dots, n\}$ \State $\Theta^{(t)} = \Theta^{(t-1)} - \eta(t) \, \nabla_\Theta J_i(\Theta^{(t-1)})$ \Until{$\left|J(\Theta^{(t)}) - J(\Theta^{(t-1)})\right| &lt; \epsilon$} \Return{$\Theta^{(t)}$} \EndProcedure \end{algorithmic} \end{algorithm}
+</div>
+</div>
+<p>İyi bir durdurma kriteri seçmek, SGD için geleneksel gradient descent’e göre biraz daha yanıltıcı olabilir çünkü value hedefi adım adım gürültülü olabilir. Pratik olarak, <span class="math inline">\(T\)</span> sabit sayıda yinelemeden sonra durmak yaygın bir alternatiftir.</p>
+<p><span class="math inline">\(t\)</span> arttıkça SGD’in yerel bir optimum noktaya yakınlaşması için, learning rate’in zamanın bir fonksiyonu olarak azalması gerekir. Sonraki sonuç, çalışan bir learning rate dizisini gösterir.</p>
+<div class="theorem" id="thm-sgd">
+<p><span class="theorem-title"><strong>Teorem 3.2</strong></span> <em>Eğer <span class="math inline">\(f\)</span>, convex ise ve <span class="math inline">\(\eta(t)\)</span>, <span class="math display">\[\sum_{t = 1}^{\infty}\eta(t) = \infty \;\;\text{and}\;\;
+    \sum_{t = 1}^{\infty}\eta(t)^2 &lt; \infty \;\;,\]</span>’i karşılayan bir dizi ise, SGD, </em>’i bir* olasılıkla optimale yakınsar <span class="math inline">\(\Theta\)</span>.*</p>
+</div>
+<p>Neden bu iki koşul? Sezgi, <span class="math inline">\(\sum \eta(t)\)</span>’teki ilk koşulun, exploration’in sınırsız potansiyel aralığı olasılığına izin vermek için gerekli olduğu, <span class="math inline">\(\sum\eta(t)^2\)</span>’teki ikinci koşulun ise <span class="math inline">\(t\)</span> arttıkça öğrenme oranlarının giderek küçülmesini sağladığı yönündedir.</p>
+<p>learning rate’i ayarlamanın “yasal” bir yolu, <span class="math inline">\(\eta(t) = 1/t\)</span> yapmaktır ancak insanlar genellikle daha yavaş azalan kurallar kullanır ve bu nedenle convergence kriterlerini tam olarak karşılamazlar.</p>
+<div class="study-question-callout">
+<p>Optimumdan uzun bir yola başlarsanız, <span class="math inline">\(\eta(t)\)</span>’in daha yavaş azalması, optimuma doğru daha hızlı veya daha yavaş ilerlemenize neden olur mu?</p>
+</div>
+<p>SGD’in algoritmik olarak neden normal gradient descent’ten daha iyi bir seçim olabileceğine dair birçok sezgi var:</p>
+<ul>
+<li><p>GD genellikle bir veri kümesindeki her veri noktası üzerinde bir miktar miktarın hesaplanmasını gerektirir. SGD, verilerin yalnızca bir kısmını ziyaret ettikten sonra iyi performans gösterebilir. Bu davranış, çalışma zamanı ve bellek tasarrufu açısından çok büyük veri kümeleri için yararlı olabilir.</p></li>
+<li><p><span class="math inline">\(J\)</span>’iniz aslında convex değilse ancak GD’i yakalayabilecek pek çok yüzeysel yerel optimum noktaya sahipse, bir noktada gradient’ten <em>örneklerini</em> alın <span class="math inline">\(\Theta\)</span> sizi çevrede ve yerel optimum noktalardan uzağa “sıçratabilir”.</p></li>
+<li><p>Bazen <span class="math inline">\(J\)</span>’i gerçekten iyi bir şekilde optimize etmek yapmak istediğimiz şey değildir çünkü training set’e fazla uyum sağlayabilir; yani aslında, SGD, training error’i GD’ten daha düşük alamasa da, daha düşük test error ile sonuçlanabilir.</p></li>
+</ul>
+</section>
+<section class="level2" data-number="3.5" id="sec-minibatch">
+<h2 class="anchored" data-anchor-id="sec-minibatch" data-number="3.5"><span class="header-section-number">3.5</span> Mini-batch gradient descent</h2>
+<p>Uygulamada, GD ve SGD arasındaki ortak orta nokta <em>mini-batch gradient descent</em>’tir. Her adımda gradient’i tahmin etmek için tam veri setini (GD) veya tek bir veri noktasını (SGD) kullanmak yerine, mini toplu GD, <span class="math inline">\(b\)</span> veri noktalarının küçük bir alt kümesini rastgele seçer.</p>
+<div class="pseudocode-container quarto-float" data-caption-prefix="Algorithm" data-chapter-level="3" data-comment-delimiter="//" data-indent-size="1.2em" data-line-number="true" data-line-number-punc=":" data-no-end="false" data-pseudocode-number="1">
+<div class="pseudocode">
+\begin{algorithm} \begin{algorithmic} \Procedure{Mini-batch-Gradient-Descent}{$\Theta_{init},\eta,b,\{J_i\}_{i=1}^n,\epsilon$} \State $\Theta^{(0)} \gets \Theta_{\it init}$ \State $t \gets 0$ \Repeat \State $t \gets t+1$ \State $B \gets$ random mini-batch of size $b$ from $\{1, \ldots, n\}$ \State $\Theta^{(t)} = \Theta^{(t-1)} - \eta \, \nabla_\Theta J_B(\Theta^{(t-1)})$ \Until{$\left|J(\Theta^{(t)}) - J(\Theta^{(t-1)})\right| &lt; \epsilon$} \Return{$\Theta^{(t)}$} \EndProcedure \end{algorithmic} \end{algorithm}
+</div>
+</div>
+<p>Burada <span class="math inline">\(\nabla_\Theta J_B(\Theta) = \frac{1}{b}\sum_{i \in B} \nabla_\Theta J_i(\Theta)\)</span>, mini parti <span class="math inline">\(B\)</span> üzerinden ortalaması alınan gradient’tir. Bu, SGD’e göre daha doğru bir gradient tahmini sağlarken, GD’e göre adım başına çok daha ucuz kalır.</p>
+</section>
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Kopyalandı");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Kopyalandı");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+<div class="nav-page nav-page-previous">
+<a aria-label="Regression" class="pagination-link" href="./regression.html">
+<i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>  <span class="chapter-title">Regression</span></span>
+</a>
+</div>
+<div class="nav-page nav-page-next">
+<a aria-label="Classification" class="pagination-link" href="./classification.html">
+<span class="nav-page-text"><span class="chapter-number">4</span>  <span class="chapter-title">Classification</span></span> <i class="bi bi-arrow-right-short"></i>
+</a>
+</div>
+</nav>
+</div> <!-- /content -->
+<script type="text/javascript">
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        let pseudocodeOptions = {
+          indentSize: el.dataset.indentSize || "1.2em",
+          commentDelimiter: el.dataset.commentDelimiter || "//",
+          lineNumber: el.dataset.lineNumber === "true" ? true : false,
+          lineNumberPunc: el.dataset.lineNumberPunc || ":",
+          noEnd: el.dataset.noEnd === "true" ? true : false,
+          titlePrefix: el.dataset.captionPrefix || "Algorithm"
+        };
+        pseudocode.renderElement(el.querySelector(".pseudocode"), pseudocodeOptions);
+      });
+    })(document);
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        let captionSpan = el.querySelector(".ps-root > .ps-algorithm > .ps-line > .ps-keyword")
+        if (captionSpan !== null) {
+          let captionPrefix = el.dataset.captionPrefix + " ";
+          let captionNumber = "";
+          if (el.dataset.pseudocodeNumber) {
+            captionNumber = el.dataset.pseudocodeNumber + " ";
+            if (el.dataset.chapterLevel) {
+              captionNumber = el.dataset.chapterLevel + "." + captionNumber;
+            }
+          }
+          captionSpan.innerHTML = captionPrefix + captionNumber;
+        }
+      });
+    })(document);
+    </script>
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

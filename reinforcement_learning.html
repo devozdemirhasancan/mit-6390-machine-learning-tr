@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+
+<html lang="tr" xml:lang="tr" xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta charset="utf-8"/>
+<meta content="quarto-1.10.18" name="generator"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=yes" name="viewport"/>
+<title>12  Reinforcement Learning – 6.390 - Machine Learning'e Giriş</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta content="./" name="quarto:offset"/>
+<link href="./matrix_calculus.html" rel="next"/>
+<link href="./mdp.html" rel="prev"/>
+<link href="./assets/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet"/>
+<link class="quarto-color-scheme" href="site_libs/quarto-html/quarto-syntax-highlighting-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<link class="quarto-color-scheme quarto-color-alternate" href="site_libs/quarto-html/quarto-syntax-highlighting-dark-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<link class="quarto-color-scheme-extra" href="site_libs/quarto-html/quarto-syntax-highlighting-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet"/>
+<link append-hash="true" class="quarto-color-scheme" data-mode="light" href="site_libs/bootstrap/bootstrap-c0d695abc4efa72cfba88dcf11645824.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<link append-hash="true" class="quarto-color-scheme quarto-color-alternate" data-mode="dark" href="site_libs/bootstrap/bootstrap-dark-ad73eeac00dcd6e430ad3806ef4d1812.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<link append-hash="true" class="quarto-color-scheme-extra" data-mode="light" href="site_libs/bootstrap/bootstrap-c0d695abc4efa72cfba88dcf11645824.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<script src="site_libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.js"></script>
+<link href="site_libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.css" rel="stylesheet"/>
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Sonuç yok",
+    "search-matching-documents-text": "eşleşen belgeler",
+    "search-copy-link-title": "Aramak için bağlantıyı kopyalayın",
+    "search-hide-matches-text": "Ek eşleşmeleri gizle",
+    "search-more-match-text": "bu belgede bir tane daha eşleşme",
+    "search-more-matches-text": "bu belgede daha fazla eşleşme",
+    "search-clear-button-title": "Temizle",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "İptal et",
+    "search-submit-button-title": "Gönder",
+    "search-label": "Ara"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+<link href="assets/style.css" rel="stylesheet"/>
+<meta content="12  Reinforcement Learning – 6.390 - Machine Learning’e Giriş" name="twitter:title"/>
+<meta content="" name="twitter:description"/>
+<meta content="summary" name="twitter:card"/>
+</head>
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+<div id="quarto-search-results"></div>
+<header class="headroom fixed-top" id="quarto-header">
+<nav class="quarto-secondary-nav">
+<div class="container-fluid d-flex">
+<button aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Kenar çubuğunu değiştir" class="quarto-btn-toggle btn" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="button" type="button">
+<i class="bi bi-layout-text-sidebar-reverse"></i>
+</button>
+<nav aria-label="breadcrumb" class="quarto-page-breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./reinforcement_learning.html"><span class="chapter-number">12</span>  <span class="chapter-title">Reinforcement Learning</span></a></li></ol></nav>
+<a aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Kenar çubuğunu değiştir" class="flex-grow-1" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="navigation">
+</a>
+<button aria-label="Ara" class="btn quarto-search-button" onclick="window.quartoOpenSearch();" type="button">
+<i class="bi bi-search"></i>
+</button>
+</div>
+</nav>
+</header>
+<!-- content -->
+<div class="quarto-container page-columns page-rows-contents page-layout-article" id="quarto-content">
+<!-- sidebar -->
+<nav class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" id="quarto-sidebar">
+<div class="pt-lg-2 mt-2 text-left sidebar-header">
+<div class="sidebar-title mb-0 py-0">
+<a href="./">6.390 - Machine Learning’e Giriş</a>
+<div class="sidebar-tools-main tools-wide">
+<a aria-label="English Original" class="quarto-navigation-tool px-1" href="https://introml.mit.edu/notes/" title="English Original"><i class="bi bi-translate"></i></a>
+<a aria-label="Accessibility" class="quarto-navigation-tool px-1" href="https://accessibility.mit.edu/" title="Accessibility"><i class="bi bi-universal-access"></i></a>
+<a aria-label="Kaynak Kodu" class="quarto-navigation-tool px-1" href="https://github.com/390introml/notes" title="Kaynak Kodu"><i class="bi bi-github"></i></a>
+<div class="dropdown">
+<a aria-expanded="false" aria-label="Share" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" href="" id="quarto-navigation-tool-dropdown-0" role="link" title="Share"><i class="bi bi-share"></i></a>
+<ul aria-labelledby="quarto-navigation-tool-dropdown-0" class="dropdown-menu">
+<li>
+<a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+<i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+</li>
+<li>
+<a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+<i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+</li>
+</ul>
+</div>
+<a class="quarto-color-scheme-toggle quarto-navigation-tool px-1" href="" onclick="window.quartoToggleColorScheme(); return false;" title="Karanlık modu değiştir"><i class="bi"></i></a>
+<a class="quarto-reader-toggle quarto-navigation-tool px-1" href="" onclick="window.quartoToggleReader(); return false;" title="Okuyucu modunu değiştir">
+<div class="quarto-reader-toggle-btn">
+<i class="bi"></i>
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class="mt-2 flex-shrink-0 align-items-center">
+<div class="sidebar-search">
+<div class="" id="quarto-search" title="Ara"></div>
+</div>
+</div>
+<div class="sidebar-menu-container">
+<ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./index.html">
+<span class="menu-text"><span class="chapter-number">1</span>  <span class="chapter-title">Giriş</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./regression.html">
+<span class="menu-text"><span class="chapter-number">2</span>  <span class="chapter-title">Regression</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./gradient_descent.html">
+<span class="menu-text"><span class="chapter-number">3</span>  <span class="chapter-title">Gradient Descent</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./classification.html">
+<span class="menu-text"><span class="chapter-number">4</span>  <span class="chapter-title">Classification</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./feature_representation.html">
+<span class="menu-text"><span class="chapter-number">5</span>  <span class="chapter-title">Feature Representation</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./neural_networks.html">
+<span class="menu-text"><span class="chapter-number">6</span>  <span class="chapter-title">Sinir Ağları</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./convolutional_neural_networks.html">
+<span class="menu-text"><span class="chapter-number">7</span>  <span class="chapter-title">Evrişimsel Sinir Ağları</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./representation.html">
+<span class="menu-text"><span class="chapter-number">8</span>  <span class="chapter-title">Representation Learning</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./transformers.html">
+<span class="menu-text"><span class="chapter-number">9</span>  <span class="chapter-title">Transformatörler</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./non_parametric.html">
+<span class="menu-text"><span class="chapter-number">10</span>  <span class="chapter-title">Non-parametric Models</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./mdp.html">
+<span class="menu-text"><span class="chapter-number">11</span>  <span class="chapter-title">Markov Karar Süreçleri</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link active" href="./reinforcement_learning.html">
+<span class="menu-text"><span class="chapter-number">12</span>  <span class="chapter-title">Reinforcement Learning</span></span></a>
+</div>
+</li>
+<li class="sidebar-item sidebar-item-section">
+<div class="sidebar-item-container">
+<a aria-expanded="true" class="sidebar-item-text sidebar-link text-start" data-bs-target="#quarto-sidebar-section-1" data-bs-toggle="collapse" role="navigation">
+<span class="menu-text">Ekler</span></a>
+<a aria-expanded="true" aria-label="Bölümü değiştir" class="sidebar-item-toggle text-start" data-bs-target="#quarto-sidebar-section-1" data-bs-toggle="collapse" role="navigation">
+<i class="bi bi-chevron-right ms-2"></i>
+</a>
+</div>
+<ul class="collapse list-unstyled sidebar-section depth1 show" id="quarto-sidebar-section-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./matrix_calculus.html">
+<span class="menu-text"><span class="chapter-number">A</span>  <span class="chapter-title">Matrix Calculus</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./neural_network_appendix.html">
+<span class="menu-text"><span class="chapter-number">B</span>  <span class="chapter-title">Sinir Ağlarını Optimize Etme</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./nutshell.html">
+<span class="menu-text"><span class="chapter-number">C</span>  <span class="chapter-title">Genel durum</span></span></a>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="quarto-sidebar-footer"><div class="sidebar-footer-item">
+<p><small>© MIT ve 6.390 (eski adıyla 6.036) ders ekibi. <a href="https://introml.mit.edu/notes/">English original</a>. Hasan için hazırlanmış Türkçe çeviri/uyarlamadır; MIT tarafından onaylandığı anlamına gelmez. <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> ile lisanslanmıştır.</small></p>
+</div></div></nav>
+<div class="quarto-sidebar-collapse-item" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" id="quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+<div class="sidebar margin-sidebar" id="quarto-margin-sidebar">
+<nav class="toc-active" id="TOC" role="doc-toc">
+<h2 id="toc-title">İçindekiler</h2>
+<ul>
+<li><a class="nav-link active" data-scroll-target="#rl" href="#rl" id="toc-rl"><span class="header-section-number">12.1</span> Reinforcement learning algoritmalarına genel bakış</a>
+<ul>
+<li><a class="nav-link" data-scroll-target="#model-içermeyen-yöntemler" href="#model-içermeyen-yöntemler" id="toc-model-içermeyen-yöntemler"><span class="header-section-number">12.1.1</span> Model içermeyen yöntemler</a></li>
+<li><a class="nav-link" data-scroll-target="#sec-q_learning" href="#sec-q_learning" id="toc-sec-q_learning"><span class="header-section-number">12.1.2</span> Q-learning</a></li>
+<li><a class="nav-link" data-scroll-target="#sec-fitted_q" href="#sec-fitted_q" id="toc-sec-fitted_q"><span class="header-section-number">12.1.3</span> Takılı Q-learning</a></li>
+</ul></li>
+<li><a class="nav-link" data-scroll-target="#sec-rl_policy_search" href="#sec-rl_policy_search" id="toc-sec-rl_policy_search"><span class="header-section-number">12.2</span> Policy gradient</a></li>
+<li><a class="nav-link" data-scroll-target="#sec-rl_model_based" href="#sec-rl_model_based" id="toc-sec-rl_model_based"><span class="header-section-number">12.3</span> Model tabanlı RL</a></li>
+<li><a class="nav-link" data-scroll-target="#sec-bandit" href="#sec-bandit" id="toc-sec-bandit"><span class="header-section-number">12.4</span> Haydut sorunları</a></li>
+</ul>
+</nav>
+</div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+<header class="quarto-title-block default" id="title-block-header">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">12</span>  <span class="chapter-title">Reinforcement Learning</span></h1>
+</div>
+<div class="quarto-title-meta">
+</div>
+</header>
+<p><em>Reinforcement learning</em> (RL), bir agent’in bir environment ile etkileşim kurarak karar vermeyi öğrendiği bir machine learning türüdür. Diğer öğrenme paradigmalarından farklı olarak RL’in birkaç ayırt edici özelliği vardır:</p>
+<ul>
+<li>agent, bir environment ile doğrudan etkileşime girerek ödül veya ceza şeklinde geri bildirim alır.</li>
+<li>agent, environment’ten alacağı bilgileri etkileyen eylemleri seçebilir</li>
+<li>agent, daha fazla deneyim kazandıkça karar verme stratejisini adım adım günceller</li>
+</ul>
+<p>Bir reinforcement learning probleminde, agent ve environment arasındaki etkileşim belirli bir modeli izler:</p>
+<div class="imagify">
+<p><a class="lightbox" data-gallery="quarto-lightbox-gallery-1" href="data:image/svg+xml,%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0D%0A%3Csvg%20version%3D%271.1%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20xmlns%3Axlink%3D%27http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%27%20width%3D%27271.72927pt%27%20height%3D%27110.422715pt%27%20viewBox%3D%27-72.000004%20-71.999999%20181.152847%2073.615143%27%3E%0D%0A%3Cstyle%20type%3D%27text%2Fcss%27%3E%0D%0A%3C%21%5BCDATA%5B%40font-face%7Bfont-family%3Aec-lmr10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAh0AA0AAAAACvwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnky09TLzIAAAFMAAAAQgAAAFZVu17oY21hcAAAAZAAAAByAAABahOsFl9jdnQgAAACBAAAAAQAAAAEACECeWdhc3AAAAIIAAAACAAAAAj%2F%2FwADZ2x5ZgAAAhAAAASyAAAF%2BGCr8XloZWFkAAAGxAAAADEAAAA2L0NJwWhoZWEAAAb4AAAAHgAAACQF0QLWaG10eAAABxgAAAA4AAAAOBbvAWBsb2NhAAAHUAAAAB4AAAAeCmYItm1heHAAAAdwAAAAHwAAACAAVAB2bmFtZQAAB5AAAAC7AAABJoE7oSZwb3N0AAAITAAAACgAAAA%2BAeoBjXjaY2BgYGQAgsvb7s0A0c9WNkvCaABWowdXAAB42mNgZLzGOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqQSGcqZpf%2BbMEQxbWPghqkBAOjVCk8AAHjazY1LCoNQDEXPe37qfwUuyG2IdtCJggjupBQHgt1omlelFKdOPJCEcwkJ4LFVicHRqpmv%2B1Q6CyIsITV3HvSMTCKa1zTqHYNzecsqi8zykud%2B5w8T8guN1WaPC5zHww%2F0DzcnUQxJmkHORfgAFOUUJQAAACECeQAAAAH%2F%2FwACeNpVVEls20YUnRmKpKiNpsQhRdlaKEqiLMmyRYqmXMmyZWdzbBTOaidemyauA2RpA7RBgCRtE7tAkxZJkVsOzbHHIj4UQQ9JT0EvvTY99JYCRYHm0gW5tE5naDtwDxzM%2FwPOf%2B%2F99wcgoAMAe9F9wAAeVB9C0N%2Fa4H3ghfWQY39ubTCIbMFDhqZZmt7gOfhPawPSvC3pkmlLhg79vz59iu7%2Fu6KjWQB8IPPqb%2FgcfgcsYINh0AYg7xhYNrKFYVivQrNgZDksK7Y16JDQGLQtJQk5nuRSkCRdb3VMmSN%2FOPVBF8PnWg53IUlyD4%2FMJmSssRo2Jno7V1unG3ty%2FXtFpqQnGl9NlvLO8sUTjcZoPvx9T7IiuaM1RUvIgiRXx9p5Ptl3rGBFawW9VnLs0c5Avj7rOw0AAlmC9wHBWwAmwVo3sjwpXUWktm2pEbiDleKm2zbjwAfhAKOfUvqqPUft%2FbluWcNyYn54%2FtqHs4VhI%2B6%2FHAiclctHh84v51FSlBOaUnvj08drmlHUWACoRqQmEtE3QAEqKIJeAHSHsJV4TMV4rZCLXVOmaEyihEvhkFMk1hN36wlr6uT69eOH6%2FfuBSsHO8VkurxvvDeYjuXREl1%2Faq8tLa6NjQU%2FkKV9o9WFxYHRliT%2FQGv3bPNNgTQogfI25wjjldF3qHoA2sgxjTZjWymEPdKh0oAa2F9KQVXyz83OXFmbLe3LxcZeoGTJ6MrVMH85FMlVJd%2F4wAonHr70yeKpdaPfFNbrk3qkt9OPaX3iOfASfQEkEPUwAPs1dyyRtmPXUpn6Lpu8rOHPaprmXEArblqJp7wvkoIXg%2BlofvPPTDjNMGgeZ3SZfoD2NEMWFX4LKqDP07aKiPkK1Hu8s6uQ6niu3PLgVgapcRwXBCU1eab%2F83pCc95719GO1MtpuktDNhx8cqCh5c%2BepSpv%2FuUVT4czjyZmWvZvXrSj8TOicQAEQZKwJBrv%2BId6m4%2FA7aa2Ie0qhs9uzC18vHZi7uYRRWrnJ00tHhvJHDQTPy7fuv34xs1F%2F8lKtjheeWuhomc75WXKsYfM7jnC0fMP9O7%2FHzlLdYwdemoEbYsJz5UytVbkNqV2aaaI6%2FERV0CMENSiXd3wmpYbL1%2FYTS2avP%2FmBQj5WEhWFYXW1Qm3VcJtHOyhvMyCWfVtDQupoFqDwx4WnuM9xirxioK9aTbJuGc5IjQBMgLb0N0CtFrKTqtxE3c5zfN%2BjmEEH%2BPnw1yw0Dg6VVas1upQo9kREcvTA1aGSPD3dQ5Nf%2BSUdJFlI2JCSvdd8fmgIJ6JBEK80DNx2oh2hWITvdbE3iAXENdEQUYo6C9PNyn%2BGME%2Fhd4h%2BiW33yYCzpFsx3CMCOKxLckp5CGb0grJ8Tt3NIiHq8eS1Vy0Zl0dcp3mOaikH1WnO0jZ%2FL3cjAuHBum9UTLTT%2BDXwAEkhA5nmDhFXg8%2BCEmjbYfPmpi0WuWZrZBEihpLQfLkdUOqhBsbdNETvbjQnWbn3mabq5U%2BO8RGjy%2BxzfMLZkK47vNHed%2BZFT4s8L73lTa8S%2FsDNcUffgWgKvq6aSxytT9gMMR5QUjd%2FDIU8Idg9%2BYvMSEAD7QRGY%2F%2FAAyxCsIAAHjaY2BkYGAAYi6z2SHx%2FDZfGbiZnwNFGJ6tbJaE00L%2FvzLtZ9oG5HIwMIFEATU9C6UAAAB42mNgZGBg2vb%2FK0MU0yUGIGDaz8DIgAr4AHzcBKwAAAFrACEAAAAAAU0AAAH0ACABvAAiAiwAIgG8ABwBFgAhAiwAIAH0ABwBiAAcAYoAIQGFABMC0gASAAAAKgAqACoAggC8APoBOgFsAawB3gIaAnoCpgL8AAB42mNgZGBg4GNwZWBhAAEmIGZkAIk5MOiBBAALsgDLAHjaXY1NCsIwFIQ%2FrS3%2BLcSF6yzcpjRZqHgA8QSu3JVYBNtC2gt4DA%2FgGbyerzWCGHi8L5PJDDDmwoDuDImZB45Ycw4cM%2BMROBH%2FS14Ho4n4p72z44gjy8AxK%2B6BExY8uVHiMWRwK72RdaCmou23p8ChsKTiUOxlHDn6599HNWxF3clY0SwbCaqr9lD7wimbZmqvXK77CkGz1TttMyuukwR6Gq59bRfUVXFyvrnWlTKpXP4r%2BUbxBoN0J2UAeNpjYGLAD%2FiAmJGBicGFwY3BncGDwYchkCGIIZQhjCGcIQoAJeMDeA%3D%3D%29%20format%28%27woff%27%29%3B%7D%0D%0A%40font-face%7Bfont-family%3Aec-lmr12%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAfsAA0AAAAACuQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnky09TLzIAAAFMAAAAQgAAAFZVo18IY21hcAAAAZAAAACAAAABgiLlFm9jdnQgAAACEAAAAAQAAAAEACECeWdhc3AAAAIUAAAACAAAAAj%2F%2FwADZ2x5ZgAAAhwAAAQeAAAFyCssMRJoZWFkAAAGPAAAADEAAAA2L51Jt2hoZWEAAAZwAAAAHgAAACQGIAM1aG10eAAABpAAAAA4AAAAOBicAXJsb2NhAAAGyAAAAB4AAAAeCngI7m1heHAAAAboAAAAHwAAACAAVAB9bmFtZQAABwgAAAC7AAABJoM9pSpwb3N0AAAHxAAAACgAAAA%2BAcgBcnjaY2BgYGQAgsvb7s0A0c9WNkvCaABWowdXAAB42mNgZPzLOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqRcGcqYFf5bMkQxrWbggqkBAPM5ClcAAHjaY2BgYGaAYBkGRgYQqAHyGMF8FoYEIC3CIAAUYWFwZfBhSGRIZchkyGcoYihhKPv%2FHyiLEM2Fif7f93%2FH%2FyX%2FF%2F6f93%2F2%2F5n%2FZ%2FyfDjUZAzCyMcClGJmABBO6AgbiADOEYsEmxwrEQHsY2IGYg5OLgYGbgYeBl2GwAADPnRt5ACECeQAAAAH%2F%2FwACeNqNlE9s21Qcx9%2FvOYmTJnUT%2F7drO7Gd2En%2FJK0dJ%2BnaZHQ0ReraDQpdVw1NLUPbAbG1B8QB1MG0oQ5RIe0yaRInTojD1J4Ghx172Z3DhAQ3JNCATgguNPCcdGijYsKHp%2Fd%2Bst73832%2FPwgjEyEo4TuIQjQq7wCqTO3SEfTI24lFv53apTDZoh0qDEfD8C4dgz%2BndiGM%2Bxkz4%2FoZ24T4D3t7%2BM7BRROfRQijElk28ReojCrkdpuJDIPlBBnfEwXyOx8bhqBamwRPlHzXFMJwJgwKJoc3xfiAMTLrbeWYc21HFJ32OSZ34625lKgefM%2F7suzzeLQIKGgdNzhGBWasDXR77DeVeWXjOz1jHPxiZHRA4dfjOIa%2FRDbKdzliPY5QO4jZlvus9DGRiqTShjOZX84xWtPQ33tX7inCHyogPdvIlcQ0o2LFYHWMQ7FHT8QiyPrrd3gI97uem6iFUCGwBd5qQrUMrmNbMYEXvVpQtVtAVHVggAR8r1Y3yLmFA5cnRE5QbUXqAjwU5yle8Oaar8l5yU%2B3zOL0JzdXJyozA9Rwrk%2FS2M9PlgqBPDJUGxxYaTSmZ%2B5aVoUtz44LosSWDONEq4jXpgPfc%2FKVOFvUqiemx%2FJZzxD6KLjQ4zUI723CqyODvNMQQvmqbdEM2FYZN8EMUQ%2BpCR7UXbtF%2BZ6BJbidjEfYUy4%2FNJ4DIUOvnFl654Ol0kyea%2F1MGSMmU%2FD4GLzN9014aedMk4syixs3zq9dt8rj1%2BvzudRQuySF%2BqTu0D7eRiziCEEWIT8Ic0MLvZTYQs33JKrL0H2nYH9M2BpTFF9baFsNnRM0jRcHdcaA9aTOFjq%2F5vpJUvDrJFbUdK6b%2FxxClAJfoTl0EiEzsMpA0uF0s0GThcG0HTwrSBjIL2Snw3NClJJVeDptLtRn0%2ByGVTfTUdjyFbmqLr6q%2BsrL%2FvyRrY4Z5t5CTRxtOheUopq6lNS5Qme%2FC633576eW17%2F6eih5wEniAcP%2Bf%2Fy8P%2FwceKQ9b8x%2F2F7LthhzTwgNdOHkkhGCqnxp%2FLj8nTMcp1qveZJogAPNs%2BubF5dXtmcV91bjpZ1Pnaz36xu3bz%2F4bXzibXKi9OVvdHJifKbYZ400p1rxKOLimQX3nnUmf3EmtSryVoAa252yYaPQkfa0hsSX5Va9b6IrDBpGa7K1pUrT1th9c9OXYaUwvMCF2qyxMssvoQGQ%2FVur5L%2BIzMqsAObAZoMKt7AXZlZ0TFmtrdFOP7CklwsiaP%2B%2BxP1oHkZZP3e6XXMd350G1pyYaI3c8J7H8NdMnEKxAsZM65gYIGnk0Ca2%2B%2Beydzjwq6vc6Sn4LE%2BushJUfrieqyhnF4dGkx8GqHjqfi1aIK3RLgVwgObjicynQ6oGayGgZTUuZOiOXipf0DpR%2BhviHL%2B3AAAeNpjYGRgYABivxShK%2FH8Nl8ZuJmfA0UYnq1sloTTQv%2B%2FMUsyrQZyORiYQKIAPrULXwAAAHjaY2BkYGBa%2Ff8bQxSzAQMQMEsyMDKgAj4AX64DXAAAAWsAIQAAAAABTQAAApoAKQJkACkB6gAiAbMAHgEQACEDMAAgAiAAIAHqAB4BfQAcAX0AEgIFABIAAAAqACoAKgBuAKQA%2FAE8AW4B0AIWAkICfAKoAuQAAHjaY2BkYGDgY%2FBhYGEAASYgZmQAiTkw6IEEAAxhANIAeNpdjU0KwjAQhT%2BtLf4txIXrLNymNFmoeADxBK7clVgE20LaC3gMD%2BAZvJ7TGkEMDPNl5s17wJgLA7o3JGYeOGLNOXDMjEfgRPQv2Q5GE9FPe2XHEUeWgWNW3AMnLHhyo8RjsHArvZF2oKai7bunwKFkm5JJ30s5cvTP3Wdq2Mp0J2VFadmIUV21h9oXTtk0U3vlct1HCJqt3mmbWVGdxNDTcO1jO6MuipPzzbWulEnl8x%2FJ14o3h%2FYncQB42mNgYsAP%2BICYkYGJQYNBn8GFwYPBhyGAIZAhiCGUIZwhEgAhgAM7%29%20format%28%27woff%27%29%3B%7D%0D%0Atext.f0%20%7Bfont-family%3Aec-lmr12%3Bfont-size%3A14.346196px%7D%0D%0Atext.f1%20%7Bfont-family%3Aec-lmr10%3Bfont-size%3A9.96264px%7D%0D%0A%5D%5D%3E%0D%0A%3C%2Fstyle%3E%0D%0A%3Cg%20id%3D%27page1%27%3E%0D%0A%3Cg%20stroke-miterlimit%3D%2710%27%20transform%3D%27matrix%28.996264%200%200%20-.996264%2017.038523%20-35.19243%29%27%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cpath%20d%3D%27M%2022.92924%2036.7456%20L%20-22.92924%2036.7456%20C%20-25.13841%2036.7456%20-26.92924%2034.95477%20-26.92924%2032.7456%20L%20-26.92924%2024.15988%20C%20-26.92924%2021.95071%20-25.13841%2020.15988%20-22.92924%2020.15988%20L%2022.92924%2020.15988%20C%2025.13841%2020.15988%2026.92924%2021.95071%2026.92924%2024.15988%20L%2026.92924%2032.7456%20C%2026.92924%2034.95477%2025.13841%2036.7456%2022.92924%2036.7456%20Z%20M%20-26.92924%2020.15988%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-23.59627%2023.49286%29matrix%281.00375%200%200%20-1.00375%20-17.102417%20-35.324402%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2717.038523%27%20y%3D%27-35.19243%27%3ELearner%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2039.18427%20-20.15988%20L%20-39.18427%20-20.15988%20C%20-41.39343%20-20.15988%20-43.18427%20-21.95071%20-43.18427%20-24.15988%20L%20-43.18427%20-32.7456%20C%20-43.18427%20-34.95477%20-41.39343%20-36.7456%20-39.18427%20-36.7456%20L%2039.18427%20-36.7456%20C%2041.39343%20-36.7456%2043.18427%20-34.95477%2043.18427%20-32.7456%20L%2043.18427%20-24.15988%20C%2043.18427%20-21.95071%2041.39343%20-20.15988%2039.18427%20-20.15988%20Z%20M%20-43.18427%20-36.7456%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-39.85129%20-33.41263%29matrix%281.00375%200%200%20-1.00375%20-17.102417%20-35.324402%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2717.038523%27%20y%3D%27-35.19243%27%3EEn%3Ctspan%20x%3D%2734.010202%27%3Evironmen%3C%2Ftspan%3E%0D%0A%3Ctspan%20x%3D%2790.980676%27%3Et%3C%2Ftspan%3E%0D%0A%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20-43.38426%20-28.45274%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20-46.12665%20-24.27222%20C%20-55.59894%20-9.83241%20-50.42792%2012.1497%20-32.22577%2023.01161%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.85143%20.52438%20-.52438%20.85143%20-32.21631%2022.99858%29%27%20stroke-width%3D%270.64%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.55997%202.07996%20C%20-1.42996%201.29997%200.0%200.12999%200.38998%200.0%20C%200.0%20-0.12999%20-1.42996%20-1.29997%20-1.55997%20-2.07996%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-44.85265%20-.8593%29matrix%281.00375%200%200%20-1.00375%20-17.102417%20-35.324402%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%2717.038523%27%20y%3D%27-35.19243%27%3Erew%3Ctspan%20x%3D%2732.286737%27%3Eard%3C%2Ftspan%3E%0D%0A%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20-43.38426%20-31.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20-47.50192%20-28.46234%20C%20-73.0071%20-10.89615%20-65.80292%2023.84167%20-32.79572%2030.4681%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.97815%20.2078%20-.2078%20.97815%20-32.79147%2030.45593%29%27%20stroke-width%3D%270.64%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.55997%202.07996%20C%20-1.42996%201.29997%200.0%200.12999%200.38998%200.0%20C%200.0%20-0.12999%20-1.42996%20-1.29997%20-1.55997%20-2.07996%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-86.03944%203.5721%29matrix%281.00375%200%200%20-1.00375%20-17.102417%20-35.324402%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%2717.038523%27%20y%3D%27-35.19243%27%3Estate%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2027.12924%2028.45274%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%2032.11658%2028.09889%20C%2059.70013%2026.14143%2070.22812%20-4.3234%2047.82782%20-24.83705%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.72899%20-.68446%20.68446%20-.72899%2047.81625%20-24.82835%29%27%20stroke-width%3D%270.64%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.55997%202.07996%20C%20-1.42996%201.29997%200.0%200.12999%200.38998%200.0%20C%200.0%20-0.12999%20-1.42996%20-1.29997%20-1.55997%20-2.07996%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2862.46002%203.55531%29matrix%281.00375%200%200%20-1.00375%20-17.102417%20-35.324402%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%2717.038523%27%20y%3D%27-35.19243%27%3Eaction%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E"><img class="img-fluid" src="data:image/svg+xml,%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0D%0A%3Csvg%20version%3D%271.1%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20xmlns%3Axlink%3D%27http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%27%20width%3D%27271.72927pt%27%20height%3D%27110.422715pt%27%20viewBox%3D%27-72.000004%20-71.999999%20181.152847%2073.615143%27%3E%0D%0A%3Cstyle%20type%3D%27text%2Fcss%27%3E%0D%0A%3C%21%5BCDATA%5B%40font-face%7Bfont-family%3Aec-lmr10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAh0AA0AAAAACvwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnky09TLzIAAAFMAAAAQgAAAFZVu17oY21hcAAAAZAAAAByAAABahOsFl9jdnQgAAACBAAAAAQAAAAEACECeWdhc3AAAAIIAAAACAAAAAj%2F%2FwADZ2x5ZgAAAhAAAASyAAAF%2BGCr8XloZWFkAAAGxAAAADEAAAA2L0NJwWhoZWEAAAb4AAAAHgAAACQF0QLWaG10eAAABxgAAAA4AAAAOBbvAWBsb2NhAAAHUAAAAB4AAAAeCmYItm1heHAAAAdwAAAAHwAAACAAVAB2bmFtZQAAB5AAAAC7AAABJoE7oSZwb3N0AAAITAAAACgAAAA%2BAeoBjXjaY2BgYGQAgsvb7s0A0c9WNkvCaABWowdXAAB42mNgZLzGOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqQSGcqZpf%2BbMEQxbWPghqkBAOjVCk8AAHjazY1LCoNQDEXPe37qfwUuyG2IdtCJggjupBQHgt1omlelFKdOPJCEcwkJ4LFVicHRqpmv%2B1Q6CyIsITV3HvSMTCKa1zTqHYNzecsqi8zykud%2B5w8T8guN1WaPC5zHww%2F0DzcnUQxJmkHORfgAFOUUJQAAACECeQAAAAH%2F%2FwACeNpVVEls20YUnRmKpKiNpsQhRdlaKEqiLMmyRYqmXMmyZWdzbBTOaidemyauA2RpA7RBgCRtE7tAkxZJkVsOzbHHIj4UQQ9JT0EvvTY99JYCRYHm0gW5tE5naDtwDxzM%2FwPOf%2B%2F99wcgoAMAe9F9wAAeVB9C0N%2Fa4H3ghfWQY39ubTCIbMFDhqZZmt7gOfhPawPSvC3pkmlLhg79vz59iu7%2Fu6KjWQB8IPPqb%2FgcfgcsYINh0AYg7xhYNrKFYVivQrNgZDksK7Y16JDQGLQtJQk5nuRSkCRdb3VMmSN%2FOPVBF8PnWg53IUlyD4%2FMJmSssRo2Jno7V1unG3ty%2FXtFpqQnGl9NlvLO8sUTjcZoPvx9T7IiuaM1RUvIgiRXx9p5Ptl3rGBFawW9VnLs0c5Avj7rOw0AAlmC9wHBWwAmwVo3sjwpXUWktm2pEbiDleKm2zbjwAfhAKOfUvqqPUft%2FbluWcNyYn54%2FtqHs4VhI%2B6%2FHAiclctHh84v51FSlBOaUnvj08drmlHUWACoRqQmEtE3QAEqKIJeAHSHsJV4TMV4rZCLXVOmaEyihEvhkFMk1hN36wlr6uT69eOH6%2FfuBSsHO8VkurxvvDeYjuXREl1%2Faq8tLa6NjQU%2FkKV9o9WFxYHRliT%2FQGv3bPNNgTQogfI25wjjldF3qHoA2sgxjTZjWymEPdKh0oAa2F9KQVXyz83OXFmbLe3LxcZeoGTJ6MrVMH85FMlVJd%2F4wAonHr70yeKpdaPfFNbrk3qkt9OPaX3iOfASfQEkEPUwAPs1dyyRtmPXUpn6Lpu8rOHPaprmXEArblqJp7wvkoIXg%2BlofvPPTDjNMGgeZ3SZfoD2NEMWFX4LKqDP07aKiPkK1Hu8s6uQ6niu3PLgVgapcRwXBCU1eab%2F83pCc95719GO1MtpuktDNhx8cqCh5c%2BepSpv%2FuUVT4czjyZmWvZvXrSj8TOicQAEQZKwJBrv%2BId6m4%2FA7aa2Ie0qhs9uzC18vHZi7uYRRWrnJ00tHhvJHDQTPy7fuv34xs1F%2F8lKtjheeWuhomc75WXKsYfM7jnC0fMP9O7%2FHzlLdYwdemoEbYsJz5UytVbkNqV2aaaI6%2FERV0CMENSiXd3wmpYbL1%2FYTS2avP%2FmBQj5WEhWFYXW1Qm3VcJtHOyhvMyCWfVtDQupoFqDwx4WnuM9xirxioK9aTbJuGc5IjQBMgLb0N0CtFrKTqtxE3c5zfN%2BjmEEH%2BPnw1yw0Dg6VVas1upQo9kREcvTA1aGSPD3dQ5Nf%2BSUdJFlI2JCSvdd8fmgIJ6JBEK80DNx2oh2hWITvdbE3iAXENdEQUYo6C9PNyn%2BGME%2Fhd4h%2BiW33yYCzpFsx3CMCOKxLckp5CGb0grJ8Tt3NIiHq8eS1Vy0Zl0dcp3mOaikH1WnO0jZ%2FL3cjAuHBum9UTLTT%2BDXwAEkhA5nmDhFXg8%2BCEmjbYfPmpi0WuWZrZBEihpLQfLkdUOqhBsbdNETvbjQnWbn3mabq5U%2BO8RGjy%2BxzfMLZkK47vNHed%2BZFT4s8L73lTa8S%2FsDNcUffgWgKvq6aSxytT9gMMR5QUjd%2FDIU8Idg9%2BYvMSEAD7QRGY%2F%2FAAyxCsIAAHjaY2BkYGAAYi6z2SHx%2FDZfGbiZnwNFGJ6tbJaE00L%2FvzLtZ9oG5HIwMIFEATU9C6UAAAB42mNgZGBg2vb%2FK0MU0yUGIGDaz8DIgAr4AHzcBKwAAAFrACEAAAAAAU0AAAH0ACABvAAiAiwAIgG8ABwBFgAhAiwAIAH0ABwBiAAcAYoAIQGFABMC0gASAAAAKgAqACoAggC8APoBOgFsAawB3gIaAnoCpgL8AAB42mNgZGBg4GNwZWBhAAEmIGZkAIk5MOiBBAALsgDLAHjaXY1NCsIwFIQ%2FrS3%2BLcSF6yzcpjRZqHgA8QSu3JVYBNtC2gt4DA%2FgGbyerzWCGHi8L5PJDDDmwoDuDImZB45Ycw4cM%2BMROBH%2FS14Ho4n4p72z44gjy8AxK%2B6BExY8uVHiMWRwK72RdaCmou23p8ChsKTiUOxlHDn6599HNWxF3clY0SwbCaqr9lD7wimbZmqvXK77CkGz1TttMyuukwR6Gq59bRfUVXFyvrnWlTKpXP4r%2BUbxBoN0J2UAeNpjYGLAD%2FiAmJGBicGFwY3BncGDwYchkCGIIZQhjCGcIQoAJeMDeA%3D%3D%29%20format%28%27woff%27%29%3B%7D%0D%0A%40font-face%7Bfont-family%3Aec-lmr12%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAfsAA0AAAAACuQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnky09TLzIAAAFMAAAAQgAAAFZVo18IY21hcAAAAZAAAACAAAABgiLlFm9jdnQgAAACEAAAAAQAAAAEACECeWdhc3AAAAIUAAAACAAAAAj%2F%2FwADZ2x5ZgAAAhwAAAQeAAAFyCssMRJoZWFkAAAGPAAAADEAAAA2L51Jt2hoZWEAAAZwAAAAHgAAACQGIAM1aG10eAAABpAAAAA4AAAAOBicAXJsb2NhAAAGyAAAAB4AAAAeCngI7m1heHAAAAboAAAAHwAAACAAVAB9bmFtZQAABwgAAAC7AAABJoM9pSpwb3N0AAAHxAAAACgAAAA%2BAcgBcnjaY2BgYGQAgsvb7s0A0c9WNkvCaABWowdXAAB42mNgZPzLOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqRcGcqYFf5bMkQxrWbggqkBAPM5ClcAAHjaY2BgYGaAYBkGRgYQqAHyGMF8FoYEIC3CIAAUYWFwZfBhSGRIZchkyGcoYihhKPv%2FHyiLEM2Fif7f93%2FH%2FyX%2FF%2F6f93%2F2%2F5n%2FZ%2FyfDjUZAzCyMcClGJmABBO6AgbiADOEYsEmxwrEQHsY2IGYg5OLgYGbgYeBl2GwAADPnRt5ACECeQAAAAH%2F%2FwACeNqNlE9s21Qcx9%2FvOYmTJnUT%2F7drO7Gd2En%2FJK0dJ%2BnaZHQ0ReraDQpdVw1NLUPbAbG1B8QB1MG0oQ5RIe0yaRInTojD1J4Ghx172Z3DhAQ3JNCATgguNPCcdGijYsKHp%2Fd%2Bst73832%2FPwgjEyEo4TuIQjQq7wCqTO3SEfTI24lFv53apTDZoh0qDEfD8C4dgz%2BndiGM%2Bxkz4%2FoZ24T4D3t7%2BM7BRROfRQijElk28ReojCrkdpuJDIPlBBnfEwXyOx8bhqBamwRPlHzXFMJwJgwKJoc3xfiAMTLrbeWYc21HFJ32OSZ34625lKgefM%2F7suzzeLQIKGgdNzhGBWasDXR77DeVeWXjOz1jHPxiZHRA4dfjOIa%2FRDbKdzliPY5QO4jZlvus9DGRiqTShjOZX84xWtPQ33tX7inCHyogPdvIlcQ0o2LFYHWMQ7FHT8QiyPrrd3gI97uem6iFUCGwBd5qQrUMrmNbMYEXvVpQtVtAVHVggAR8r1Y3yLmFA5cnRE5QbUXqAjwU5yle8Oaar8l5yU%2B3zOL0JzdXJyozA9Rwrk%2FS2M9PlgqBPDJUGxxYaTSmZ%2B5aVoUtz44LosSWDONEq4jXpgPfc%2FKVOFvUqiemx%2FJZzxD6KLjQ4zUI723CqyODvNMQQvmqbdEM2FYZN8EMUQ%2BpCR7UXbtF%2BZ6BJbidjEfYUy4%2FNJ4DIUOvnFl654Ol0kyea%2F1MGSMmU%2FD4GLzN9014aedMk4syixs3zq9dt8rj1%2BvzudRQuySF%2BqTu0D7eRiziCEEWIT8Ic0MLvZTYQs33JKrL0H2nYH9M2BpTFF9baFsNnRM0jRcHdcaA9aTOFjq%2F5vpJUvDrJFbUdK6b%2FxxClAJfoTl0EiEzsMpA0uF0s0GThcG0HTwrSBjIL2Snw3NClJJVeDptLtRn0%2ByGVTfTUdjyFbmqLr6q%2BsrL%2FvyRrY4Z5t5CTRxtOheUopq6lNS5Qme%2FC633576eW17%2F6eih5wEniAcP%2Bf%2Fy8P%2FwceKQ9b8x%2F2F7LthhzTwgNdOHkkhGCqnxp%2FLj8nTMcp1qveZJogAPNs%2BubF5dXtmcV91bjpZ1Pnaz36xu3bz%2F4bXzibXKi9OVvdHJifKbYZ400p1rxKOLimQX3nnUmf3EmtSryVoAa252yYaPQkfa0hsSX5Va9b6IrDBpGa7K1pUrT1th9c9OXYaUwvMCF2qyxMssvoQGQ%2FVur5L%2BIzMqsAObAZoMKt7AXZlZ0TFmtrdFOP7CklwsiaP%2B%2BxP1oHkZZP3e6XXMd350G1pyYaI3c8J7H8NdMnEKxAsZM65gYIGnk0Ca2%2B%2Beydzjwq6vc6Sn4LE%2BushJUfrieqyhnF4dGkx8GqHjqfi1aIK3RLgVwgObjicynQ6oGayGgZTUuZOiOXipf0DpR%2BhviHL%2B3AAAeNpjYGRgYABivxShK%2FH8Nl8ZuJmfA0UYnq1sloTTQv%2B%2FMUsyrQZyORiYQKIAPrULXwAAAHjaY2BkYGBa%2Ff8bQxSzAQMQMEsyMDKgAj4AX64DXAAAAWsAIQAAAAABTQAAApoAKQJkACkB6gAiAbMAHgEQACEDMAAgAiAAIAHqAB4BfQAcAX0AEgIFABIAAAAqACoAKgBuAKQA%2FAE8AW4B0AIWAkICfAKoAuQAAHjaY2BkYGDgY%2FBhYGEAASYgZmQAiTkw6IEEAAxhANIAeNpdjU0KwjAQhT%2BtLf4txIXrLNymNFmoeADxBK7clVgE20LaC3gMD%2BAZvJ7TGkEMDPNl5s17wJgLA7o3JGYeOGLNOXDMjEfgRPQv2Q5GE9FPe2XHEUeWgWNW3AMnLHhyo8RjsHArvZF2oKai7bunwKFkm5JJ30s5cvTP3Wdq2Mp0J2VFadmIUV21h9oXTtk0U3vlct1HCJqt3mmbWVGdxNDTcO1jO6MuipPzzbWulEnl8x%2FJ14o3h%2FYncQB42mNgYsAP%2BICYkYGJQYNBn8GFwYPBhyGAIZAhiCGUIZwhEgAhgAM7%29%20format%28%27woff%27%29%3B%7D%0D%0Atext.f0%20%7Bfont-family%3Aec-lmr12%3Bfont-size%3A14.346196px%7D%0D%0Atext.f1%20%7Bfont-family%3Aec-lmr10%3Bfont-size%3A9.96264px%7D%0D%0A%5D%5D%3E%0D%0A%3C%2Fstyle%3E%0D%0A%3Cg%20id%3D%27page1%27%3E%0D%0A%3Cg%20stroke-miterlimit%3D%2710%27%20transform%3D%27matrix%28.996264%200%200%20-.996264%2017.038523%20-35.19243%29%27%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cpath%20d%3D%27M%2022.92924%2036.7456%20L%20-22.92924%2036.7456%20C%20-25.13841%2036.7456%20-26.92924%2034.95477%20-26.92924%2032.7456%20L%20-26.92924%2024.15988%20C%20-26.92924%2021.95071%20-25.13841%2020.15988%20-22.92924%2020.15988%20L%2022.92924%2020.15988%20C%2025.13841%2020.15988%2026.92924%2021.95071%2026.92924%2024.15988%20L%2026.92924%2032.7456%20C%2026.92924%2034.95477%2025.13841%2036.7456%2022.92924%2036.7456%20Z%20M%20-26.92924%2020.15988%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-23.59627%2023.49286%29matrix%281.00375%200%200%20-1.00375%20-17.102417%20-35.324402%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2717.038523%27%20y%3D%27-35.19243%27%3ELearner%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2039.18427%20-20.15988%20L%20-39.18427%20-20.15988%20C%20-41.39343%20-20.15988%20-43.18427%20-21.95071%20-43.18427%20-24.15988%20L%20-43.18427%20-32.7456%20C%20-43.18427%20-34.95477%20-41.39343%20-36.7456%20-39.18427%20-36.7456%20L%2039.18427%20-36.7456%20C%2041.39343%20-36.7456%2043.18427%20-34.95477%2043.18427%20-32.7456%20L%2043.18427%20-24.15988%20C%2043.18427%20-21.95071%2041.39343%20-20.15988%2039.18427%20-20.15988%20Z%20M%20-43.18427%20-36.7456%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-39.85129%20-33.41263%29matrix%281.00375%200%200%20-1.00375%20-17.102417%20-35.324402%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2717.038523%27%20y%3D%27-35.19243%27%3EEn%3Ctspan%20x%3D%2734.010202%27%3Evironmen%3C%2Ftspan%3E%0D%0A%3Ctspan%20x%3D%2790.980676%27%3Et%3C%2Ftspan%3E%0D%0A%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20-43.38426%20-28.45274%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20-46.12665%20-24.27222%20C%20-55.59894%20-9.83241%20-50.42792%2012.1497%20-32.22577%2023.01161%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.85143%20.52438%20-.52438%20.85143%20-32.21631%2022.99858%29%27%20stroke-width%3D%270.64%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.55997%202.07996%20C%20-1.42996%201.29997%200.0%200.12999%200.38998%200.0%20C%200.0%20-0.12999%20-1.42996%20-1.29997%20-1.55997%20-2.07996%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-44.85265%20-.8593%29matrix%281.00375%200%200%20-1.00375%20-17.102417%20-35.324402%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%2717.038523%27%20y%3D%27-35.19243%27%3Erew%3Ctspan%20x%3D%2732.286737%27%3Eard%3C%2Ftspan%3E%0D%0A%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20-43.38426%20-31.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%20-47.50192%20-28.46234%20C%20-73.0071%20-10.89615%20-65.80292%2023.84167%20-32.79572%2030.4681%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.97815%20.2078%20-.2078%20.97815%20-32.79147%2030.45593%29%27%20stroke-width%3D%270.64%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.55997%202.07996%20C%20-1.42996%201.29997%200.0%200.12999%200.38998%200.0%20C%200.0%20-0.12999%20-1.42996%20-1.29997%20-1.55997%20-2.07996%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-86.03944%203.5721%29matrix%281.00375%200%200%20-1.00375%20-17.102417%20-35.324402%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%2717.038523%27%20y%3D%27-35.19243%27%3Estate%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2027.12924%2028.45274%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20stroke-width%3D%270.8%27%3E%0D%0A%3Cpath%20d%3D%27M%2032.11658%2028.09889%20C%2059.70013%2026.14143%2070.22812%20-4.3234%2047.82782%20-24.83705%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.72899%20-.68446%20.68446%20-.72899%2047.81625%20-24.82835%29%27%20stroke-width%3D%270.64%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.55997%202.07996%20C%20-1.42996%201.29997%200.0%200.12999%200.38998%200.0%20C%200.0%20-0.12999%20-1.42996%20-1.29997%20-1.55997%20-2.07996%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2862.46002%203.55531%29matrix%281.00375%200%200%20-1.00375%20-17.102417%20-35.324402%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f1%27%20x%3D%2717.038523%27%20y%3D%27-35.19243%27%3Eaction%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E" style="display:block; margin: .5em auto;" title="\begin{tikzpicture}[main node/.style={draw,rounded corners,font=\Large},
+      arr/.style={-&gt;, thick, shorten &lt;=5pt, shorten &gt;=5pt,}]
+    \node[main node] (rl) at (0,1) {Learner};
+    \node[main node] (env) at (0,-1) {Environment};
+    \draw (env.west) edge[arr, bend left=50, looseness=1.1]
+      node[right] {reward} ($ (rl.west) + (0, -0.1)$);
+    \draw ($ (env.west) + (0,-0.1)$) edge[arr, bend left=70, looseness=1.5]
+      node[left] {state} ($ (rl.west) + (0, 0.1)$);
+    \draw (rl.east) edge[arr, bend left=70, looseness=1.5]
+      node[right] {action} (env.east);
+  \end{tikzpicture}"/></a></p>
+</div>
+<p>Etkileşim döngüsü şu şekilde ilerler:</p>
+<ol type="1">
+<li>Agent mevcut <em>state</em> <span class="math inline">\(s^{(i)}\)</span>’i gözlemler</li>
+<li>Agent, bir <em>action</em> <span class="math inline">\(a^{(i)}\)</span>’i seçer ve çalıştırır</li>
+<li>Agent, environment’ten bir <em>reward</em> <span class="math inline">\(r^{(i)}\)</span> alır</li>
+<li>Agent, yeni <em>state</em> <span class="math inline">\(s^{(i+1)}\)</span>’i gözlemliyor</li>
+<li>Agent yeni bir <em>action</em> <span class="math inline">\(a^{(i+1)}\)</span>’i seçer ve çalıştırır</li>
+<li>Agent, yeni bir <em>reward</em> <span class="math inline">\(r^{(i+1)}\)</span> alıyor</li>
+<li>Bu döngü devam ediyor…</li>
+</ol>
+<p>MDP <a class="quarto-xref" href="mdp.html"><span>Bölüm 11</span></a>’e benzer şekilde, bir RL probleminde agent’in hedefi, beklenen kümülatif reward değerini en üst düzeye çıkaran bir <em>policy</em> (durumlardan eylemlere bir eşleme) öğrenmektir. zaman. Bu policy, agent’in karar verme sürecine rehberlik ederek en olumlu sonuçlara yol açacak eylemleri seçmesine yardımcı olur.</p>
+<section class="level2 page-columns page-full" data-number="12.1" id="rl">
+<h2 class="anchored" data-anchor-id="rl" data-number="12.1"><span class="header-section-number">12.1</span> Reinforcement learning algoritmalarına genel bakış</h2>
+<!-- A *reinforcement learning (RL)* is a kind of a policy that depends on the whole history of states, actions, and rewards and selects the next action to take. There are several different ways to measure the quality of an RL algorithm, including: -->
+<!-- - Ignoring the $r^{(i)}$ values that it gets *while* learning, but considering how many interactions with the environment are required for it to learn a policy $\pi: \mathcal{S} \rightarrow \mathcal{A}$ that is nearly optimal. -->
+<!-- - Maximizing the expected sum of discounted rewards while it is learning. -->
+<!-- Most of the focus is on the first criterion (which is called “sample efficiency”), because the second one is very difficult. The first criterion is reasonable when the learning can take place somewhere safe (imagine a robot learning, inside the robot factory, where it can’t hurt itself too badly) or in a simulated environment. -->
+<p>reinforcement learning’e yaklaşımlar, ne tür hypothesis veya model’in öğrenildiğine göre önemli ölçüde farklılık gösterir. Kabaca söylemek gerekirse, RL yöntemleri, model içermeyen yöntemler ve model tabanlı yöntemler olarak kategorize edilebilir. Temel ayrım, model tabanlı yöntemlerin, bir policy öğrenmenin nihai amacına yardımcı olmak için transition ve reward modellerini açıkça öğrenmesidir; model içermeyen yöntemler bunu yapmaz. Tartışmamıza model içermeyen yöntemlerle başlayacağız ve tartışmasız en popüler algoritma türlerinden ikisini, Q-learning <a class="quarto-xref" href="#sec-q_learning"><span>Bölüm 12.1.2</span></a> ve policy gradient <a class="quarto-xref" href="#sec-rl_policy_search"><span>Bölüm 12.2</span></a>’i tanıtacağız. Daha sonra model tabanlı yöntemler <a class="quarto-xref" href="#sec-rl_model_based"><span>Bölüm 12.3</span></a>’i açıklayacağız. Son olarak, state geçişleri olmayan (veya önemsiz bir tek-state MDP) basitleştirilmiş bir RL ayarı olarak görülebilen <a class="quarto-xref" href="#sec-bandit"><span>Bölüm 12.4</span></a> “haydut” sorunlarını kısaca ele alıyoruz; burada ana sorun, eylemler arasında exploration’e karşı exploitation’tir.</p>
+<section class="level3" data-number="12.1.1" id="model-içermeyen-yöntemler">
+<h3 class="anchored" data-anchor-id="model-içermeyen-yöntemler" data-number="12.1.1"><span class="header-section-number">12.1.1</span> Model içermeyen yöntemler</h3>
+<p>Model içermeyen yöntemler, transition ve reward modellerini açıkça öğrenmeyen yöntemlerdir. Açıkça öğrenilenlere bağlı olarak, model içermeyen yöntemler bazen value tabanlı yöntemler (burada amaç bir value function’i öğrenmek/tahmin etmektir) ve policy tabanlı yöntemler (burada amaç doğrudan optimum policy’i öğrenmektir) olarak daha fazla kategorize edilir. Bu tür bir sınıflandırmanın yaklaşık olduğunu ve sınırların bulanık olduğunu unutmamak önemlidir. Aslında, mevcut RL araştırması, her bir yaklaşımın güçlü yönlerini birleştirmek amacıyla, value işlevleri, politikaları ve transition ve reward modellerinin öğrenilmesini karmaşık bir learning algorithm’te birleştirme eğilimindedir.</p>
+</section>
+<section class="level3 page-columns page-full" data-number="12.1.2" id="sec-q_learning">
+<h3 class="anchored" data-anchor-id="sec-q_learning" data-number="12.1.2"><span class="header-section-number">12.1.2</span> Q-learning</h3>
+<p>Q-learning, state-action value function’in, yani <span class="math inline">\(\mathrm{Q}\)</span> fonksiyonunun öğrenilmesine (tahmin edilmesine) odaklanan, RL algoritmalarının sıklıkla kullanılan bir class’idir. Özellikle, recall ve MDP value yineleme güncellemesi:</p>
+<p><span class="math display">\[
+\begin{equation}
+  \mathrm{Q}(s,a) = \mathrm{R}(s,a) + \gamma \sum_{s'} \mathrm{T}(s,a,s')\max_{a'}\mathrm{Q}(s',a')
+\end{equation}
+\]</span></p>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Çoğu öğrencinin kafasını karıştıran şey, ne zaman value iteration yaptığımız ve ne zaman Q-learning yaptığımızdır. Value iteration, <span class="math inline">\(\mathrm{T}\)</span> ve <span class="math inline">\(\mathrm{R}\)</span>’i bildiğinizi ve yalnızca <em>compute</em> <span class="math inline">\(\mathrm{Q}\)</span> yapmanız gerektiğini varsayar. Q-learning’te, <span class="math inline">\(\mathrm{T}\)</span> ve <span class="math inline">\(\mathrm{R}\)</span>’i bilmiyoruz ve hatta doğrudan tahmin ediyoruz: <span class="math inline">\(\mathrm{Q}\)</span>’i doğrudan deneyimlerimize dayanarak tahmin ediyoruz!</p>
+</div></div><p>Aşağıdaki Q-learning algorithm, bu value yineleme fikrini, transition işlevini <span class="math inline">\(\mathrm{T}\)</span> veya bilmediğimiz RL senaryosuna uyarlar. reward işlevi <span class="math inline">\(\mathrm{R}\)</span> ve bunun yerine güncellemeleri gerçekleştirmek için örneklere güvenin.</p>
+<div class="pseudocode-container quarto-float" data-caption-prefix="Algorithm" data-chapter-level="12" data-comment-delimiter="//" data-indent-size="1.2em" data-line-number="true" data-line-number-punc=":" data-no-end="false" data-pseudocode-number="1" id="Q-Learning">
+<div class="pseudocode">
+\begin{algorithm}\begin{algorithmic} \Procedure{Q-Learning}{$\mathcal{S}, \mathcal{A}, \gamma, \alpha, s_0, \text{max\_iter}$} \State $i \gets 0$ \ForAll{$s \in \mathcal{S},\; a \in \mathcal{A}$} \State $\mathrm{Q}_{\text{old}}(s, a) \gets 0$ \EndFor \State $s \gets s_0$ \While{$i &lt; \text{max\_iter}$} \State $a \gets \text{select\_action}\bigl(s,\,\mathrm{Q}_{\text{old}}\bigr)$ \State $(r, s') \gets \text{execute}(a)$ \State $\mathrm{Q}_{\text{new}}(s, a) \gets (1-\alpha)\,\mathrm{Q}_{\text{old}}(s,a)\;+\;\alpha\bigl(r + \gamma \max_{a'}\mathrm{Q}_{\text{old}}(s',a')\bigr)$ \State $s \gets s'$ \State $i \gets i + 1$ \State $\mathrm{Q}_{\text{old}} \gets \mathrm{Q}_{\text{new}}$ \EndWhile \Return $\mathrm{Q}_{\text{new}}$ \EndProcedure \end{algorithmic} \end{algorithm}
+</div>
+</div>
+<p>Q-Learning için sağlanan sahte kodla birlikte key’te dikkate alınması gereken birkaç nokta vardır. Öncelikle öğrenmeyi hangi state’ten başlatacağımızı belirlememiz gerekiyor. Bir oyun bağlamında bu başlangıç ​​state iyi tanımlanabilir. Bir environment’te gezinen bir robot bağlamında, ilk state’in rastgele örneklenmesi düşünülebilir. Her durumda, agent’in environment’te gezinirken deneyimleyeceği trajectory’i belirlemek için ilk state gereklidir.</p>
+<p>İkincisi, farklı bağlamlar while döngüsünde yinelemeyi ne zaman durduracağımızı nasıl seçmek istediğimizi etkileyecektir. Yine bazı oyunlarda nasıl oynandığına bağlı olarak state’i sonlandıran net bir durum söz konusu olabilir. Öte yandan, bir robotun bir environment <em>ad infinitum</em>’i keşfetmesine izin verilebilir. Böyle bir durumda, sabit sayıda geçişin ayarlanması (sözde kodda açıkça yapıldığı gibi) düşünülebilir; veya algorithm bir süre çalıştıktan sonra Q tablosundaki değerler değişmediğinde örnekte yinelemeyi durdurmak isteyebiliriz.</p>
+<p>Son olarak, environment aracılığıyla tek bir trajectory, tüm state‑action çiftlerini yeterince araştırmak için yeterli olmayabilir. Bu durumlarda, potansiyel olarak farklı başlangıç ​​state <span class="math inline">\(s_0\)</span> seçenekleriyle Q‑Learning algorithm’in bir dizi yinelemesinden geçmek gerekli hale gelir.</p>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Q-Learning’in birkaç örneğini çalıştırma fikrine genellikle birden fazla <em>bölüm</em> deneyimleme adı verilir.</p>
+</div></div><p>Elbette Q-Learning’i, Q tablosunun her çağrıda sıfırlanmayacağı şekilde değiştirmek isteriz.</p>
+<p>Şimdi Q-Learning’de neler olup bittiğini inceleyelim. Burada <span class="math inline">\(\alpha \in (0,1]\)</span>, convergence amaçları doğrultusunda bozulması gereken ancak pratikte genellikle bir sabite ayarlanan <em>learning rate</em>’i temsil eder. Ayrıca Q-learning’in bir varsaydığını da belirtmekte fayda var. durumların ve eylemlerin gerçekleştiği ayrı state ve action alanı <span class="math inline">\(1,2,3,\dots\)</span> vb. gibi ayrık değerler. Bunun aksine, sürekli state alanı, state’in örneğin bir değer almasına olanak tanır. sürekli sayı aralığı; örneğin, state herhangi bir gerçek olabilir <span class="math inline">\([1,3]\)</span> aralığındaki sayı. Benzer şekilde sürekli bir action alanı action’in örneğin sürekli bir aralıktan çekilmesine olanak tanır sayılar. Büyük veya sürekli state alanlarını işleyen birçok Q-learning uzantısı vardır (yakında bunlardan birine bakacağız); sürekli action alanları genellikle, kapsamımızın ötesinde olan policy-gradient yöntemlerinden veya actor-critic yöntemlerinden ek fikirler gerektirir. Bu nedenle, yukarıdaki algorithm’e, onu bu uzantılardan ayırmak için bazen daha spesifik olarak tablolu Q-learning olarak anılır.</p>
+<p>Q-learning update rule’te</p>
+<p><span id="eq-q-avg"><span class="math display">\[
+\begin{equation}\label{q_avg}
+  \mathrm{Q}[s, a] \leftarrow (1-\alpha)\mathrm{Q}[s, a]
+  + \alpha(r + \gamma \max_{a'}\mathrm{Q}[s',a'])
+\end{equation}
+\tag{12.1}\]</span></span></p>
+<p><span class="math inline">\((r + \gamma \max_{a'}\mathrm{Q}[s',a'])\)</span> terimi genellikle tek adımlı ileriye dönük <em>target</em> olarak anılır. Güncelleme şu şekilde görülebilir: halihazırda sahip olduğumuz iki farklı yinelemeli sürecin birleşimi görüldü: eski bir tahminin hedefle birleşimi learning rate <span class="math inline">\(\alpha.\)</span> ile ortalama çalışma</p>
+<p><a class="quarto-xref" href="#eq-q-avg">Eşitlik <span>12.1</span></a> aynı zamanda şu şekilde de yeniden yazılabilir:</p>
+<p><span id="eq-td-q"><span class="math display">\[
+\begin{equation}\label{td:q}
+  \mathrm{Q}[s, a] \leftarrow \mathrm{Q}[s, a]
+  + \alpha\bigl((r + \gamma \max_{a'} \mathrm{Q}[s',a'])-\mathrm{Q}[s,a]\bigr),
+\end{equation}
+\tag{12.2}\]</span></span></p>
+<p>bu da Q-learning’i başka bir şekilde yorumlamamıza olanak tanır: hedef ile mevcut tahmini value <span class="math inline">\(\mathrm{Q}[s, a].\)</span> arasındaki zamansal farka dayalı olarak bir güncelleme (veya düzeltme) yaparız.</p>
+<p>Yukarıdaki Q-learning algorithm, mevcut state <span class="math inline">\(s\)</span> ve mevcut <span class="math inline">\(\mathrm{Q}\)</span> işlevi göz önüne alındığında, <code>select_action</code> adı verilen bir prosedür içerir. hangi action’in alınacağı. <span class="math inline">\(\mathrm{Q}\)</span> value çok doğru tahmin ediliyorsa ve agent, dünyada “davranmak” için konuşlandırılmıştır (dünyada “öğrenmek” yerine), o zaman genel olarak şunu isteriz: görünüşte en uygun action <span class="math inline">\(\arg\max_{a \in \mathcal{A}} \mathrm{Q}(s,a)\)</span>’i seçmek için.</p>
+<p>Ancak öğrenme sırasında <span class="math inline">\(\mathrm{Q}\)</span> value tahminleri çok yüksek olmayacaktır. iyi ve exploration önemlidir. Bununla birlikte, tamamen rastgele keşfetmek de öğrenirken genellikle en iyi strateji değildir, çünkü attention’inizi state alanının parçalarına odaklamak iyidir. iyi bir policy yürütülürken ziyaret edilmesi muhtemel olan (kötü veya rastgele olmayan).</p>
+<p>Bu <em>exploration ile exploitation</em> ikilemini çözmeye çalışan tipik bir action seçim stratejisi, <em><span class="math inline">\(\epsilon\)</span>-açgözlü</em> stratejisi olarak adlandırılan stratejidir:</p>
+<ul>
+<li><p><span class="math inline">\(1-\epsilon\)</span> olasılığıyla, <span class="math inline">\(\arg\max_{a \in \mathcal{A}} \mathrm{Q}(s,a)\)</span>’i seçin;</p></li>
+<li><p><span class="math inline">\(\epsilon\)</span> olasılığı ile, action <span class="math inline">\(a \in \mathcal{A}\)</span>’i rastgele ve eşit olarak seçin.</p></li>
+</ul>
+<p>burada <span class="math inline">\(\epsilon\)</span>’in rastgele bir action seçme olasılığı, agent’in şu anda pek arzu edilmeyebilecek eylemleri keşfetmesine ve denemesine yardımcı olur.</p>
+<p>Q-learning, bazı standart varsayımlar altında, * garantili*’in gerçek optimum <span class="math inline">\(\mathrm{Q}\)</span> işlevine yakınsama gibi şaşırtıcı bir özelliğe sahiptir! Karşılaması gereken koşullar şunlardır: sonlu bir state-action alanına sahip olmak, her state-action çiftini sonsuz sıklıkta ziyaret etmek ve learning rate <span class="math inline">\(\alpha\)</span>’in bir planlama koşulunu karşılaması gerekir. Bu, özellikle exploration stratejisi için, her state-action’i sonsuz bir çalıştırmada sonsuz sıklıkta denediği sürece herhangi bir stratejinin uygun olduğu anlamına gelir (böylece kötü bir action seçimine zamanından önce yakınsamaz).</p>
+<p>Q-learning çok verimsiz olabilir. olan bir robot hayal edin. sola hareket etmekle reward’in 1 değerini almak arasında seçim yapın, ardından başlangıçtaki state’e dönmek veya sağa hareket edip yürümek 1000 değerinde bir reward elde etmek için 10 adımlık bir koridordan aşağı inin, ardından başlangıçtaki state’e geri dönüyor.</p>
+<!-- ::: {.column-margin}
+Q-learning is guaranteed to converge to the optimal Q function under weak conditions: any strategy that visits every state-action infinitely often suffices.
+::: -->
+<div class="imagify">
+<p><a class="lightbox" data-gallery="quarto-lightbox-gallery-2" href="data:image/svg+xml,%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0D%0A%3Csvg%20version%3D%271.1%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20xmlns%3Axlink%3D%27http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%27%20width%3D%27553.353415pt%27%20height%3D%2779.408917pt%27%20viewBox%3D%27-72.000004%20-72.000002%20368.902276%2052.939278%27%3E%0D%0A%3Cstyle%20type%3D%27text%2Fcss%27%3E%0D%0A%3C%21%5BCDATA%5B%40font-face%7Bfont-family%3Aec-lmr10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAn4AA0AAAAADOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnk1U9TLzIAAAFMAAAAQgAAAFZVzV7%2FY21hcAAAAZAAAAB0AAABcjNtMqZjdnQgAAACBAAAAAQAAAAEACECeWdhc3AAAAIIAAAACAAAAAj%2F%2FwADZ2x5ZgAAAhAAAAYkAAAHsFcmethoZWFkAAAINAAAADIAAAA2L05Jg2hoZWEAAAhoAAAAHgAAACQF4wLLaG10eAAACIgAAAA4AAAATCHEAqtsb2NhAAAIwAAAACgAAAAoD4wRcG1heHAAAAjoAAAAHwAAACAAWwBwbmFtZQAACQgAAAC7AAABJoE7oSZwb3N0AAAJxAAAADEAAABIATEBM3jaY2BgYGQAgsvb7s0A0c9WNsvBaABW1QdhAAB42mNgZPzAOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqS0GUqYpf%2BbMEQxbWMIhqkBAO8kCngAAHjaY2BgYGaAYBkGRgYQyAHyGMF8FoYAIC0AhCB5bQZdBkuGJIZ8hiKGkv%2F%2FoSIGCJH%2FN%2F5f%2F3%2F1%2F9r%2FC%2F%2FP%2Fz8PahoKYGRjgAszMgEJJnQFKDxmoAsYWNnYOTi5uHl4%2BRiIBPzIHAEGBkEGIYbBAwDXrhZpACECeQAAAAH%2F%2FwACeNpVVVts21QYPsfu4tya1k5sJ6kd13ESp0matr52aeIki3pZu3UtWdnWru26C4VpFAQDBhuXjkpI9GEIBEhDICSYNImLtAkhBBJi4qZJA8QL44FXroInhpAQyzjHbUG8%2BZzY5%2F9u5wsggAwA7CHOAxJQoHgJgr7yZaoN%2FKZd8mz7rnyZJNAjuETi7W14%2BzLlgX%2BXL0O8r9Myreq0IkPvj599Rpy%2FeYdM7AeAAIO33iK%2BJkZBGEQASBmKTBtJlpaTEV2mI5pJyzbxtdz6Odv6SZZhNAt5%2BYcsjMpy66fNLfQZPicAPoAR8AfC1gZA2pRZGUZaf0LfB6US%2Br0NqLd%2BgdcQdgZN6gE5xMRQi4SSpDxshE9AXbMtU41QIagkM2rGNGyH1DWO51h4LcsOW%2FFHjHSvONd7yko3A%2F5GNt0IBryUlBXalZF2P6w9P1OwQg9NPfdK0y6enHo2eK5WLw%2FWyy%2BetXKDnNeoD64jjAfQ1NcQBg7wAMgmmmTSRkbxKKxm0xFPHrKWxsPXumuih3ZO7TES1W6lpUhMghhgvDUpfvOvBCORpMtXQ2ddQWcVQC%2Fiq3go9LnttJnovCSihBlZ7oJy0CPHRjpgCLKyDa%2FEgn5q%2FzvHS0Ytypw6OH1cYChaEWJ%2Bkh4v1Ebu%2BshLwvuFtydC3mW9v5GzEjN33zMSE8h4FyvBfutQY%2FnBb7wB5m2EIYc0vYowVICDMBgZ1YFb8zl3vLI5m0LwFLw7BPHSgzXmrP%2B9C6%2FO7XImV8Yn7hA5XnDY3UqmJEilaEeHr6MwVB7J9%2ByPdqkyzyUfas6efqO63BFZGipP7tkeFUROk0W90ujTCJLwe8kDu%2BfGU9k2SYgnhERj9v5J7L%2BA9LpOXAAiSKAcJ3FGFLoMi8hvCunCbsivazy2pQJ1VQnT8PrRNo8n6G19Af1Rg%2B1ZWOxhjejRN27cuCDBz32Ulwi28tI%2BEZsiMeI%2BCT7Qwj5rSBfsTRkpg3VBI0xE0iGRIihwSrIPooxj3jae6ArkSoKEwG8jozZFubIyNWHkc0qtkOz0k9tqYyPVoL%2FNT3n6p7cLTDTbMKfbPQG%2Bq4v3hyPHpvafvTq7qn%2FcHhYSfFuAFAUy2vq2I%2BAbqeX2LubqO4qEmBU9cXb4vtUFpMmWf0mgAAvYLlYE1cDR55NbJm4GisAL1UVaJPANwd7i%2B3H15MWeLlVXw07cFpjORKO8%2FGqmNpyZeXiW7m5wGb6dZLhSzpGYa4tPHImOrQylA9leLsrF%2BypXXl5cH%2BteXYKHU3VGYL19h%2FO7S0766MadHkT4videB12ue2guVBVKt2xrCFJYI60CDduqQiTU97%2BXtvvJmBzr8FNzX91bLR8MhPNP%2BYg1XyD45W0%2BzyuLn%2B61bX12%2FJ7yh0EeeP7lzoMoYp9C90nH%2FNWM%2Bi9lnuO30klGKEzZwmkOu%2FlFDcEnSMR%2BIDz18ImxieOFgPPMmebM6dEjZ7Rpe3CaXajW5x843UkLoYvDFqs58zuaSyOVgWBu7N5dSytTcP620pTc31saNVuPW2NN5876ZKBdTLHA7astfGmQAQYwcV%2B5dbWZDZuNhNBS1f5%2Fi1SMza0va8ObTHVHel9Zlk7uncnKlhYbFkVeYGhxonbshYOVCjKFTa4lOuHOQ%2BujUjW101xYPdrdfHCQTwkMtkgrffLSwdG7q%2Bkjx9LVPfnDLjbh1h%2BEj3jX7dIUQriZcZpikTy0bnP%2FRUXNuB65SSF8j92%2Bp%2FSMEY%2Bl%2Bptza00pP1LPhgK9O%2BtZ8duFtTqsBKRw%2Buabzs61RbjQX6uw7JeRzlqtOL8xE16HHwE%2Fanp8hzdmerZou8W90dubsbx%2Bdm5%2Bde3A3JNNjnbSE2osGq52j6vxbw49vf7h2ScXvLOFZLZRWJovyMl6%2FhDOG07ZCfg%2ByKJ%2FCKQ3Pp8yN0ghXVl7qxxwDvgQsXVJT%2BS6B8qhdcTLvG9fFjVE1fYRpC8QYzq74KOxVCO%2Fgom1bnS3bxTF%2BckVCKlwECWMw3PDiNsuYhnNF91echvSpHVTMZUQQbE6vXn94K5YRmycOxeDbKU4IxZTzIB2ZrttDp2AnPRecapOcK1f80NR37QF%2FgEAwIDBeNpjYGRgYADifeeNzeL5bb4ycDM%2FB4owPFvZLAenuf%2BvZbrItA3I5WBgAokCAFaxDDkAAHjaY2BkYGDa9n8tQxQzFwMQMF1kYGRABcIAYqEDtAAAeNpjzGZQZAACRl8GBmYuBgsgzc34hUEdiCOB2AiItYBYBoltAaW1mHTA4jKMHUDcyiAMAB4tD4UAAAAqACoAKgBOAF4AoADGAQgBXgGUAegCOAJmArYDBAM%2BA3ADrAPYeNpjYGRgYBBmsGdgYwABJiBmZACJOTDogQQAC9EAzAB42l2NTQrCMBSEP60t%2Fi3Ehess3KY0Wah4APEErtyVWATbQtoLeAwP4Bm8nq81ghh4vC%2BTyQww5sKA7gyJmQeOWHMOHDPjETgR%2F0teB6OJ%2BKe9s%2BOII8vAMSvugRMWPLlR4jFkcCu9kXWgpqLtt6fAobCk4lDsZRw5%2BuffRzVsRd3JWNEsGwmqq%2FZQ%2B8Ipm2Zqr1yu%2BwpBs9U7bTMrrpMEehqufW0X1FVxcr651pUyqVz%2BK%2FlG8QaDdCdlAHjaY2BiwA%2BEgZiRgYmBj0EAyBZhEGUQYxBnkGCQZJBikGaQYXBlCGIIZQgHABxWAmUAAAA%3D%29%20format%28%27woff%27%29%3B%7D%0D%0Atext.f0%20%7Bfont-family%3Aec-lmr10%3Bfont-size%3A9.96264px%7D%0D%0A%5D%5D%3E%0D%0A%3C%2Fstyle%3E%0D%0A%3Cg%20id%3D%27page1%27%3E%0D%0A%3Cg%20stroke-miterlimit%3D%2710%27%20transform%3D%27matrix%28.996264%200%200%20-.996264%2013.238579%20-21.601733%29%27%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cpath%20d%3D%27M%20-85.35823%200.0%20M%20-85.35823%200.0%20L%20-56.90549%200.0%20M%20-85.35823%2028.44275%20L%20-56.90549%2028.44275%20M%20-85.35823%200.0%20L%20-85.35823%2028.45274%20M%20-56.91548%200.0%20L%20-56.91548%2028.45274%20M%20-56.90549%2028.45274%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%200.0%200.0%20M%200.0%200.0%20L%20284.52744%200.0%20M%200.0%2028.44275%20L%20284.52744%2028.44275%20M%200.0%200.0%20L%200.0%2028.45274%20M%2028.45274%200.0%20L%2028.45274%2028.45274%20M%2056.90549%200.0%20L%2056.90549%2028.45274%20M%2085.35823%200.0%20L%2085.35823%2028.45274%20M%20113.81097%200.0%20L%20113.81097%2028.45274%20M%20142.26372%200.0%20L%20142.26372%2028.45274%20M%20170.71646%200.0%20L%20170.71646%2028.45274%20M%20199.1692%200.0%20L%20199.1692%2028.45274%20M%20227.62195%200.0%20L%20227.62195%2028.45274%20M%20256.07469%200.0%20L%20256.07469%2028.45274%20M%20284.51744%200.0%20L%20284.51744%2028.45274%20M%20284.52744%2028.45274%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20-11.87584%2014.22636%20C%20-11.87584%2023.38165%20-19.29745%2030.80327%20-28.45274%2030.80327%20C%20-37.60803%2030.80327%20-45.02965%2023.38165%20-45.02965%2014.22636%20C%20-45.02965%205.07108%20-37.60803%20-2.35054%20-28.45274%20-2.35054%20C%20-19.29745%20-2.35054%20-11.87584%205.07108%20-11.87584%2014.22636%20Z%20M%20-28.45274%2014.22636%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-40.27222%2010.782%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3Erob%3Ctspan%20x%3D%2727.933429%27%3Eot%3C%2Ftspan%3E%0D%0A%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20-12.80363%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20-12.80363%2031.29819%20C%20-5.85133%2038.25046%205.38913%2038.3577%2012.47366%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%2012.46262%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2811.72636%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2015.6491%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%2015.6491%2031.29819%20C%2022.60136%2038.25046%2033.84183%2038.3577%2040.92642%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%2040.91536%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2840.17911%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E2%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2044.10184%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%2044.10184%2031.29819%20C%2051.05411%2038.25046%2062.29457%2038.3577%2069.37917%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%2069.3681%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2868.63185%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E3%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2072.55458%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%2072.55458%2031.29819%20C%2079.50685%2038.25046%2090.74733%2038.3577%2097.8319%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%2097.82085%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2897.0846%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E4%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20101.00732%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20101.00732%2031.29819%20C%20107.9596%2038.25046%20119.20007%2038.3577%20126.28464%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20126.27359%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28125.53734%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E5%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20129.46007%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20129.46007%2031.29819%20C%20136.41234%2038.25046%20147.6528%2038.3577%20154.7374%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20154.72633%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28153.99008%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E6%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20157.91281%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20157.91281%2031.29819%20C%20164.86508%2038.25046%20176.10556%2038.3577%20183.19012%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20183.17908%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28182.44283%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E7%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20186.36555%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20186.36555%2031.29819%20C%20193.31783%2038.25046%20204.5583%2038.3577%20211.64287%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20211.63182%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28210.89557%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E8%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20214.8183%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20214.8183%2031.29819%20C%20221.77057%2038.25046%20233.01105%2038.3577%20240.09563%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20240.08456%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28239.34831%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E9%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20243.27104%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20243.27104%2031.29819%20C%20250.22333%2038.25046%20261.46378%2038.3577%20268.54837%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20268.53731%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28265.30106%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E10%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28242.18567%2040.95705%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E%2B1000%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20-44.10184%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20-44.10184%2031.29819%20C%20-51.05411%2038.25046%20-62.29457%2038.3577%20-69.37917%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.74138%20-.67102%20.67102%20-.74138%20-69.3681%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-63.29445%2040.95705%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E%2B1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-75.29851%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E-1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E"><img class="img-fluid" src="data:image/svg+xml,%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0D%0A%3Csvg%20version%3D%271.1%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20xmlns%3Axlink%3D%27http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%27%20width%3D%27553.353415pt%27%20height%3D%2779.408917pt%27%20viewBox%3D%27-72.000004%20-72.000002%20368.902276%2052.939278%27%3E%0D%0A%3Cstyle%20type%3D%27text%2Fcss%27%3E%0D%0A%3C%21%5BCDATA%5B%40font-face%7Bfont-family%3Aec-lmr10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAn4AA0AAAAADOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnk1U9TLzIAAAFMAAAAQgAAAFZVzV7%2FY21hcAAAAZAAAAB0AAABcjNtMqZjdnQgAAACBAAAAAQAAAAEACECeWdhc3AAAAIIAAAACAAAAAj%2F%2FwADZ2x5ZgAAAhAAAAYkAAAHsFcmethoZWFkAAAINAAAADIAAAA2L05Jg2hoZWEAAAhoAAAAHgAAACQF4wLLaG10eAAACIgAAAA4AAAATCHEAqtsb2NhAAAIwAAAACgAAAAoD4wRcG1heHAAAAjoAAAAHwAAACAAWwBwbmFtZQAACQgAAAC7AAABJoE7oSZwb3N0AAAJxAAAADEAAABIATEBM3jaY2BgYGQAgsvb7s0A0c9WNsvBaABW1QdhAAB42mNgZPzAOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqS0GUqYpf%2BbMEQxbWMIhqkBAO8kCngAAHjaY2BgYGaAYBkGRgYQyAHyGMF8FoYAIC0AhCB5bQZdBkuGJIZ8hiKGkv%2F%2FoSIGCJH%2FN%2F5f%2F3%2F1%2F9r%2FC%2F%2FP%2Fz8PahoKYGRjgAszMgEJJnQFKDxmoAsYWNnYOTi5uHl4%2BRiIBPzIHAEGBkEGIYbBAwDXrhZpACECeQAAAAH%2F%2FwACeNpVVVts21QYPsfu4tya1k5sJ6kd13ESp0matr52aeIki3pZu3UtWdnWru26C4VpFAQDBhuXjkpI9GEIBEhDICSYNImLtAkhBBJi4qZJA8QL44FXroInhpAQyzjHbUG8%2BZzY5%2F9u5wsggAwA7CHOAxJQoHgJgr7yZaoN%2FKZd8mz7rnyZJNAjuETi7W14%2BzLlgX%2BXL0O8r9Myreq0IkPvj599Rpy%2FeYdM7AeAAIO33iK%2BJkZBGEQASBmKTBtJlpaTEV2mI5pJyzbxtdz6Odv6SZZhNAt5%2BYcsjMpy66fNLfQZPicAPoAR8AfC1gZA2pRZGUZaf0LfB6US%2Br0NqLd%2BgdcQdgZN6gE5xMRQi4SSpDxshE9AXbMtU41QIagkM2rGNGyH1DWO51h4LcsOW%2FFHjHSvONd7yko3A%2F5GNt0IBryUlBXalZF2P6w9P1OwQg9NPfdK0y6enHo2eK5WLw%2FWyy%2BetXKDnNeoD64jjAfQ1NcQBg7wAMgmmmTSRkbxKKxm0xFPHrKWxsPXumuih3ZO7TES1W6lpUhMghhgvDUpfvOvBCORpMtXQ2ddQWcVQC%2Fiq3go9LnttJnovCSihBlZ7oJy0CPHRjpgCLKyDa%2FEgn5q%2FzvHS0Ytypw6OH1cYChaEWJ%2Bkh4v1Ebu%2BshLwvuFtydC3mW9v5GzEjN33zMSE8h4FyvBfutQY%2FnBb7wB5m2EIYc0vYowVICDMBgZ1YFb8zl3vLI5m0LwFLw7BPHSgzXmrP%2B9C6%2FO7XImV8Yn7hA5XnDY3UqmJEilaEeHr6MwVB7J9%2ByPdqkyzyUfas6efqO63BFZGipP7tkeFUROk0W90ujTCJLwe8kDu%2BfGU9k2SYgnhERj9v5J7L%2BA9LpOXAAiSKAcJ3FGFLoMi8hvCunCbsivazy2pQJ1VQnT8PrRNo8n6G19Af1Rg%2B1ZWOxhjejRN27cuCDBz32Ulwi28tI%2BEZsiMeI%2BCT7Qwj5rSBfsTRkpg3VBI0xE0iGRIihwSrIPooxj3jae6ArkSoKEwG8jozZFubIyNWHkc0qtkOz0k9tqYyPVoL%2FNT3n6p7cLTDTbMKfbPQG%2Bq4v3hyPHpvafvTq7qn%2FcHhYSfFuAFAUy2vq2I%2BAbqeX2LubqO4qEmBU9cXb4vtUFpMmWf0mgAAvYLlYE1cDR55NbJm4GisAL1UVaJPANwd7i%2B3H15MWeLlVXw07cFpjORKO8%2FGqmNpyZeXiW7m5wGb6dZLhSzpGYa4tPHImOrQylA9leLsrF%2BypXXl5cH%2BteXYKHU3VGYL19h%2FO7S0766MadHkT4videB12ue2guVBVKt2xrCFJYI60CDduqQiTU97%2BXtvvJmBzr8FNzX91bLR8MhPNP%2BYg1XyD45W0%2BzyuLn%2B61bX12%2FJ7yh0EeeP7lzoMoYp9C90nH%2FNWM%2Bi9lnuO30klGKEzZwmkOu%2FlFDcEnSMR%2BIDz18ImxieOFgPPMmebM6dEjZ7Rpe3CaXajW5x843UkLoYvDFqs58zuaSyOVgWBu7N5dSytTcP620pTc31saNVuPW2NN5876ZKBdTLHA7astfGmQAQYwcV%2B5dbWZDZuNhNBS1f5%2Fi1SMza0va8ObTHVHel9Zlk7uncnKlhYbFkVeYGhxonbshYOVCjKFTa4lOuHOQ%2BujUjW101xYPdrdfHCQTwkMtkgrffLSwdG7q%2Bkjx9LVPfnDLjbh1h%2BEj3jX7dIUQriZcZpikTy0bnP%2FRUXNuB65SSF8j92%2Bp%2FSMEY%2Bl%2Bptza00pP1LPhgK9O%2BtZ8duFtTqsBKRw%2Buabzs61RbjQX6uw7JeRzlqtOL8xE16HHwE%2Fanp8hzdmerZou8W90dubsbx%2Bdm5%2Bde3A3JNNjnbSE2osGq52j6vxbw49vf7h2ScXvLOFZLZRWJovyMl6%2FhDOG07ZCfg%2ByKJ%2FCKQ3Pp8yN0ghXVl7qxxwDvgQsXVJT%2BS6B8qhdcTLvG9fFjVE1fYRpC8QYzq74KOxVCO%2Fgom1bnS3bxTF%2BckVCKlwECWMw3PDiNsuYhnNF91echvSpHVTMZUQQbE6vXn94K5YRmycOxeDbKU4IxZTzIB2ZrttDp2AnPRecapOcK1f80NR37QF%2FgEAwIDBeNpjYGRgYADifeeNzeL5bb4ycDM%2FB4owPFvZLAenuf%2BvZbrItA3I5WBgAokCAFaxDDkAAHjaY2BkYGDa9n8tQxQzFwMQMF1kYGRABcIAYqEDtAAAeNpjzGZQZAACRl8GBmYuBgsgzc34hUEdiCOB2AiItYBYBoltAaW1mHTA4jKMHUDcyiAMAB4tD4UAAAAqACoAKgBOAF4AoADGAQgBXgGUAegCOAJmArYDBAM%2BA3ADrAPYeNpjYGRgYBBmsGdgYwABJiBmZACJOTDogQQAC9EAzAB42l2NTQrCMBSEP60t%2Fi3Ehess3KY0Wah4APEErtyVWATbQtoLeAwP4Bm8nq81ghh4vC%2BTyQww5sKA7gyJmQeOWHMOHDPjETgR%2F0teB6OJ%2BKe9s%2BOII8vAMSvugRMWPLlR4jFkcCu9kXWgpqLtt6fAobCk4lDsZRw5%2BuffRzVsRd3JWNEsGwmqq%2FZQ%2B8Ipm2Zqr1yu%2BwpBs9U7bTMrrpMEehqufW0X1FVxcr651pUyqVz%2BK%2FlG8QaDdCdlAHjaY2BiwA%2BEgZiRgYmBj0EAyBZhEGUQYxBnkGCQZJBikGaQYXBlCGIIZQgHABxWAmUAAAA%3D%29%20format%28%27woff%27%29%3B%7D%0D%0Atext.f0%20%7Bfont-family%3Aec-lmr10%3Bfont-size%3A9.96264px%7D%0D%0A%5D%5D%3E%0D%0A%3C%2Fstyle%3E%0D%0A%3Cg%20id%3D%27page1%27%3E%0D%0A%3Cg%20stroke-miterlimit%3D%2710%27%20transform%3D%27matrix%28.996264%200%200%20-.996264%2013.238579%20-21.601733%29%27%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cpath%20d%3D%27M%20-85.35823%200.0%20M%20-85.35823%200.0%20L%20-56.90549%200.0%20M%20-85.35823%2028.44275%20L%20-56.90549%2028.44275%20M%20-85.35823%200.0%20L%20-85.35823%2028.45274%20M%20-56.91548%200.0%20L%20-56.91548%2028.45274%20M%20-56.90549%2028.45274%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%200.0%200.0%20M%200.0%200.0%20L%20284.52744%200.0%20M%200.0%2028.44275%20L%20284.52744%2028.44275%20M%200.0%200.0%20L%200.0%2028.45274%20M%2028.45274%200.0%20L%2028.45274%2028.45274%20M%2056.90549%200.0%20L%2056.90549%2028.45274%20M%2085.35823%200.0%20L%2085.35823%2028.45274%20M%20113.81097%200.0%20L%20113.81097%2028.45274%20M%20142.26372%200.0%20L%20142.26372%2028.45274%20M%20170.71646%200.0%20L%20170.71646%2028.45274%20M%20199.1692%200.0%20L%20199.1692%2028.45274%20M%20227.62195%200.0%20L%20227.62195%2028.45274%20M%20256.07469%200.0%20L%20256.07469%2028.45274%20M%20284.51744%200.0%20L%20284.51744%2028.45274%20M%20284.52744%2028.45274%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20-11.87584%2014.22636%20C%20-11.87584%2023.38165%20-19.29745%2030.80327%20-28.45274%2030.80327%20C%20-37.60803%2030.80327%20-45.02965%2023.38165%20-45.02965%2014.22636%20C%20-45.02965%205.07108%20-37.60803%20-2.35054%20-28.45274%20-2.35054%20C%20-19.29745%20-2.35054%20-11.87584%205.07108%20-11.87584%2014.22636%20Z%20M%20-28.45274%2014.22636%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-40.27222%2010.782%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3Erob%3Ctspan%20x%3D%2727.933429%27%3Eot%3C%2Ftspan%3E%0D%0A%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20-12.80363%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20-12.80363%2031.29819%20C%20-5.85133%2038.25046%205.38913%2038.3577%2012.47366%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%2012.46262%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2811.72636%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2015.6491%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%2015.6491%2031.29819%20C%2022.60136%2038.25046%2033.84183%2038.3577%2040.92642%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%2040.91536%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2840.17911%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E2%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2044.10184%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%2044.10184%2031.29819%20C%2051.05411%2038.25046%2062.29457%2038.3577%2069.37917%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%2069.3681%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2868.63185%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E3%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2072.55458%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%2072.55458%2031.29819%20C%2079.50685%2038.25046%2090.74733%2038.3577%2097.8319%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%2097.82085%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2897.0846%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E4%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20101.00732%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20101.00732%2031.29819%20C%20107.9596%2038.25046%20119.20007%2038.3577%20126.28464%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20126.27359%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28125.53734%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E5%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20129.46007%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20129.46007%2031.29819%20C%20136.41234%2038.25046%20147.6528%2038.3577%20154.7374%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20154.72633%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28153.99008%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E6%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20157.91281%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20157.91281%2031.29819%20C%20164.86508%2038.25046%20176.10556%2038.3577%20183.19012%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20183.17908%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28182.44283%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E7%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20186.36555%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20186.36555%2031.29819%20C%20193.31783%2038.25046%20204.5583%2038.3577%20211.64287%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20211.63182%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28210.89557%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E8%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20214.8183%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20214.8183%2031.29819%20C%20221.77057%2038.25046%20233.01105%2038.3577%20240.09563%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20240.08456%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28239.34831%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E9%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20243.27104%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20243.27104%2031.29819%20C%20250.22333%2038.25046%20261.46378%2038.3577%20268.54837%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28.74138%20-.67102%20.67102%20.74138%20268.53731%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28265.30106%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E10%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28242.18567%2040.95705%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E%2B1000%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20-44.10184%2031.29819%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20-44.10184%2031.29819%20C%20-51.05411%2038.25046%20-62.29457%2038.3577%20-69.37917%2031.61989%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.74138%20-.67102%20.67102%20-.74138%20-69.3681%2031.60684%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-63.29445%2040.95705%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E%2B1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-75.29851%2011.07774%29matrix%281.00375%200%200%20-1.00375%20-13.288224%20-21.682739%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%2713.238579%27%20y%3D%27-21.601733%27%3E-1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E" style="display:block; margin: .5em auto;" title="\begin{tikzpicture}
+    \draw (-3,0) grid (-2,1);
+    \draw (0,0) grid (10,1);
+    \node[circle, draw] (robot) at (-1,.5) {robot};
+    % right arrows
+    \foreach \x in {1,2,3,4,5,6,7,8,9,10} {
+        \coordinate (a) at (\x - 1.45, 1.1);
+        \coordinate (b) at (\x - .55, 1.1);
+        \draw (a) edge[-&gt;, bend left=45] coordinate (mid) (b);
+        \node at (\x - .5, .5) {\x};
+      }
+    \node[above] (reward) at (mid) {+1000};
+
+    % left arrow
+    \coordinate (a) at (-2.45, 1.1);
+    \coordinate (b) at (-1.55, 1.1);
+    \draw (b) edge[-&gt;, bend right=45] node[above] {+1} (a);
+    \node at (-2.5, .5) {-1};
+\end{tikzpicture}"/></a></p>
+</div>
+<p>Robot ilk kez sağa doğru hareket edip koridordan aşağı indiğinde, <span class="math inline">\(\mathrm{Q}\)</span> value’i yalnızca koridordaki state 9 için güncelleyecek ve action yüksek bir value’e sahip olmak için ``doğru’’, ancak henüz anlamayacak ilk adımlarda sağa doğru ilerlemenin iyi bir seçim olduğunu söyledi. bir dahaki sefere koridorda aşağı doğru hareket ettiğinde, state’in value’ini sonuncusundan önce günceller ve bu şekilde devam eder. Koridorda 10 tur attıktan sonra artık sağa gitmenin sola gitmekten daha iyi olduğunu görebilir.</p>
+<p>Daha somut olarak, <span class="math inline">\(i = 0, \ldots, 9\)</span> konumlarının her birinde sağa doğru hareket etmek için Q değerlerini temsil eden <span class="math inline">\(\mathrm{Q}(i = 0, \ldots, 9; \text{right})\)</span> Q değerlerinin vector’ini düşünün. Konum dizini 0, yukarıda resimde gösterildiği gibi robotun başlangıç ​​konumudur.</p>
+<p>Daha sonra, <span class="math inline">\(\alpha = 1\)</span> ve <span class="math inline">\(\gamma = 0.9\)</span> için <a class="quarto-xref" href="#eq-td-q">Eşitlik <span>12.2</span></a> şu hale gelir:</p>
+<p><span class="math display">\[
+\mathrm{Q}(i, \text{right}) \;=\; \mathrm{R}(i, \text{right}) \;+\; 0.9 \,\max_a \mathrm{Q}(i+1, a)\,.
+\]</span></p>
+<p>0 Q değerleriyle başlayarak,</p>
+<p><span class="math display">\[
+\mathrm{Q}^{(0)}(i = 0, \ldots, 9;\,\text{right})
+=\begin{bmatrix}
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0
+\end{bmatrix}\,.
+\]</span></p>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Burada her zamanki gösterim kurallarını ihlal ediyoruz ve <span class="math inline">\(\mathrm{Q}^{i}\)</span>’i, her zaman sağa hareket eden policy’i çalıştırırken robotun koridorun sonuna kadar koşmasından sonra ortaya çıkan Q value function’i ifade etmek için yazıyoruz.</p>
+</div></div><p>Sağa hareket eden sıfırdan farklı tek reward <span class="math inline">\(\mathrm{R}(9,\text{right}) = 1000\)</span> olduğundan, robotumuz koridorda bir kez ilerledikten sonra yeni Q vector’imiz</p>
+<p><span class="math display">\[
+\mathrm{Q}^{(1)}(i = 0, \ldots, 9;\,\text{right})
+=\begin{bmatrix}
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 1000
+\end{bmatrix}\,.
+\]</span></p>
+<p>Koridorda tekrar ilerledikten sonra</p>
+<p><span class="math display">\[
+\mathrm{Q}(8,\text{right}) = 0 + 0.9\,\mathrm{Q}(9,\text{right}) = 900
+\]</span></p>
+<p>güncellemeler:</p>
+<p><span class="math display">\[
+\mathrm{Q}^{(2)}(i = 0, \ldots, 9;\,\text{right})
+=\begin{bmatrix}
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 900 &amp; 1000
+\end{bmatrix}\,.
+\]</span></p>
+<p>Benzer şekilde,</p>
+<p><span class="math display">\[
+\mathrm{Q}^{(3)}(i = 0, \ldots, 9;\,\text{right})
+=\begin{bmatrix}
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 810 &amp; 900 &amp; 1000
+\end{bmatrix}\,,
+\]</span></p>
+<p><span class="math display">\[
+\mathrm{Q}^{(4)}(i = 0, \ldots, 9;\,\text{right})
+=\begin{bmatrix}
+0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 0 &amp; 729 &amp; 810 &amp; 900 &amp; 1000
+\end{bmatrix}\,,
+\]</span></p>
+<p><span class="math display">\[
+\dots
+\]</span></p>
+<p><span class="math display">\[
+\mathrm{Q}^{(10)}(i = 0, \ldots, 9;\,\text{right})
+=\\
+\begin{bmatrix}
+387.4 &amp; 420.5 &amp; 478.3 &amp; 531.4 &amp; 590.5 &amp; 656.1 &amp; 729 &amp; 810 &amp; 900 &amp; 1000
+\end{bmatrix}\,,
+\]</span></p>
+<p>ve robot nihayet 0 konumundan sağa doğru hareket eden value’i görüyor.</p>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Burada, action’teki exploration/exploitation ikilemini görebiliriz: <span class="math inline">\(s_0=0\)</span>’in bakış açısından, <span class="math inline">\(1\)</span>’in reward’ini anında almak gibi görünecek uzun koridoru keşfetmeden daha iyi bir stratejidir.</p>
+</div></div><div class="study-question-callout">
+<p>Her zaman “sola gitme” policy’in yürütülmesinden kaynaklanan Q value işlevlerini belirleyin.</p>
+</div>
+<p>Fonksiyon yaklaşımıyla ## Q-learning</p>
+<p>Yukarıdaki Q-learning algorithm’imizde, esasen her <span class="math inline">\(\mathrm{Q}\)</span> value’i <span class="math inline">\(s\)</span> ve <span class="math inline">\(a\)</span> tarafından indekslenmiş bir tabloda takip ediyoruz. <span class="math inline">\(\mathcal{S}\)</span> ve/veya <span class="math inline">\(\mathcal{A}\)</span> büyükse (veya sürekliyse) ne yapacağız?</p>
+<p>Q değerlerini saklamak için neural network gibi bir fonksiyon yaklaşım aracı kullanabiliriz. Örneğin, <span class="math inline">\(s\)</span> ve <span class="math inline">\(a\)</span> girişlerini alan ve <span class="math inline">\(Q_\theta(s,a)\)</span> çıkışını yapan <span class="math inline">\(\theta\)</span> parametreleriyle bir neural network tasarlayabiliriz. Bu kaybı optimize ederek bunu bir regression sorunu olarak ele alabiliriz:</p>
+<p><span class="math display">\[
+\mathcal{L}(\theta) \;=\; \bigl(Q_\theta(s,a) \;-\; y\bigr)^2,
+\qquad
+y \;=\; r + \gamma \max_{a'} Q_\theta(s', a')
+\]</span></p>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Bu sözde kare Bellman hatasıdır; Adından da anlaşılacağı gibi, <a class="quarto-xref" href="mdp.html"><span>Bölüm 11</span></a>’te <strong>MDPs</strong>’te gördüğümüz Bellman equation ile yakından ilişkilidir. Kabaca söylemek gerekirse bu hata Bellman eşitliğinin ne kadar ihlal edildiğini ölçer.</p>
+</div></div><p>Önemli bir incelik: <span class="math inline">\(y\)</span> hedefi ayrıca <span class="math inline">\(\theta\)</span>’e (<span class="math inline">\(Q_\theta(s', a')\)</span> aracılığıyla) bağlıdır, ancak gradient’i hesaplarken bunu bir sabit olarak ele alırız. Aşağıdaki takılan Q algorithm, hedefi bir regression label olarak dondurarak bunu açıkça ortaya koymaktadır.</p>
+<p><span class="math inline">\(\mathrm{Q}\)</span> değerlerine yaklaşmak amacıyla neural network kullanmak için birkaç farklı mimari seçenek vardır:</p>
+<ul>
+<li>Her action <span class="math inline">\(a\)</span> için bir ağ; <span class="math inline">\(s\)</span>’i input olarak alır ve <span class="math inline">\(Q_\theta(s, a)\)</span>’i output olarak üretir;</li>
+<li><span class="math inline">\(s\)</span>’i input olarak alan ve her action için <span class="math inline">\(\mathrm{Q}\)</span> değerlerinden oluşan bir vector üreten tek bir ağ (burada <span class="math inline">\(i\)</span>’inci bileşen <span class="math inline">\(Q_\theta(s,a_i)\)</span>’tir); veya</li>
+<li><span class="math inline">\(s, a\)</span>’i bir vector’e birleştirilmiş olarak alan tek bir ağ (eğer <span class="math inline">\(a\)</span> ayrıksa, yararlı bir iç yapıya sahip olmadığı sürece muhtemelen bir one-hot encoding kullanırdık) ve <span class="math inline">\(Q_\theta(s, a)\)</span>’i output olarak üretir.</li>
+</ul>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Sürekli action alanları için, policy ve value işlev öğrenimini birleştiren, <em>actor-critic yöntemleri</em> adı verilen class yöntemlerinin kullanılması popülerdir. Ancak burada bunlara detaylı olarak girmeyeceğiz.</p>
+</div></div><p>İlk iki seçenek yalnızca ayrık (ve çok büyük olmayan) action setleri için uygundur. Sürekli eylemler için son seçenek uygulanabilir ancak bu durumda <span class="math inline">\(\arg\max_{a \in \mathcal{A}} Q_\theta(s, a)\)</span>’i bulmak zordur.</p>
+<p>İşlev yaklaşımıyla Q-learning hakkında çok fazla teorik garanti yoktur ve aslında bazen oldukça istikrarsız olabilir (örneğin, bir süre iyi performans göstermeyi öğrenmek ve sonra aniden kötüleşmek). Ancak neural network Q-learning’in de bazı önemli başarıları var.</p>
+<p>Nasıl korunacağımızı bildiğimiz istikrarsızlık türlerinden biri de <em>felaketle sonuçlanan unutma</em>’tir. Standart supervised learning’te, eğitim <span class="math inline">\(x\)</span> değerlerinin bazı dağılımlardan bağımsız olarak çizilmesini bekliyoruz.</p>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Ve aslında, veri dosyasındaki sıralarını rutin olarak karıştırıyoruz.</p>
+</div></div><p>Ancak robot gibi öğrenen bir agent, bir environment içerisinde hareket ederken karşılaştığı durumların sırası zamansal olarak ilişkilendirilecektir. Örneğin robot, karanlık bir environment’te 12 saat, ardından açık renkli bir environment’te 12 saat geçirebilir. Bu, karanlıktayken sinir ağı weight güncellemelerinin <span class="math inline">\(Q_\theta\)</span>’in, hava aydınlandığında value function’i “unutmasına” neden olacağı anlamına gelebilir.</p>
+<p>Bunu halletmenin bir yolu, <em>experience replay</em>’i kullanmaktır; burada <span class="math inline">\((s,a,s',r)\)</span> deneyimlerimizi bir * yeniden oynatma arabelleğine* kaydederiz. Dünyada ne zaman bir adım atsak, <span class="math inline">\((s,a,s',r)\)</span>’i tekrar oynatma arabelleğine ekler ve onu Q-learning güncellemesi yapmak için kullanırız. Daha sonra tekrar oynatma arabelleğinden rastgele bir dizi tuple seçiyoruz ve bunlara dayalı olarak Q-learning güncellemelerini de yapıyoruz. Genel olarak, yalnızca en son 1000 deneyimin * kayan penceresinin* yeniden oynatma arabelleğinde tutulmasına yardımcı olabilir. (Optimal policy’in state alanının büyük bir bölümünü ziyaret edebileceği durumlar için daha büyük bir arabellek gerekli olacaktır, ancak bellek nedenleriyle ve aynı zamanda state alanının optimal policy ile ilgisi olmayan kısımlarına odaklanmamamız için arabellek boyutunu küçük tutmayı seviyoruz.) Buradaki fikir, bunun yayılmamıza yardımcı olmasıdır. Bu güncellemeleri yaparsak reward değerlerini state alanımız üzerinden daha verimli bir şekilde gerçekleştiririz. Bunun value iteration gibi bir şey yaptığını ancak bilinen bir model yerine deneyim örneklerini kullandığını görebiliriz.</p>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Sinir ağı <span class="math inline">\(\mathrm{Q}\)</span> yaklaştırıcısını, experience replay’i ve bir <em>target network</em>’i (parametreleri birçok SGD adımı için sabit tutulan ve yalnızca periyodik olarak yenilenen <span class="math inline">\(Q_\theta\)</span>’in bir kopyası) birleştirmek, şu şekilde bilinen tariftir: <em>Deep Q-Networks</em> (DQN). target network, önyüklemeli hedefi birçok güncellemede sabit tutar.</p>
+</div></div></section>
+<section class="level3" data-number="12.1.3" id="sec-fitted_q">
+<h3 class="anchored" data-anchor-id="sec-fitted_q" data-number="12.1.3"><span class="header-section-number">12.1.3</span> Takılı Q-learning</h3>
+<p><span class="math inline">\(\mathrm{Q}\)</span> işlevini öğrenmek için alternatif bir strateji Q-learning algorithm standardına göre daha sağlam bir yöntemdir <em>fitted Q</em> olarak adlandırıldı. Yukarıdakiyle aynı Bellman hatası fikrini kullanır, ancak iki aşamayı net bir şekilde ayırır: önce <span class="math inline">\(y = r + \gamma \max_{a'} Q_\theta(s', a')\)</span> ön yüklemeli hedefleri statik bir veri kümesinde dondurun, ardından <span class="math inline">\(Q_\theta\)</span>’i bu hedeflere sığdırmak için sıradan denetimli regression’i çalıştırın.</p>
+<div class="pseudocode-container quarto-float" data-caption-prefix="Algorithm" data-chapter-level="12" data-comment-delimiter="//" data-indent-size="1.2em" data-line-number="true" data-line-number-punc=":" data-no-end="false" data-pseudocode-number="2" id="Fitted-Q-Learning">
+<div class="pseudocode">
+\begin{algorithm}\begin{algorithmic} \Procedure{Fitted-Q-Learning}{$\mathcal{A}, s_0, \gamma, \epsilon, m$} \State $s \gets s_0$ \Comment{e.g., $s_0$ can be drawn randomly from $\mathcal{S}$} \State $\mathcal{D} \gets \emptyset$ \State initialize neural-network representation of $Q$ \While{True} \State $\mathcal{D}_\text{new} \gets$ experience from executing $\epsilon$-greedy policy based on $Q$ for $m$ steps \State $\mathcal{D} \gets \mathcal{D} \cup \mathcal{D}_\text{new}$ represented as tuples $(s, a, s', r)$ \State $\mathcal{D}_\text{supervised} \gets \emptyset$ \For{each tuple $(s, a, s', r) \in \mathcal{D}$} \State $x \gets (s,a)$ \State $y \gets r + \gamma \max_{a' \in \mathcal{A}} Q(s', a')$ \State $\mathcal{D}_\text{supervised} \gets \mathcal{D}_\text{supervised} \cup \{(x,y)\}$ \EndFor \State $Q \gets \text{supervised-NN-regression}(\mathcal{D}_\text{supervised})$ \EndWhile \EndProcedure \end{algorithmic} \end{algorithm}
+</div>
+</div>
+<p>Burada, mevcut <span class="math inline">\(Q_\theta\)</span> tarafından tetiklenen policy’i kullanma arasında geçiş yapıyoruz. <span class="math inline">\(\mathcal{D}_\text{new}\)</span> veri kümesini toplamak ve eklemek için <span class="math inline">\(\mathcal{D}\)</span> genel veri kümemize ve ardından denetimli <span class="math inline">\(\mathrm{Q}\)</span> value’in temsilini öğrenmek için sinir ağı eğitimi tüm veri seti üzerinde çalışır. Bu yöntem karıştırmaz dinamik programlama aşaması (eskilere dayalı olarak yeni <span class="math inline">\(\mathrm{Q}\)</span> değerlerinin hesaplanması) fonksiyon yaklaşımı aşamasıyla (gözetimli eğitim) neural network) ve yıkıcı unutmayı önler. regression eğitim genellikle loss function olarak kare hatasını kullanır ve Uyum iyi olana kadar eğitilecektir (muhtemelen uzatılmış olarak ölçülür) veriler).</p>
+<p>Yukarıdaki Q-learning’in yerleşik-Q ve deneyim-tekrar oynatma sürümünün, bir spektrumdaki iki nokta kadar rakip algoritmalar olmadığını unutmayın: her ikisi de geçmiş geçişleri depolar ve her ikisi de önyüklemeli Bellman hedeflerine yönelik bir ağa uyar. <em>ne kadar sıklıkta</em> hedeflerin yenilendiği (her gradient adımı ve dış yineleme başına bir kez) ve <em>kaç tane</em> gradient adımının yenilemeler arasında alındığı açısından farklılık gösterir.</p>
+</section>
+</section>
+<section class="level2" data-number="12.2" id="sec-rl_policy_search">
+<h2 class="anchored" data-anchor-id="sec-rl_policy_search" data-number="12.2"><span class="header-section-number">12.2</span> Policy gradient</h2>
+<p>Farklı bir model içermeyen strateji, ilk önce bir value function veya transition model’i tahmin etmek yerine doğrudan iyi bir policy aramaktır. Bu, özellikle action alanı büyük veya sürekli olduğunda ve <span class="math inline">\(\arg\max_a \mathrm{Q}(s,a)\)</span>’i tekrar tekrar çözmenin zor olduğu durumlarda kullanışlıdır. Buradaki fikir, <span class="math inline">\(\pi_\theta(a \mid s)\)</span>’e göre farklılaştırılabilen parametreli bir <span class="math inline">\(\pi_\theta(a \mid s)\)</span> politika ailesi seçmektir, böylece gradient tabanlı optimizasyonu kullanarak policy’i geliştirebiliriz.</p>
+<p>Burada <span class="math inline">\(\pi_\theta(a \mid s)\)</span>, eylemler üzerinden koşullu bir olasılık dağılımıdır: agent, state <span class="math inline">\(s\)</span>’te olduğunda, <span class="math inline">\(\pi_\theta(a \mid s)\)</span> olasılıkla action <span class="math inline">\(a\)</span>’i seçer. Bunun gibi stokastik politikalar, öğrenme sırasında doğal olarak exploration’i içerir.</p>
+<p>Amacımız, <span class="math inline">\(\pi_\theta\)</span>’i takip ederek elde edilen beklenen kümülatif reward <span class="math inline">\(J(\theta)\)</span>’i en üst düzeye çıkarmak için <span class="math inline">\(\theta\)</span>’i seçmektir: <span class="math display">\[
+J(\theta) = \mathbb{E}\left[\sum_{t=0}^{\infty}\gamma^t R_t \,\middle|\, a_t \sim \pi_\theta(\cdot \mid S_t)\right],
+\]</span> gradient ascent ile maksimuma çıkarıyoruz: <span class="math inline">\(\theta \leftarrow \theta + \alpha \nabla_\theta J(\theta)\)</span>, learning rate <span class="math inline">\(\alpha &gt; 0\)</span> ile.</p>
+<p>gradient ascent’i çalıştırmak için <span class="math inline">\(\nabla_\theta J(\theta)\)</span> tahminine ihtiyacımız var. Klasik yaklaşım, yüksek return’e yol açan eylemlerin olasılığını artırarak ve düşük return’e yol açan eylemlerin olasılığını azaltarak gradient’i örneklenmiş yörüngelerden tahmin eden <em>REINFORCE</em>’tir. Bu yöntemler işe yarayabilir, ancak genellikle gürültülüdürler ve pratikte ayarlanması zordur.</p>
+</section>
+<section class="level2 page-columns page-full" data-number="12.3" id="sec-rl_model_based">
+<h2 class="anchored" data-anchor-id="sec-rl_model_based" data-number="12.3"><span class="header-section-number">12.3</span> Model tabanlı RL</h2>
+<p>RL’e kavramsal olarak en basit yaklaşım, etkileşim verilerinden <span class="math inline">\(\mathrm{T}\)</span> ve <span class="math inline">\(\mathrm{R}\)</span>’i tahmin etmek ve ardından elde edilen MDP <span class="math inline">\((\mathcal{S}, \mathcal{A}, \hat{\mathrm{T}}, \hat{\mathrm{R}})\)</span>’i value iteration (veya başka bir MDP çözen algorithm) ile çözmektir.</p>
+<p><span class="math inline">\((s^{(t)}, a^{(t)}, s^{(t+1)}, r^{(t)})\)</span> tuple’ları olarak deneyim topladığımızı varsayalım. <span class="math inline">\(\mathrm{T}(s,a,s')\)</span> bir olasılık olduğundan, bunu aşağıdakileri sayarak tahmin ediyoruz: <span class="math display">\[
+\hat{\mathrm{T}}(s,a,s') = \frac{\#(s,a,s')}{\#(s,a)},
+\]</span> burada <span class="math inline">\(\#(s,a,s')\)</span>, verilerdeki <span class="math inline">\((s,a,s')\)</span> ile eşleşen geçişleri sayar ve <span class="math inline">\(\#(s,a)\)</span>, <span class="math inline">\((s,a)\)</span>’e yapılan ziyaretleri sayar.</p>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Yaygın bir iyileştirme, sıfır olasılık tahminlerini ve sıfıra bölünmeyi önlemek için <span class="math inline">\(\hat{\mathrm{T}}(s,a,s') = \frac{\#(s,a,s') + 1}{\#(s,a) + |\mathcal{S}|}\)</span>’i kullanan <em>Laplace düzgünleştirme</em>’tir. Kavramsal olarak bu, tahminimizi tek tip rastgele olasılıklarla “başlatmaya” benzer; veri biriktikçe etki kaybolur.</p>
+</div></div><p><span class="math inline">\((s,a)\)</span>’te ödüller belirleyici olduğundan tek bir gözlem yeterlidir: <span class="math inline">\(\hat{\mathrm{R}}(s,a) = r\)</span>.</p>
+<p>Bu yaklaşım küçük ayrık state ve action uzayları için etkilidir ancak sürekli veya çok büyük state uzaylarına genellemek aktif bir araştırma alanıdır.</p>
+</section>
+<section class="level2 page-columns page-full" data-number="12.4" id="sec-bandit">
+<h2 class="anchored" data-anchor-id="sec-bandit" data-number="12.4"><span class="header-section-number">12.4</span> Haydut sorunları</h2>
+<p>Haydut sorunları reinforcement learning sorunlarının bir alt kümesidir. Temel bir haydut problemi şu şekilde verilmektedir:</p>
+<ul>
+<li>A eylem kümesi <span class="math inline">\(\mathcal{A}\)</span>;</li>
+<li>A reward değerleri kümesi <span class="math inline">\(\mathcal{R}\)</span>; ve</li>
+<li>A olasılıksal reward işlevi <span class="math inline">\(R_p: \mathcal{A} \times \mathcal{R} \rightarrow \mathbb{R}\)</span>, yani <span class="math inline">\(R_p\)</span>, bir action ve bir reward alan ve bu action’e koşullandırılmış reward’i alma olasılığını döndüren bir işlevdir. alındı, <span class="math inline">\(R_p(a, r) = Pr(\text{reward} = r \mid \text{action} = a)\)</span>. agent her action aldığında, bu dağıtımdan yeni bir value çekilir.</li>
+</ul>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Haydutlarda oluşturulan bu olasılıksal ödüllerin şu ana kadar yaptığımız “ödüller deterministiktir” varsayımlarından farklı olduğuna dikkat edin.</p>
+</div></div><p>En tipik haydut sorunu <span class="math inline">\(\mathcal{R} = \{0, 1\}\)</span> ve <span class="math inline">\(|\mathcal{A}| = k\)</span>’tir. Buna <em><span class="math inline">\(k\)</span> silahlı haydut sorunu</em> denir; burada hangi “kolun” (action <span class="math inline">\(a\)</span>) seçileceğine karar verilir ve reward ya bir kazanç (<span class="math inline">\(1\)</span>) alır ya da almaz. (<span class="math inline">\(0\)</span>).</p>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Neden “haydut”? İngilizce argoda “tek kollu haydut”, kumar makinesi anlamına gelir çünkü tek kolu vardır ve paranızı alır! Burada da benzer bir makinemiz var ancak <span class="math inline">\(k\)</span> kolları var.</p>
+</div></div><p>Önemli soru genellikle <em>exploration ile exploitation</em> arasındaki sorulardan biridir. Her action’i 10 kez denediğinizi ve şimdi <span class="math inline">\(R_p(a, r)\)</span> olasılıkları için <span class="math inline">\(\hat{R}_p(a, r)\)</span> tahminlerine sahip olduğunuzu hayal edin. Bundan sonra hangi kolu seçmelisiniz? Yapabilirdin:</p>
+<ul>
+<li><em>exploit</em> bilginizi, beklenen reward’in en yüksek value’ine sahip kolu seçerek; veya<br/>
+</li>
+<li><em>keşfet</em> daha da ileri giderek, <span class="math inline">\(R_p(a, r)\)</span> değerlerine ilişkin daha iyi tahminler elde etmek için eylemlerin bazılarını veya tamamını birden fazla kez deneyin.</li>
+</ul>
+<p>Teori sonuçta bize, horizon <span class="math inline">\(h\)</span>’imiz ne kadar uzun olursa (veya benzer şekilde, discount factor’imiz 1’e yakınsa), action’in kötü seçimine vaktinden önce yaklaşmamak için keşfetmeye o kadar fazla zaman harcamamız gerektiğini söyler.</p>
+<p>Haydut sorunları reinforcement learning sorunlarıdır (ve toplu supervised learning’ten çok farklıdır):</p>
+<ul>
+<li>agent, elde edeceği verileri etkileyebilir (<span class="math inline">\(a\)</span>’in seçilmesi ona <span class="math inline">\(R(a, r)\)</span>’ten başka bir örnek verir) ve</li>
+<li>agent, öğrenirken yaptığı hatalardan dolayı cezalandırılır (davranırken elde ettiği beklenen reward’i maksimuma çıkarmaya çalışır).</li>
+</ul>
+<p>Bir <em>bağlamsal eşkıya probleminde</em>, bazı <span class="math inline">\(\mathcal{S}\)</span> kümesinden birden fazla olası durum ve her biriyle ilişkilendirilmiş ayrı bir eşkıya probleminiz vardır.</p>
+<p>Haydut sorunları reinforcement learning’in önemli bir alt kümesidir. Sorunların farkında olmak önemlidir, ancak bu class’te bunların çözümlerini incelemeyeceğiz.</p>
+</section>
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Kopyalandı");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Kopyalandı");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+<div class="nav-page nav-page-previous">
+<a aria-label="Markov Karar Süreçleri" class="pagination-link" href="./mdp.html">
+<i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">11</span>  <span class="chapter-title">Markov Karar Süreçleri</span></span>
+</a>
+</div>
+<div class="nav-page nav-page-next">
+<a aria-label="Matrix Calculus" class="pagination-link" href="./matrix_calculus.html">
+<span class="nav-page-text"><span class="chapter-number">A</span>  <span class="chapter-title">Matrix Calculus</span></span> <i class="bi bi-arrow-right-short"></i>
+</a>
+</div>
+</nav>
+</div> <!-- /content -->
+<script type="text/javascript">
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        let pseudocodeOptions = {
+          indentSize: el.dataset.indentSize || "1.2em",
+          commentDelimiter: el.dataset.commentDelimiter || "//",
+          lineNumber: el.dataset.lineNumber === "true" ? true : false,
+          lineNumberPunc: el.dataset.lineNumberPunc || ":",
+          noEnd: el.dataset.noEnd === "true" ? true : false,
+          titlePrefix: el.dataset.captionPrefix || "Algorithm"
+        };
+        pseudocode.renderElement(el.querySelector(".pseudocode"), pseudocodeOptions);
+      });
+    })(document);
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        let captionSpan = el.querySelector(".ps-root > .ps-algorithm > .ps-line > .ps-keyword")
+        if (captionSpan !== null) {
+          let captionPrefix = el.dataset.captionPrefix + " ";
+          let captionNumber = "";
+          if (el.dataset.pseudocodeNumber) {
+            captionNumber = el.dataset.pseudocodeNumber + " ";
+            if (el.dataset.chapterLevel) {
+              captionNumber = el.dataset.chapterLevel + "." + captionNumber;
+            }
+          }
+          captionSpan.innerHTML = captionPrefix + captionNumber;
+        }
+      });
+    })(document);
+    </script>
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

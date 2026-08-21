@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="tr" xml:lang="tr"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>8&nbsp; Representation Learning – 6.390 - Machine Learning'e Giriş</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./transformers.html" rel="next">
+<link href="./convolutional_neural_networks.html" rel="prev">
+<link href="./assets/logo/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-c0d695abc4efa72cfba88dcf11645824.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-ad73eeac00dcd6e430ad3806ef4d1812.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-c0d695abc4efa72cfba88dcf11645824.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.js"></script>
+<link href="site_libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.css" rel="stylesheet">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Sonuç yok",
+    "search-matching-documents-text": "eşleşen belgeler",
+    "search-copy-link-title": "Aramak için bağlantıyı kopyalayın",
+    "search-hide-matches-text": "Ek eşleşmeleri gizle",
+    "search-more-match-text": "bu belgede bir tane daha eşleşme",
+    "search-more-matches-text": "bu belgede daha fazla eşleşme",
+    "search-clear-button-title": "Temizle",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "İptal et",
+    "search-submit-button-title": "Gönder",
+    "search-label": "Ara"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="assets/style.css">
+<meta name="twitter:title" content="8&nbsp; Representation Learning – 6.390 - Machine Learning’e Giriş">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="figures/autoencoder_mnist.png">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Kenar çubuğunu değiştir" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./representation.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Representation Learning</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Kenar çubuğunu değiştir" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Ara" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">6.390 - Machine Learning’e Giriş</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://introml.mit.edu/notes/" title="English Original" class="quarto-navigation-tool px-1" aria-label="English Original"><i class="bi bi-translate"></i></a>
+    <a href="https://accessibility.mit.edu/" title="Accessibility" class="quarto-navigation-tool px-1" aria-label="Accessibility"><i class="bi bi-universal-access"></i></a>
+    <a href="https://github.com/390introml/notes" title="Kaynak Kodu" class="quarto-navigation-tool px-1" aria-label="Kaynak Kodu"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Karanlık modu değiştir"><i class="bi"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Okuyucu modunu değiştir">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Ara"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Giriş</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Regression</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gradient_descent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Classification</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_representation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Feature Representation</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./neural_networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Sinir Ağları</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./convolutional_neural_networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Evrişimsel Sinir Ağları</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./representation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Representation Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./transformers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Transformatörler</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./non_parametric.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Non-parametric Models</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mdp.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Markov Karar Süreçleri</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./reinforcement_learning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Reinforcement Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Ekler</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Bölümü değiştir">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./matrix_calculus.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Matrix Calculus</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./neural_network_appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Sinir Ağlarını Optimize Etme</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./nutshell.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Genel durum</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+<div class="quarto-sidebar-footer"><div class="sidebar-footer-item">
+<p><small>© MIT ve 6.390 (eski adıyla 6.036) ders ekibi. <a href="https://introml.mit.edu/notes/">English original</a>. Hasan için hazırlanmış Türkçe çeviri/uyarlamadır; MIT tarafından onaylandığı anlamına gelmez. <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> ile lisanslanmıştır.</small></p>
+</div></div></nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">İçindekiler</h2>
+   
+  <ul>
+  <li><a href="#sec-what-is-representation" id="toc-sec-what-is-representation" class="nav-link active" data-scroll-target="#sec-what-is-representation"><span class="header-section-number">8.1</span> Temsil nedir?</a></li>
+  <li><a href="#sec-transfer" id="toc-sec-transfer" class="nav-link" data-scroll-target="#sec-transfer"><span class="header-section-number">8.2</span> Transfer learning ve ince ayar</a></li>
+  <li><a href="#letiketsiz-öğrenme-gösterimleri" id="toc-letiketsiz-öğrenme-gösterimleri" class="nav-link" data-scroll-target="#letiketsiz-öğrenme-gösterimleri"><span class="header-section-number">8.3</span> Letiketsiz öğrenme gösterimleri</a>
+  <ul>
+  <li><a href="#sec-self-supervised" id="toc-sec-self-supervised" class="nav-link" data-scroll-target="#sec-self-supervised"><span class="header-section-number">8.3.1</span> Ön metin görevleri: denetimli görevlerden kendi kendini denetleyen görevlere kadar</a></li>
+  <li><a href="#sec-context-embeddings" id="toc-sec-context-embeddings" class="nav-link" data-scroll-target="#sec-context-embeddings"><span class="header-section-number">8.3.2</span> Bağlam tabanlı öğrenme</a></li>
+  <li><a href="#sec-contrastive" id="toc-sec-contrastive" class="nav-link" data-scroll-target="#sec-contrastive"><span class="header-section-number">8.3.3</span> Karşılaştırmalı ve çok modlu öğrenme</a></li>
+  </ul></li>
+  <li><a href="#sec-autoencoder-structure" id="toc-sec-autoencoder-structure" class="nav-link" data-scroll-target="#sec-autoencoder-structure"><span class="header-section-number">8.4</span> Otomatik kodlayıcılar</a></li>
+  <li><a href="#sec-embeddings" id="toc-sec-embeddings" class="nav-link" data-scroll-target="#sec-embeddings"><span class="header-section-number">8.5</span> Gömmeler: birleştirici bir görünüm</a>
+  <ul>
+  <li><a href="#yerleştirme-etiği" id="toc-yerleştirme-etiği" class="nav-link" data-scroll-target="#yerleştirme-etiği"><span class="header-section-number">8.5.1</span> Yerleştirme etiği</a></li>
+  <li><a href="#transformatörlere-bağlantı" id="toc-transformatörlere-bağlantı" class="nav-link" data-scroll-target="#transformatörlere-bağlantı"><span class="header-section-number">8.5.2</span> Transformatörlere bağlantı</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-autoencoders" class="quarto-section-identifier"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Representation Learning</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Önceki bölümlerde, yeni veriler için etiketleri tahmin eden modelleri öğrenmek amacıyla hem özelliklere/girdilere hem de karşılık gelen etiketlere/çıktılara sahip eğitim örneklerini kullanarak büyük ölçüde supervised learning’e odaklanmıştık. Ancak yinelenen bir konu da <em>verilerin nasıl temsil edildiği</em>’in önemi olmuştur. <a href="feature_representation.html" class="quarto-xref"><span>Bölüm 5</span></a>’te, doğru feature transformation’i seçmenin, çalışan bir model ile çalışmayan bir model arasındaki farkı yaratabileceğini gördük. <a href="convolutional_neural_networks.html" class="quarto-xref"><span>Bölüm 7</span></a>’te evrişimli sinir ağlarının hiyerarşik özellikleri verilerden otomatik olarak öğrendiğini gördük. Bu bölüm daha geniş bir soruyu sormak için geri adım atıyor: <em>doğrudan</em> verilerinin iyi temsillerini öğrenebilir miyiz ve neden bunu isteyelim?</p>
+<section id="sec-what-is-representation" class="level2 page-columns page-full" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="sec-what-is-representation"><span class="header-section-number">8.1</span> Temsil nedir?</h2>
+<p><em>temsili</em>, ham verilerden, alakasız ayrıntıları atarken temel bilgileri yakalayan daha kompakt, yapılandırılmış bir kodlamaya eşlemedir. Bir çitin önündeki bazı çöp kutularının fotoğrafını düşünün. Bir kamera milyonlarca pixel değerini kaydeder, ancak sahneyi hafızadan çizmeniz istendiğinde çok daha basit bir şey üretirsiniz: “ahşap çit”, “gri çöp kutusu”, “metal” gibi etiketlerin olduğu bir çizim. Beyniniz ham duyusal input’i, sahnenin <em>anlamını</em>’ini koruyan kompakt bir açıklamaya sıkıştırdı.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Bu örnek, insan hafızasının pixel düzeyindeki ayrıntılar yerine <em>gist</em> sahnesini sakladığını gösteren Bartlett (1932) ve Intraub &amp; Richardson (1989) tarafından yapılan deneylerden alınmıştır.</p>
+</div></div><p>Daha resmi olarak, <span class="math inline">\(x \in \mathbb{R}^d\)</span> verisi verildiğinde, bir temsil, verileri aşağı akış görevlerinin (classification, clustering, alma, oluşturma) kolaylaştığı yeni bir alana eşleyen bir <span class="math inline">\(g: \mathbb{R}^d \rightarrow \mathbb{R}^k\)</span> işlevidir (tipik olarak <span class="math inline">\(k &lt; d\)</span> ile).</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Gösterimler genellikle daha düşük boyutlu olsa da (<span class="math inline">\(k &lt; d\)</span>), bu gerekli değildir. Birçok modern sistemde (örneğin transformatörlerde), gösterimler aslında daha yüksek boyutlu olabilir, ancak ilgili bilgilerin çıkarılmasını kolaylaştıracak şekilde yapılandırılmıştır.</p>
+</div></div><p>Bir temsili <em>iyi</em> yapan nedir? Tüm sıkıştırmalar eşit derecede yararlı değildir; yanlış bilgiyi göz ardı eden bir gösterim, yararsız olmaktan daha da kötüdür. Bengio ve ark. (2013) arzu edilen birkaç özelliği tanımlamaktadır:</p>
+<ol type="1">
+<li><strong>Compact</strong> (<em>minimal</em>): temsilde gürültü ve fazlalık göz ardı edilerek birkaç boyut kullanılır.</li>
+<li><strong>Açıklayıcı</strong> (<em>sufficient</em>): orijinal verileri yeniden yapılandırmak veya bunlar hakkında mantık yürütmek için yeterli bilgiyi tutar.</li>
+<li><strong>Disentangled</strong>: farklı boyutlar bağımsız varyasyon faktörlerini yakalar (ör. rakam kimliği ve kontur kalınlığı).</li>
+<li><strong>Yorumlanabilir</strong>: boyutlar anlamlı kavramlara karşılık gelir.</li>
+<li><strong>Sonraki görevler için kullanışlıdır</strong>: iyi bir temsil, sonraki problem çözmeyi kolaylaştırır.</li>
+</ol>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>“Genel olarak konuşursak, iyi bir temsil, sonraki öğrenme görevini kolaylaştıran temsildir.” — <em>Derin Öğrenme</em>, Goodfellow ve ark. 2016</p>
+</div></div><p>Yüksek düzeyde, iyi bir temsil, <em>önem verdiğimiz bilgileri korurken</em>veri yapısını basitleştiren*’dir.</p>
+<p>Bu özellikler bazen gerilim içindedir; örneğin, kompaktlığı maksimuma çıkarmak açıklayıcı gücü feda edebilir (örneğin, tek bitlik bir gösterim maksimum düzeyde kompakttır ancak neredeyse hiçbir şeyi açıklamaz). Ancak, overfitting’te gördüğümüz gibi, <em>current</em> veri kümesinin açıklayıcı gücünü en üst düzeye çıkarmak, aslında <em>lower</em>’i gelecekteki veri kümeleri için de sağlayabilir. Kompakt gösterimler generalization’e yardımcı olur: model karmaşıklığının sınırlandırılmasının overfitting’i engellemesi gibi, gösterimdeki bir bottleneck, model’i veri kümesine özgü gürültü yerine en geniş anlamda kullanışlı yapıyı yakalamaya zorlar. representation learning’in büyük bir kısmı bu dengelemeler arasında gezinmekle ilgilidir.</p>
+<p><strong>Yerleştirme olarak temsiller.</strong> Bir neural network’in her bir layer’i, input’ini * etkinleştirmelerinin<em>’inin bir vector’iyle eşler. Bu activation vector’i bir </em>embedding* olarak düşünebiliriz — konumun anlamı kodladığı yüksek boyutlu bir uzaydaki bir nokta. Bir layer’in <em>ağırlıkları</em>’i ile ürettiği <em>aktivasyonları</em> arasında ayrım yapmak önemlidir: ağırlıklar öğrenilen parametrelerdir (bir CNN’teki filtreler, bir weight’in girişleri) matrix), aktivasyonlar ise bu ağırlıklar belirli bir input’e uygulandığında üretilen çıktılardır. Bir veri noktasının embedding’i, ağırlıkların kendisi değil, onun activation vector’idir; ağırlıklar, embedding alanları arasındaki <em>mapping</em>’i tanımlar; etkinleştirmeler ise Belirli bir input’in belirli bir soyutlama düzeyinde <em>temsili</em>. Dolayısıyla representation learning, uzaklıkların ve yönlerin anlamsal ilişkileri kodladığı veri kümesi üzerinden bir geometri öğrenme olarak görülebilir.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Bir CNN’te öğrenilen filtreler gösterimin “alfabesi” veya yapı taşlarıdır. Belirli bir image’in embedding’i, filter etkinleştirmelerinin vector’idir; her filter’in her konumda ne kadar güçlü yanıt verdiği. Aynı nesnenin iki görüntüsü, pikselleri önemli ölçüde farklı olsa bile benzer activation desenleri üretecektir. (Örneğin, ağırlıkları bir sözlük olarak düşünün; eğitimden sonra sabitlenir; ağın neyi tespit edeceğini tanımlar. Etkinleştirmeler, belirli bir input için o sözlükte bir şey aramanın sonucudur. Aynı köpeğin iki görüntüsü, pixel değerleri önemli ölçüde farklı olsa bile benzer etkinleştirmeler (benzer arama sonuçları) üretir.)</p>
+</div></div><p>Örneğin, bir image <span class="math inline">\(x\)</span> verildiğinde, bazı ara layer’teki aktivasyonlar, belirli bir soyutlama düzeyinde image’i temsil eden bir vector oluşturur. Buna “word2vec” benzetmesi yaparak “im2vec” adını verebiliriz (aşağıdaki <a href="transformers.html#sec-embeddings" class="quarto-xref"><span>Bölüm 9.2</span></a>’te tartışılmıştır). Ağ iyi bir temsil öğrenmişse, anlamsal olarak benzer görüntüler birbirine yakın yerleştirmelere sahip olacaktır; gerçek pixel değerleri çok farklı olsa bile, bu alanda iki altın avcının fotoğrafı yakında olacaktır.</p>
+</section>
+<section id="sec-transfer" class="level2 page-columns page-full" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="sec-transfer"><span class="header-section-number">8.2</span> Transfer learning ve ince ayar</h2>
+<p>Her ne kadar böyle adlandırmasak da, representation learning’i zaten çalışırken görmüştük. Bir CNN görüntüleri sınıflandırmak üzere eğitildiğinde, dahili katmanları giderek soyutlaşan özelliklerden oluşan bir hiyerarşiyi öğrenir.</p>
+<p><strong>Hiyerarşik feature öğrenimi.</strong> Eğitimli bir CNN’teki bireysel nöronların neye yanıt verdiğini görselleştirerek, farklı aşamalarda öğrenilen özellik türlerini sezgisel olarak anlayabiliriz. Zeiler ve Fergus’un (2014) çalışması, ilk katmanların basit kenarları ve renkleri öğrendiğini, orta katmanların bunları dokular ve nesne parçaları halinde birleştirdiğini ve en derin katmanların tüm nesnelere ve sahnelere yanıt verdiğini - klasik bilgisayarlı görme hattını yansıttığını gösterdi; ancak burada özellikler elle tasarlanmak yerine uçtan uca verilerden alınmıştır.</p>
+<p>classification için uçtan uca eğitilmiş bir CNN’te, backpropagation’in <em>both</em> feature temsillerini (filtrelerin algıladığı şey) <em>ve</em>’i ortaklaşa öğrendiğini unutmayın. tamamen bağlı ağırlıklar (bu özelliklerin son görev için nasıl birleştirildiği). İkisi birleşiyor: Ortaya çıkan temsiller tahmin hedefi tarafından şekillendiriliyor.</p>
+<p><strong>Sinirbilim paralellikleri.</strong> Bu hiyerarşi, sinir bilimcilerin, bilgiyi erken görsel korteksteki basit kenar dedektörlerinden daha yüksek alanlardaki tüm nesnelere yanıt veren nöronlara kadar giderek daha karmaşık hale gelen bir dizi alan aracılığıyla işleyen beynin görsel sisteminde gözlemledikleriyle paralellikler gösterir. Araştırmacılar, derin bir ağ ile primat beyninin görsel bilgiyi nasıl organize ettiğini karşılaştırdıklarında, benzerlik yapılarının yakından hizalandığı ortaya çıkıyor: Beyinde benzer sinirsel activation desenleri üreten görüntüler aynı zamanda derin ağda da benzer activation desenleri üretiyor ve bunun tersi de geçerli.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Yamins ve ark. (PNAS 2014), derin ağ aktivasyonlarının benzerlik yapısını primat görsel korteksinden alınan sinir kayıtlarıyla karşılaştırdı ve güçlü bir benzerlik buldu. Daha yakın zamanlarda, <a href="https://doi.org/10.1038/s41467-024-49168-6">Goldstein ve ark. (Nature Communications, 2024)</a>, dil modellerinden beyin yerleştirmeleri ve bağlamsal yerleştirmelerin ortak geometrik kalıpları paylaştığını gösterdi; bu da biyolojik ve yapay sistemlerin benzer temsil stratejileri üzerinde birleştiğini öne sürüyor.</p>
+</div></div><p>Derin bir ağın dahili temsilleri genel amaçlı özellikleri (kenarlar, dokular, nesne parçaları) yakalıyorsa bu temsiller, ağın orijinal olarak üzerinde eğitim aldığı <em>beyond</em> görevleri için yararlı olmalıdır. Bu, <em>transfer learning</em>’in arkasındaki key bilgisidir.</p>
+<p><strong>transfer learning örneği:</strong></p>
+<ol type="1">
+<li><strong>Pretrain</strong> A görevi için büyük bir veri kümesinde bir ağ (örneğin, ImageNet’te 1000 nesne kategorisinin sınıflandırılması), <span class="math inline">\(W\)</span> ve <span class="math inline">\(b\)</span> öğrenilen parametrelerin elde edilmesi.</li>
+<li><strong>Transfer</strong> B görevi için yeni bir ağ başlatmak amacıyla bu parametrelerden bazıları veya tümü (örneğin, iç mekan fotoğraflarından oda türlerinin tanınması).</li>
+<li><strong>Finetune</strong>, görev B’nin (genellikle çok daha küçük) veri kümesindeki yeni ağ, <span class="math inline">\(W'\)</span> ve <span class="math inline">\(b'\)</span> parametrelerinin güncellenmesiyle sonuçlanır.</li>
+</ol>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Aktarılan “öğrenilmiş gösterim” tam olarak önceden eğitilmiş ağın ağırlıkları ve önyargılarıdır; bunlar, ağın keşfettiği feature dedektörlerini kodlar.</p>
+</div></div><p>Bu işe yarar çünkü ilk katmanlar birçok görsel görevde yararlı olan genel özellikleri (kenarlar, dokular) öğrenirken sonraki katmanlar giderek göreve özgü hale gelir. İnce ayar, ağın daha yüksek seviyeli temsillerini yeni göreve uyarlamasına ve aynı zamanda kullanışlı alt seviye özelliklerini korumasına olanak tanır. İnce ayar yaptığınızda, ilk katmanlar zaten çoğunlukla düşük seviyeli yapıyı “öğrenmiştir”, dolayısıyla gradient güncellemeleri çoğunlukla yeni görevin semantiğine uyum sağlayan sonraki katmanları etkiler. Aksine, sıfırdan eğitim her şeyi yeniden öğrenmeyi gerektirir; pahalı ve veriye aç bir süreç.</p>
+<p>Transfer learning artık derin öğrenmede standart bir uygulamadır. Uygulayıcılar sıfırdan eğitim vermek yerine genellikle önceden eğitilmiş bir model ile başlar ve kendi özel uygulamalarına göre ince ayar yapar. Bu, ihtiyaç duyulan etiketli veri miktarını önemli ölçüde azaltır ve önemli veri kümeleriyle bile çoğu zaman sıfırdan eğitimden daha iyi sonuçlar verir.</p>
+<p>Uygulamada ince ayar sırasında ağın ne kadarının güncelleneceği bir tasarım tercihidir. Yaygın bir strateji, ilk katmanları tamamen dondurmak (gradyanlarını sıfıra ayarlamak) ve yalnızca sonraki katmanları eğitmektir; bu daha hızlıdır ve risk’in yararlı düşük seviyeli özelliklerin üzerine yazılmasını azaltır. Genel bir kural olarak: B görevi A görevine ne kadar benzerse, o kadar fazla katmanı güvenli bir şekilde dondurabilirsiniz.</p>
+</section>
+<section id="letiketsiz-öğrenme-gösterimleri" class="level2 page-columns page-full" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="letiketsiz-öğrenme-gösterimleri"><span class="header-section-number">8.3</span> Letiketsiz öğrenme gösterimleri</h2>
+<p>Transfer learning, hedef görevdeki etiketli verilere olan ihtiyacı azaltır, ancak yine de denetlenen pretraining’e dayanır; ilk etapta birisinin bu milyondan fazla ImageNet görüntüsünü label yapması gerekiyordu. Bu durum doğal bir soruyu gündeme getiriyor: Tüm bu etiketleme gerçekten gerekli mi, yoksa <em>any</em> etiketleri olmadan iyi temsiller öğrenebilir miyiz?</p>
+<p>Yapabileceğimizi düşünmek için nedenlerimiz var. <em>self-supervised learning</em>’in key anlayışı, verilerin kendisinin denetim sinyali sağlayabilmesidir; insan etiketine gerek yoktur. Ve kendi kendini denetlemenin ötesinde, <em>unlabeled</em> verileri son derece bol: İnternet milyarlarca resim, metin belgesi ve ses kaydı içeriyor ve bunların hiçbiri etiketli olarak gelmiyor. Bu verilerden faydalı temsillerin öğrenilmesi, kendi kendini denetleyen ve denetleyen representation learning’in temel sorusudur.</p>
+<section id="sec-self-supervised" class="level3 page-columns page-full" data-number="8.3.1">
+<h3 data-number="8.3.1" class="anchored" data-anchor-id="sec-self-supervised"><span class="header-section-number">8.3.1</span> Ön metin görevleri: denetimli görevlerden kendi kendini denetleyen görevlere kadar</h3>
+<p><em>self-supervised learning</em>’in ardındaki fikir kavramsal olarak basittir: İnsan tarafından sağlanan etiketler gerektirmek yerine, etiketleri otomatik olarak oluşturmak için verinin yapısını kullanarak supervised learning sorununu * verinin kendisinden * oluştururuz.</p>
+<p>key’in fikri, etiketleri ücretsiz olan bir yardımcı tahmin problemi olan bir <em>ön metin görevi</em> tasarlamaktır. Bir ağı bahane görevini çözecek şekilde eğiterek, iç katmanlarında yararlı temsiller ortaya çıkar. Bu, öğrencilerin zaten aşina olduğu supervised learning’in doğal bir uzantısıdır — tek fark, etiketlerin <em>’ten geldiği </em>’tir.</p>
+<p>Bahane görevlerine örnekler şunları içerir:</p>
+<ul>
+<li><strong>Maskeli tahmin:</strong> input’in bir kısmını gizleyin ve eksik parçayı tahmin etmesi için ağı eğitin. Görüntüler için bu, rastgele yamaların maskelenmesi ve pixel değerlerinin tahmin edilmesi anlamına gelebilir. Metin için bu, kelimeleri maskelemek ve bağlamdan tahmin etmek anlamına gelir (BERT’te olduğu gibi).</li>
+<li><strong>İçerik tahmini:</strong> Bir input’in bir parçası verildiğinde, yakınlarda neyin görüneceğini tahmin edin. Örneğin, bir image yaması verildiğinde, birkaç aday yamadan hangisinin onun komşusu olduğunu tahmin edin.</li>
+<li><strong>Renklendirme:</strong> Gri tonlamalı bir image verildiğinde renkleri tahmin edin. Başarılı olmak için ağın nesne sınırlarını, malzemelerini ve anlambilimini anlaması gerekir.</li>
+</ul>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>O ve ark. (2022), image yamalarının %75’ini maskeleyen ve ağı bunları yeniden yapılandırmak üzere eğiten maskelenmiş otomatik kodlayıcıların (MAE) denetimli pretraining’inkilere rakip olan veya onları aşan temsilleri öğrendiğini gösterdi.</p>
+</div></div><p>Her durumda, etiketler verilerin kendisinden ücretsiz olarak gelir; herhangi bir insan açıklamasına gerek yoktur. Ortaya çıkan temsiller faydalıdır <em>çünkü</em> bu görevleri çözmek veri yapısının anlaşılmasını gerektirir. Eksik image yamalarını doldurabilecek bir ağ, dokular, nesne sınırları ve mekansal düzen hakkında bilgi sahibi olmalıdır. Maskelenmiş kelimeleri tahmin edebilen bir ağ, sözdizimi ve anlam hakkında bir şeyler öğrenmiş olmalı.</p>
+<p>Somut bir metin örneği düşünün. Verilen cümleye göre:</p>
+<blockquote class="blockquote">
+<p>Yağmurdan sonra çim ____ oldu.</p>
+</blockquote>
+<p>Eksik sözcüğü tahmin etmek üzere eğitilmiş bir model’in “ıslak” veya “yeşil” sözcüklerinin olası tamamlamalar olduğunu öğrenmesi gerekir; bu da yağmur, çimen ve bunların ilişkileri hakkında bazı şeyleri anlamayı gerektirir. Bu bir <em>kendi kendini denetleme</em> örneğidir: eğitim sinyali insan etiketlerinden değil, verinin kendisinden gelir.</p>
+<p>Self-supervised learning, büyük ölçekli modellerin eğitimi için baskın paradigma haline geldi. Modern dil modelleri, sıradaki bir sonraki kelimeyi tahmin ederek eğitilir; bu, geniş ölçekte, dikkat çekici derecede yetenekli dil temsilleri üreten bir kendi kendini denetleme biçimidir.</p>
+</section>
+<section id="sec-context-embeddings" class="level3 page-columns page-full" data-number="8.3.2">
+<h3 data-number="8.3.2" class="anchored" data-anchor-id="sec-context-embeddings"><span class="header-section-number">8.3.2</span> Bağlam tabanlı öğrenme</h3>
+<p>Temsilleri etiketler olmadan öğrenmeye yönelik başka bir yaklaşım, <em>co-occurrence</em>’e dayanır: benzer bağlamlarda görünen öğelerin benzer temsilleri olmalıdır. Doğal dil işlemede <em>kelime yerleştirmelerin</em> arkasında yatan prensip budur.</p>
+<p>“Köpek” ve “kedi” gibi anlamsal olarak ilişkili kelimelerin vektörleri birbirine yakın olmalı, “kedi” ve “masa” gibi alakasız kelimeler ise birbirinden uzak olmalıdır. Yerleştirmeler arasındaki benzerlik sıklıkla <em>inner ürünü</em> (dot product) kullanılarak ölçülür:</p>
+<p><span class="math display">\[a^T b = a \cdot b = \sum_{j} a_j \, b_j\]</span></p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>İlgili bir ölçü <em>kosinüs benzerliği</em>, <span class="math inline">\(\frac{a^T b}{\|a\| \, \|b\|}\)</span>’tir; bu, vector büyüklüğü için normalleştirir ve yalnızca yön hizalamasını ölçer.</p>
+</div></div><p>İç çarpım, iki vektörün ne kadar hizalı olduğunu gösterir: son derece pozitif değerler güçlü benzerliğe işaret eder, negatif değerler karşıtlığa işaret eder ve sıfıra yakın değerler hiçbir benzerlik önermez (büyüklükle ilgili bir ölçeklendirme faktörüne kadar).</p>
+<p>Çığır açan bir embedding yöntemi olan <em>word2vec</em> (Mikolov ve diğerleri, 2013), vector aritmetiğinin anlamsal ilişkilere karşılık geldiği yerleştirmeler üretti:</p>
+<p><span class="math display">\[\text{embedding}_{\tt paris} - \text{embedding}_{\tt france} + \text{embedding}_{\tt italy} \approx \text{embedding}_{\tt rome}\]</span></p>
+<p>Bu tür yerleştirmeler, çeşitli vocabulary (örneğin, <span class="math inline">\(\textit{uncle} - \textit{man} + \textit{woman} \approx \textit{aunt}\)</span>) genelindeki analojiler gibi anlamlı anlamsal ilişkileri ortaya çıkardı. Eğitim prosedürü bir self-supervised learning biçimidir: ağ, bir kelimeyi kendi bağlamından tahmin etmeyi öğrenir (veya tam tersi) ve bu eğitimden ortaya çıkan kelime vektörleri, dağıtımsal anlambilimi yakalar; “bir kelimeyi, tuttuğu şirkete göre bileceksiniz” ilkesi.</p>
+<p>Aynı bağlam temelli prensip metnin çok ötesinde de geçerlidir:</p>
+<ul>
+<li><strong>Node2Vec</strong> (Grover ve Leskovec, 2016), rastgele yürüyüşleri “cümleler” olarak ele alarak ve word2vec benzeri bir amaç uygulayarak bir grafikteki düğümlere yönelik yerleştirmeleri öğrenir. Benzer grafik komşuluklarında görünen düğümler benzer yerleştirmeler alır.</li>
+<li><strong>Tıbbi yerleştirmeler:</strong> Elektronik sağlık kayıtlarının temsilleri (EHRs), hasta geçmişlerini benzer koşullara sahip hastaların cluster ile bir arada bulunduğu vector alanlarına yerleştirerek daha iyi klinik tahmin modellerine olanak tanır.</li>
+<li><strong>Image yerleştirmeleri:</strong> <a href="#sec-what-is-representation" class="quarto-xref"><span>Bölüm 8.1</span></a>’te tartışıldığı gibi, CNNs’in ara katmanları görsel ve anlamsal olarak benzer görüntülerin yakında olduğu yerleştirmeler üretir.</li>
+</ul>
+</section>
+<section id="sec-contrastive" class="level3 page-columns page-full" data-number="8.3.3">
+<h3 data-number="8.3.3" class="anchored" data-anchor-id="sec-contrastive"><span class="header-section-number">8.3.3</span> Karşılaştırmalı ve çok modlu öğrenme</h3>
+<p>Yukarıdaki yöntemler (kendi kendini denetleyen bahane görevleri ve bağlama dayalı öğrenme) verileri tahmin ederek veya birlikte konumlandırarak temsilleri öğrenir. <em>Contrastive learning</em> farklı bir yaklaşım benimser: input’in parçalarını yeniden yapılandırmak veya tahmin etmek yerine, <em>karşılaştırma</em> örnekleriyle öğrenir ve temsil alanının geometrisini doğrudan şekillendirir.</p>
+<p>Temel fikir basit:</p>
+<ol type="1">
+<li>Bir veri noktası alın ve bunun iki genişletilmiş versiyonunu oluşturun (örneğin, aynı image’in iki farklı kırpması/renk değişimi). Bunlar bir <em>pozitif çifti</em> oluşturur.</li>
+<li>Toplu formdaki diğer veri noktaları <em>negatif çiftler</em>.</li>
+<li>Pozitif çiftlerin birbirine yakın, negatif çiftlerin ise birbirinden uzak olduğu gösterimler üretmek için ağı eğitin.</li>
+</ol>
+<p>Bu, ağın, farklı girişleri ayırt etmeye devam ederken, <em>invariant</em> büyütmelere (kırpma, renk değişiklikleri vb.) sahip temsilleri öğrenmesini teşvik eder. SimCLR ve MoCo gibi çerçeveler, contrastive learning’in denetimli pretraining ile rekabetçi temsiller üretebildiğini göstermiştir.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>O ve ark. (2020), negatif örneklerden oluşan dinamik bir sırayı koruyan ve contrastive learning’in etkili bir şekilde ölçeklenmesini sağlayan MoCo’yu (Momentum Contrast) tanıttı.</p>
+</div></div><p><strong>Çok modlu öğrenme.</strong> Karşıtlık ilkesi, doğal olarak farklı veri türlerindeki paylaşılan temsillerin (örneğin, resimler ve metin açıklamaları veya ses ve video) öğrenilmesine kadar uzanır. Sezgi, farklı yöntemlerin aynı temel kavramın tamamlayıcı görüşlerini sağlamasıdır. Bir köpeğin fotoğrafı ve “getirme oynayan bir Golden Retriever” cümlesi aynı sahneyi ifade ediyor. Bir model’i, eşleşen image metin çiftlerinin (pozitifler) temsillerini bir araya getirirken uyumsuz çiftleri (negatifler) birbirinden ayıracak şekilde eğiterek, orijinal formlarına bakılmaksızın, farklı modalitelerden ilgili kavramların birbirine yakın olduğu paylaşılan bir embedding alanı elde ederiz.</p>
+<p>Bu fikir, görüntüler ve metin için ortak bir embedding alanı öğrenen CLIP gibi modellerin temelini oluşturur. Bir image verildiğinde, CLIP ilgili metin açıklamalarını alabilir ve bunun tersi de geçerlidir; bunların tümünü, herhangi bir özel classification görevi konusunda açıkça eğitilmeden gerçekleştirir. Paylaşılan temsil, yeni görevlerin yalnızca doğal dilde açıklanmasıyla esnek “sıfır atış” aktarımına olanak tanır.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>LeCun (2022), birden fazla yöntemi entegre eden ve birden fazla zaman ölçeğinde tahmin yapmayı mümkün kılan öğrenme temsillerinin, daha otonom makine zekasına doğru bir key adımı olduğunu savunuyor.</p>
+<p>Sıfır atış, model’in hiçbir zaman açıkça eğitilmediği kategorileri işleyebileceği anlamına gelir. Örneğin, bir image ve label “panda” metni verildiğinde, CLIP, eğitim sırasında etiketli bir panda görmemiş olsa bile bunların eşleşip eşleşmediğine karar verebilir.</p>
+</div></div></section>
+</section>
+<section id="sec-autoencoder-structure" class="level2 page-columns page-full" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="sec-autoencoder-structure"><span class="header-section-number">8.4</span> Otomatik kodlayıcılar</h2>
+<p>Bahane görevi input <span class="math inline">\(x\)</span> <em>itself</em>’i yeniden oluşturmak olduğunda self-supervised learning’in özel bir durumu ortaya çıkar — maskelenmiş bir kısım değil, komşu bir yama değil, input’in tamamı. Bu yeniden yapılandırma bir bottleneck aracılığıyla zorlandığında sonuç bir <em>autoencoder</em> olur ve bottleneck’teki latent representation çok açık hale gelir.</p>
+<p>Basit, doğrusal olarak bağlı bir ağda (artık bağlantılar veya ayrı convolution akışları olmadan), bir ara layer’teki aktivasyonları latent representation olarak düşünebiliriz. autoencoder bu fikri kesinleştirir: ağ kendini üretecek şekilde sıkıştırılır ve bottleneck, verilerin temel yapısını yakalayan sıkıştırılmış bir kodlamayı zorlayan bir <em>bilgi kısıtlamasını</em> uygular.</p>
+<p>input verimiz olduğunu varsayalım <span class="math inline">\(\mathcal{D} = \{x^{(1)}, \ldots,
+  x^{(n)} \}\)</span>, where <span class="math inline">\(x^{(i)}\in \mathbb{R}^d\)</span>. We seek to learn an autoencoder that will produce a new dataset <span class="math inline">\(\mathcal{D}_{çıkış} =
+  \{a^{(1)}, \ldots, a^{(n)}\}\)</span>, where <span class="math inline">\(a^{(i)}\in \mathbb{R}^k\)</span> with <span class="math inline">\(k
+  &lt; d\)</span>. We can think about <span class="math inline">\(a^{(i)}\)</span> as the new <em>representation</em> of data point <span class="math inline">\(x^{(i)}\)</span>. For example, in <a href="#fig-illustration" class="quarto-xref">Şekil&nbsp;<span>8.1</span></a> we show the learned representations of a dataset of MNIST digits with <span class="math inline">\(k=2\)</span>. Bireysel veri noktalarını inceledikten sonra, unsupervised learning’in, aynı basamaktaki görüntülerin birbirine yakın olduğu sıkıştırılmış (veya <em>latent</em>) bir temsil bulduğunu ve potansiyel olarak sonraki clustering veya classification görevlerine büyük ölçüde yardımcı olduğunu görüyoruz.</p>
+<div id="fig-illustration" class="quarto-float quarto-figure quarto-figure-center anchored page-columns page-full">
+<figure class="quarto-float quarto-float-fig figure page-columns page-full">
+<div aria-describedby="fig-illustration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/autoencoder_mnist.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Şekil&nbsp;8.1: Rakam veri kümesinin iki boyuta sıkıştırılması. El yazısıyla yazılmış bir rakamın image’i olan input x^{(i)}, yeni düşük boyutlu gösterim (a_1,a_2)’te gösterilmektedir."><img src="figures/autoencoder_mnist.png" class="img-fluid figure-img" style="width:50.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-margin quarto-float-caption quarto-float-fig margin-caption" id="fig-illustration-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Şekil&nbsp;8.1: Rakam veri kümesinin iki boyuta sıkıştırılması. El yazısıyla yazılmış bir rakamın image’i olan input <span class="math inline">\(x^{(i)}\)</span>, yeni düşük boyutlu gösterim <span class="math inline">\((a_1,a_2)\)</span>’te gösterilmektedir.
+</figcaption>
+</figure>
+</div>
+<p><strong>Structure.</strong> Bir autoencoder iki işlevden oluşur: verileri $a temsil alanına eşleyen vector değerli <em>encoder</em> <span class="math inline">\(g : \mathbb{R}^d \rightarrow \mathbb{R}^k\)</span> ^k$, and a <em>decoder</em> <span class="math inline">\(h : \mathbb{R}^k \rightarrow
+  Temsil alanını orijinal veri alanına geri eşleyen \mathbb{R}^d\)</span>.</p>
+<p>encoder ve decoder tipik olarak sinir ağlarıdır. Tek layer autoencoder’in temel mimarisi <a href="#fig-autoencoder" class="quarto-xref">Şekil&nbsp;<span>8.2</span></a>’te gösterilmektedir; Toplama düğümlerinde bias terimleri <span class="math inline">\(W^1_0\)</span> ve <span class="math inline">\(W^2_0\)</span>’in mevcut olduğunu ancak şekilde netlik sağlamak amacıyla ihmal edildiğini unutmayın. Orijinal <span class="math inline">\(d\)</span> boyutlu input, $W^1 ile encoder <span class="math inline">\(g(x; W^1, W^1_0)=f_1(W{^1}^T x + W^1_0)\)</span> aracılığıyla <span class="math inline">\(k\)</span> boyutlarına sıkıştırılır ^{d k}$ and <span class="math inline">\(W^1_0 \in \mathbb{R}^k\)</span>, where the non-linearity <span class="math inline">\(f_1\)</span> is applied element-wise. To recover (an approximation to) the original instance, we then apply the decoder <span class="math inline">\(h(a; W^2, W^2_0) = f_2(W{^2}^T
+  a + W^2_0)\)</span>, where <span class="math inline">\(f_2\)</span> denotes a different activation function. In general, both the encoder and decoder could involve multiple layers. Learning seeks parameters <span class="math inline">\(W^1, W^1_0\)</span> and <span class="math inline">\(W^2, W^2_0\)</span> such that the reconstructed instances, <span class="math inline">\(h(g(x^{(i)}; W^{1}, W^1_0); W^{2}, W^2_0)\)</span>, are close to the original input <span class="math inline">\(x^{(i)}\)</span>.</p>
+<div id="fig-autoencoder" class="quarto-float quarto-figure quarto-figure-center anchored page-columns page-full">
+<figure class="quarto-float quarto-float-fig figure page-columns page-full">
+<div aria-describedby="fig-autoencoder-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/autoencoder.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Şekil&nbsp;8.2: encoder’i (sol yarı, açık yeşil) ve decoder’i (sağ yarı, açık mavi) gösteren Autoencoder yapısı, x girişlerini a temsiline kodlar ve \tilde{x}’i (yeniden yapılandırma) üretmek için temsilin kodunu çözer. Bu özel örnekte, gösterim (a_1, a_2, a_3) yalnızca üç boyuta sahiptir."><img src="figures/autoencoder.png" class="img-fluid figure-img" style="width:60.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-margin quarto-float-caption quarto-float-fig margin-caption" id="fig-autoencoder-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Şekil&nbsp;8.2: encoder’i (sol yarı, açık yeşil) ve decoder’i (sağ yarı, açık mavi) gösteren Autoencoder yapısı, <span class="math inline">\(x\)</span> girişlerini <span class="math inline">\(a\)</span> temsiline kodlar ve <span class="math inline">\(\tilde{x}\)</span>’i (yeniden yapılandırma) üretmek için temsilin kodunu çözer. Bu özel örnekte, gösterim (<span class="math inline">\(a_1\)</span>, <span class="math inline">\(a_2\)</span>, <span class="math inline">\(a_3\)</span>) yalnızca üç boyuta sahiptir.
+</figcaption>
+</figure>
+</div>
+<p><strong>Learning.</strong> supervised learning’teki aynı araçları kullanarak ağırlıkları öğreniyoruz: (stokastik) gradient descent, bir loss function’i en aza indirir. <span class="math inline">\(\mathcal{L}(\tilde{x}, x)\)</span> kaybı, yeniden yapılanma <span class="math inline">\(\tilde{x} = h(g(x; W^{1}, W^1_0); W^{2}, W^2_0)\)</span> ile orijinal input <span class="math inline">\(x\)</span> arasındaki tutarsızlığı ölçer. Sürekli değerli <span class="math inline">\(x\)</span> için doğal seçim squared loss’tir: <span class="math inline">\(\mathcal{L}_{SE}(\tilde{x}, x) = \sum_{j=1}^{d} (x_j - \tilde{x}_j)^2\)</span>.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Alternatif olarak, bunu <em>çok görevli öğrenme</em> olarak düşünebilirsiniz; burada amaç, <span class="math inline">\(x\)</span>’in her boyutunu tahmin etmektir. Her boyutun veri tipine uygun olarak kayıp fonksiyonları karıştırılıp eşleştirilebilir.</p>
+</div></div><p>Öğrenme daha sonra yeniden yapılandırma hatasını en aza indirecek şekilde <span class="math inline">\(h\)</span> ve <span class="math inline">\(g\)</span> parametrelerini optimize etmeye çalışır: <span class="math display">\[\min_{W^{1}, W^1_0, W^{2}, W^2_0} \sum_{i=1}^n \mathcal{L}_{SE}\left(h(g(x^{(i)}; W^{1}, W^1_0); W^{2}, W^2_0), x^{(i)}\right)\]</span></p>
+<p><strong>bottleneck.</strong>’in önemi Daha fazla kısıtlama olmadan, input’i mükemmel şekilde yeniden yapılandırmak her zaman mümkündür; örneğin, <span class="math inline">\(k=d\)</span>’e izin vererek ve kimlik işlevlerini kullanarak. Yararlı bir şey öğrenmek için, <span class="math inline">\(k\)</span>’i <span class="math inline">\(d\)</span>’ten daha küçük (genellikle çok daha küçük) yaparak bir <em>bottleneck</em> oluşturmalıyız. Bu, learning algorithm’i mümkün olduğunca basit bir açıklama kullanarak orijinal verileri tanımlayan dönüşümleri keşfetmeye zorlar. Rakam veri kümesi için sıkıştırılmış bir gösterim, label (0–9) rakamını, dönüşü ve kontur kalınlığını yakalayabilir. Öğrendikten sonra, autoencoder’in ne öğrendiğini anlamak için örneğin <span class="math inline">\(a\)</span>’in bir boyutunu değiştirerek ve kodu çözülen output <span class="math inline">\(h(a)\)</span>’in nasıl değiştiğini gözlemleyerek öğrenilen gösterimleri inceleyebiliriz.</p>
+<div class="study-question-callout">
+<p><span class="math inline">\(k = d\)</span>’i ayarlarsak (bottleneck, input ile aynı boyuta sahiptir), autoencoder ne öğrenir? Yararlı gösterimleri öğrenmek için bottleneck neden gereklidir?</p>
+</div>
+<p><strong>Lineer kodlayıcılar ve PCA.</strong> Doğrusal kodlayıcılar ve kod çözücüler bile güçlü olabilir. Hem <span class="math inline">\(f_1\)</span> hem de <span class="math inline">\(f_2\)</span> kimlik işlevi olduğunda, en iyi çözüm, tekil value ayrıştırması (SVD) kullanılarak <em>temel bileşen analizi</em> (PCA) aracılığıyla kapalı biçimde elde edilebilir. Yukarıda tartışılan neural network otomatik kodlayıcıları, tıpkı regression için çok katmanlı bir neural network’in linear regression’i genelleştirmesi gibi, PCA’in doğrusal olmayan genellemeleri olarak düşünülebilir.</p>
+<p>** Sıkıştırmadan aşağı akış görevlerine.** İyi bir encoder öğrenildikten sonra, decoder atılabilir ve encoder, bir feature çıkarıcı olarak kullanılabilir. <span class="math inline">\(a = g(x)\)</span> temsilleri daha sonra bir classifier’e veya supervised learning ile eğitilmiş regresöre beslenebilir - potansiyel olarak çok daha küçük etiketli bir veri kümesi kullanılarak. Bu, otomatik kodlayıcıları <a href="#sec-self-supervised" class="quarto-xref"><span>Bölüm 8.3.1</span></a>:’te açıklanan semi-supervised learning ayarına bağlar. Gösterimi öğrenmek için büyük bir etiketsiz veri kümesi ve downstream task için küçük bir etiketli veri kümesi kullanırız.</p>
+</section>
+<section id="sec-embeddings" class="level2 page-columns page-full" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="sec-embeddings"><span class="header-section-number">8.5</span> Gömmeler: birleştirici bir görünüm</h2>
+<p>Yukarıdaki yöntemlerin tümü tarafından öğrenilen temsiller, özünde <em>yerleştirmeler</em>’tir: karmaşık, yüksek boyutlu verilerden (görüntüler, kelimeler, cümleler, grafikler) daha düşük boyutlu bir uzaydaki vektörlere eşlemeler. İyi bir embedding’in key özelliği, vector alanındaki <strong>geometrik ilişkilerin, orijinal verilerdeki</strong> anlamlı ilişkileri yansıtmasıdır.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Daha da önemlisi, yerleştirmelerin tam koordinatlara ihtiyacı yoktur; önemli olan vector alanı içindeki <em>göreceli konumlandırmaları</em>’dir.</p>
+</div></div><p>Tüm bu yöntemler arasında çarpıcı bir tema, <em>anlamsal anlamın etiketlerden değil, verilerdeki yapısal düzenliliklerden ortaya çıkmasıdır</em>. Rakam etiketleri hakkında hiçbir bilgisi olmayan, rakamlı görüntüler üzerinde eğitilmiş bir autoencoder, aynı rakamlı cluster görüntülerinin bir arada olduğu bir latent space’i öğrenir. Açık bir gramer talimatı olmaksızın bir sonraki kelimeyi tahmin etmek üzere eğitilmiş bir language model, sözdizimsel ve anlamsal yapıyı öğrenir. Yalnızca image geliştirmeleriyle eğitilmiş karşılaştırmalı bir model, daha önce hiç anlatılmamış nesne kategorilerini ayırt etmeyi öğrenir. Neden? Çünkü <em>verilerin yapısını açıklayan faktörler genellikle anlamsal olarak anlamlı olan faktörlerle aynıdır</em>. Öğrenme algoritmaları bu faktörleri kendilerine söylendiği için değil, eğitim hedeflerini çözmenin en etkili yolu olduğu için keşfeder. Bu aynı zamanda bazı bahane görevlerinin neden diğerlerinden daha iyi çalıştığını açıklamaya da yardımcı olur: <em>anlamı</em>’in anlaşılmasını gerektiren görevler (maskeli sözcükleri tahmin etmek, eksik image bölgelerini yeniden yapılandırmak), yüzey düzeyindeki kısayollarla çözülebilen görevlerden daha iyi temsiller üretme eğilimindedir.</p>
+<p>Yöntemlerin çeşitliliğine rağmen hepsi ortak bir hedefi paylaşıyor: gizli yapıyı ortaya çıkaran kısıtlamalar getirmek. Farklılıklar <em>hangi kısıtlamanın kullanıldığı</em>’te yatmaktadır:</p>
+<div id="tbl-paradigms" class="quarto-float quarto-figure quarto-figure-center anchored page-columns page-full">
+<figure class="quarto-float quarto-float-tbl figure page-columns page-full">
+<div aria-describedby="tbl-paradigms-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 20%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Paradigması</th>
+<th>Çekirdek kısıtlaması</th>
+<th>Örnekleri</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Tahmin</strong></td>
+<td>Eksik veya gelecekteki verileri tahmin edin</td>
+<td>Maskelenmiş dil modelleri, renklendirme, sonraki kelime tahmini (<a href="#sec-self-supervised" class="quarto-xref"><span>Bölüm 8.3.1</span></a>)</td>
+</tr>
+<tr class="even">
+<td><strong>Context</strong></td>
+<td>Birlikte oluşan öğeler yakınlarda eşlenmelidir</td>
+<td>Word2Vec, Node2Vec (<a href="#sec-context-embeddings" class="quarto-xref"><span>Bölüm 8.3.2</span></a>)</td>
+</tr>
+<tr class="odd">
+<td><strong>Contrast</strong></td>
+<td>Farklı görünümler altında aynı input hizalanmalıdır</td>
+<td>SimCLR, CLIP (<a href="#sec-contrastive" class="quarto-xref"><span>Bölüm 8.3.3</span></a>)</td>
+</tr>
+<tr class="even">
+<td><strong>Sıkıştırma</strong></td>
+<td>bottleneck</td>
+<td>Otomatik Kodlayıcılar, PCA (<a href="#sec-autoencoder-structure" class="quarto-xref"><span>Bölüm 8.4</span></a>) aracılığıyla yeniden yapılandırma</td>
+</tr>
+<tr class="odd">
+<td><strong>Proximity</strong></td>
+<td>Veri alanındaki yakın noktalar yakında kalmalıdır</td>
+<td>t-SNE, UMAP</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figcaption class="quarto-float-caption-margin quarto-float-caption quarto-float-tbl margin-caption" id="tbl-paradigms-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tablo&nbsp;8.1: Temsilleri öğrenmek için beş paradigma. Her biri farklı bir kısıtlama getirir, ancak hepsi geometrinin anlamı kodladığı yerleştirmeler üretir.
+</figcaption>
+</figure>
+</div>
+<p>Bu paradigmalar kısıtlamalarının gücüne göre farklılık gösterir. t-SNE gibi yakınlığa dayalı yöntemler, komşuluk ilişkilerini koruyarak <em>exists</em> yapısının ortaya çıktığını ortaya koyuyor ancak ortaya çıkan yerleştirmeler genellikle yeni veri noktaları için yeniden kullanılamaz. Sıkıştırma, model’i temel bilgileri korumaya zorlar. Tahmin ve bağlam, eksik anlambilimin çıkarımını gerektirir. Contrastive learning, benzer öğeleri bir araya getirerek ve farklı öğeleri birbirinden ayırarak embedding alanının geometrisini açıkça şekillendirerek en güçlü kısıtlamayı dayatır.</p>
+<section id="yerleştirme-etiği" class="level3" data-number="8.5.1">
+<h3 data-number="8.5.1" class="anchored" data-anchor-id="yerleştirme-etiği"><span class="header-section-number">8.5.1</span> Yerleştirme etiği</h3>
+<p>Yerleştirmeler, training data’lerinde mevcut olan ilişkileri yakalar; insan önyargıları da dahil. İnternet metinleri üzerinde eğitilen kelime yerleştirmelerin cinsiyet stereotiplerini (örneğin, “kadın” kümeleri “hemşire”ye, “erkek” kümeleri ise “doktora” daha yakın) ve diğer toplumsal önyargıları kodladığı gösterilmiştir. Yerleştirmeler birçok alt uygulamanın temelini oluşturduğundan, bu önyargılar gerçek dünyadaki kararlara yayılabilir.</p>
+<p>Öğrenilmiş temsillerde bias’in tespit edilmesi ve hafifletilmesi, representation learning’in adaleti, hesap verebilirliği ve sosyal etkisi hakkında önemli soruları gündeme getiren aktif bir araştırma alanıdır.</p>
+</section>
+<section id="transformatörlere-bağlantı" class="level3" data-number="8.5.2">
+<h3 data-number="8.5.2" class="anchored" data-anchor-id="transformatörlere-bağlantı"><span class="header-section-number">8.5.2</span> Transformatörlere bağlantı</h3>
+<p>Yerleştirme fikri, <a href="transformers.html" class="quarto-xref"><span>Bölüm 9</span></a>’te tartışılan transformer mimarisinde merkezi bir rol oynar; burada sözcük yerleştirmeler, <em>attention mekanizması</em> aracılığıyla bağlama dayalı olarak dinamik olarak ayarlanır. “Banka” gibi bir kelime, çevredeki bağlamın finansla mı yoksa nehirlerle mi ilgili olduğuna bağlı olarak farklı yerleştirmeler alır; bu, word2vec gibi statik yerleştirmelerin sağlayabileceğinden daha incelikli bir dil anlayışı sağlar.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Kopyalandı");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Kopyalandı");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./convolutional_neural_networks.html" class="pagination-link" aria-label="Evrişimsel Sinir Ağları">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Evrişimsel Sinir Ağları</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./transformers.html" class="pagination-link" aria-label="Transformatörler">
+        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Transformatörler</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+    <script type="text/javascript">
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        let pseudocodeOptions = {
+          indentSize: el.dataset.indentSize || "1.2em",
+          commentDelimiter: el.dataset.commentDelimiter || "//",
+          lineNumber: el.dataset.lineNumber === "true" ? true : false,
+          lineNumberPunc: el.dataset.lineNumberPunc || ":",
+          noEnd: el.dataset.noEnd === "true" ? true : false,
+          titlePrefix: el.dataset.captionPrefix || "Algorithm"
+        };
+        pseudocode.renderElement(el.querySelector(".pseudocode"), pseudocodeOptions);
+      });
+    })(document);
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        let captionSpan = el.querySelector(".ps-root > .ps-algorithm > .ps-line > .ps-keyword")
+        if (captionSpan !== null) {
+          let captionPrefix = el.dataset.captionPrefix + " ";
+          let captionNumber = "";
+          if (el.dataset.pseudocodeNumber) {
+            captionNumber = el.dataset.pseudocodeNumber + " ";
+            if (el.dataset.chapterLevel) {
+              captionNumber = el.dataset.chapterLevel + "." + captionNumber;
+            }
+          }
+          captionSpan.innerHTML = captionPrefix + captionNumber;
+        }
+      });
+    })(document);
+    </script>
+  
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

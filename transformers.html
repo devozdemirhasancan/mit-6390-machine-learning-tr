@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="tr" xml:lang="tr"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>9&nbsp; Transformatörler – 6.390 - Machine Learning'e Giriş</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./non_parametric.html" rel="next">
+<link href="./representation.html" rel="prev">
+<link href="./assets/logo/favicon.svg" rel="icon" type="image/svg+xml">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-c0d695abc4efa72cfba88dcf11645824.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-ad73eeac00dcd6e430ad3806ef4d1812.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-c0d695abc4efa72cfba88dcf11645824.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.js"></script>
+<link href="site_libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Sonuç yok",
+    "search-matching-documents-text": "eşleşen belgeler",
+    "search-copy-link-title": "Aramak için bağlantıyı kopyalayın",
+    "search-hide-matches-text": "Ek eşleşmeleri gizle",
+    "search-more-match-text": "bu belgede bir tane daha eşleşme",
+    "search-more-matches-text": "bu belgede daha fazla eşleşme",
+    "search-clear-button-title": "Temizle",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "İptal et",
+    "search-submit-button-title": "Gönder",
+    "search-label": "Ara"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="assets/style.css">
+<meta name="twitter:title" content="9&nbsp; Transformatörler – 6.390 - Machine Learning’e Giriş">
+<meta name="twitter:description" content="">
+<meta name="twitter:image" content="figures/auto-regressive.gif">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Kenar çubuğunu değiştir" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./transformers.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Transformatörler</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Kenar çubuğunu değiştir" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Ara" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">6.390 - Machine Learning’e Giriş</a> 
+        <div class="sidebar-tools-main tools-wide">
+    <a href="https://introml.mit.edu/notes/" title="English Original" class="quarto-navigation-tool px-1" aria-label="English Original"><i class="bi bi-translate"></i></a>
+    <a href="https://accessibility.mit.edu/" title="Accessibility" class="quarto-navigation-tool px-1" aria-label="Accessibility"><i class="bi bi-universal-access"></i></a>
+    <a href="https://github.com/390introml/notes" title="Kaynak Kodu" class="quarto-navigation-tool px-1" aria-label="Kaynak Kodu"><i class="bi bi-github"></i></a>
+    <div class="dropdown">
+      <a href="" title="Share" id="quarto-navigation-tool-dropdown-0" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" aria-expanded="false" role="link" aria-label="Share"><i class="bi bi-share"></i></a>
+      <ul class="dropdown-menu" aria-labelledby="quarto-navigation-tool-dropdown-0">
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+              <i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+              <i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+          </li>
+      </ul>
+    </div>
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Karanlık modu değiştir"><i class="bi"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Okuyucu modunu değiştir">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Ara"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Giriş</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Regression</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./gradient_descent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Classification</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./feature_representation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Feature Representation</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./neural_networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Sinir Ağları</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./convolutional_neural_networks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Evrişimsel Sinir Ağları</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./representation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Representation Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./transformers.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Transformatörler</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./non_parametric.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Non-parametric Models</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mdp.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Markov Karar Süreçleri</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./reinforcement_learning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Reinforcement Learning</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Ekler</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Bölümü değiştir">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./matrix_calculus.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">A</span>&nbsp; <span class="chapter-title">Matrix Calculus</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./neural_network_appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">B</span>&nbsp; <span class="chapter-title">Sinir Ağlarını Optimize Etme</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./nutshell.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">C</span>&nbsp; <span class="chapter-title">Genel durum</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+<div class="quarto-sidebar-footer"><div class="sidebar-footer-item">
+<p><small>© MIT ve 6.390 (eski adıyla 6.036) ders ekibi. <a href="https://introml.mit.edu/notes/">English original</a>. Hasan için hazırlanmış Türkçe çeviri/uyarlamadır; MIT tarafından onaylandığı anlamına gelmez. <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> ile lisanslanmıştır.</small></p>
+</div></div></nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">İçindekiler</h2>
+   
+  <ul>
+  <li><a href="#sec-transformers-overview" id="toc-sec-transformers-overview" class="nav-link active" data-scroll-target="#sec-transformers-overview"><span class="header-section-number">9.1</span> Transformers’a Genel Bakış</a></li>
+  <li><a href="#sec-embeddings" id="toc-sec-embeddings" class="nav-link" data-scroll-target="#sec-embeddings"><span class="header-section-number">9.2</span> Embedding ve Temsilcilikler</a></li>
+  <li><a href="#sec-qkv" id="toc-sec-qkv" class="nav-link" data-scroll-target="#sec-qkv"><span class="header-section-number">9.3</span> Query, Key, Value ve Attention Output</a>
+  <ul>
+  <li><a href="#query-vektörleri" id="toc-query-vektörleri" class="nav-link" data-scroll-target="#query-vektörleri"><span class="header-section-number">9.3.1</span> Query Vektörleri</a></li>
+  <li><a href="#key-vektörleri" id="toc-key-vektörleri" class="nav-link" data-scroll-target="#key-vektörleri"><span class="header-section-number">9.3.2</span> Key Vektörleri</a></li>
+  <li><a href="#value-vektörleri" id="toc-value-vektörleri" class="nav-link" data-scroll-target="#value-vektörleri"><span class="header-section-number">9.3.3</span> Value Vektörleri</a></li>
+  <li><a href="#attention-output" id="toc-attention-output" class="nav-link" data-scroll-target="#attention-output"><span class="header-section-number">9.3.4</span> Attention Output</a></li>
+  </ul></li>
+  <li><a href="#sec-self-attention" id="toc-sec-self-attention" class="nav-link" data-scroll-target="#sec-self-attention"><span class="header-section-number">9.4</span> Self-attention Layer</a>
+  <ul>
+  <li><a href="#a-tekli-self-attention-kafası" id="toc-a-tekli-self-attention-kafası" class="nav-link" data-scroll-target="#a-tekli-self-attention-kafası"><span class="header-section-number">9.4.1</span> A Tekli Self-attention Kafası</a></li>
+  <li><a href="#çok-kafalı-self-attention" id="toc-çok-kafalı-self-attention" class="nav-link" data-scroll-target="#çok-kafalı-self-attention"><span class="header-section-number">9.4.2</span> Çok kafalı Self-attention</a></li>
+  </ul></li>
+  <li><a href="#sec-transformers-arch-details" id="toc-sec-transformers-arch-details" class="nav-link" data-scroll-target="#sec-transformers-arch-details"><span class="header-section-number">9.5</span> Transformers Mimari Ayrıntıları</a>
+  <ul>
+  <li><a href="#konumsal-gömmeler" id="toc-konumsal-gömmeler" class="nav-link" data-scroll-target="#konumsal-gömmeler"><span class="header-section-number">9.5.1</span> Konumsal Gömmeler</a></li>
+  <li><a href="#sec-causal-attention" id="toc-sec-causal-attention" class="nav-link" data-scroll-target="#sec-causal-attention"><span class="header-section-number">9.5.2</span> Nedensel Self-attention</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span id="sec-transformers" class="quarto-section-identifier"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Transformatörler</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Transformatörler, insan dilini işlemeye ve anlamaya yönelik bir yaklaşım olarak ilk olarak 2017 yılında doğal dil işleme (NLP) alanında tanıtılan çok yeni bir mimari ailesidir. O zamandan bu yana yalnızca NLP’te değil, aynı zamanda image işleme ve çok modlu üretken AI gibi diğer alanlarda da devrim yarattılar. Ölçeklenebilirlikleri ve paralelleştirilebilirlikleri, onları GPT, BERT ve Vision Transformers (ViT) gibi büyük ölçekli temel modellerin omurgası haline getirerek birçok state son teknoloji ürünü uygulamaya güç kazandırdı.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>İnsan dili doğası gereği sıralıdır (örneğin, karakterler sözcükleri, sözcükler cümleleri ve cümleler paragrafları ve belgeleri oluşturur). Transformatör mimarisinin ortaya çıkmasından önce, tekrarlayan sinir ağları (RNNs), sıralı bilgileri işleme yetenekleri nedeniyle kısa süreliğine alana hakim oldu. Bununla birlikte, RNNs, diğer birçok mimari gibi sıralı bilgileri yinelemeli/sıralı bir biçimde işledi; bu sayede bir dizinin her bir öğesi birbiri ardına ayrı ayrı işlendi. Transformatörler, RNNs’e göre, tüm öğeleri bir <em>parallel</em> tarzında (CNNs’in yaptığı gibi) bir sırayla işleme yetenekleri de dahil olmak üzere birçok avantaj sunar.</p>
+</div></div><p>CNNs gibi transformatörler de sinyal işlemeyi, her biri bağımsız ve aynı şekilde işlenmiş parçalar içeren aşamalara ayırır. Transformatörlerin birçok karmaşık bileşeni vardır; ancak biz onların en önemli yeniliğine odaklanacağız: <strong>attention layer</strong> adı verilen yeni bir layer türü. Attention katmanları, transformatörlerin bilgileri parçalar arasında etkili bir şekilde karıştırmasını sağlar ve tüm transformer boru hattının bu parçalar arasındaki model uzun menzilli bağımlılıklarına izin verir. Transformers’ı daha anlaşılır hale getirmeye yardımcı olmak için, bu bölümde öncelikle onları kısa ve öz bir şekilde motive edip genel bir bakışla açıklayacağız <a href="#sec-transformers-overview" class="quarto-xref"><span>Bölüm 9.1</span></a>. Ardından, veri akışını takip ederek ayrıntılara dalacağız - önce <a href="#sec-embeddings" class="quarto-xref"><span>Bölüm 9.2</span></a> girişlerinin nasıl temsil edileceğini açıklayacağız ve ardından attention mekanizması <a href="#sec-qkv" class="quarto-xref"><span>Bölüm 9.3</span></a>’i tanımlayacağız ve son olarak <a href="#sec-transformers-arch-details" class="quarto-xref"><span>Bölüm 9.5</span></a>’te tam transformer mimarisine ulaşmak için tüm bu fikirleri bir araya getireceğiz.</p>
+<section id="sec-transformers-overview" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="sec-transformers-overview"><span class="header-section-number">9.1</span> Transformers’a Genel Bakış</h2>
+<p>Transformatörler, öncelikle metin gibi sıralı veriler için tasarlanmış güçlü sinir mimarileridir. Transformatörler özünde tipik olarak otomatik gerilemelidir; yani her bir token’i önceden oluşturulmuş belirteçlere göre sıralı olarak tahmin ederek diziler üretirler. Bu otomatik gerileme özelliği, transformer model’in doğası gereği zamansal bağımlılıkları yakalamasını sağlayarak, onları özellikle metin oluşturma ve tamamlama gibi dil modelleme görevleri için uygun hale getirir.</p>
+<p>training data’imizin şu cümleyi içerdiğini varsayalım: “Bugüne kadar en zeki düşünür Isaac’ti.” transformer model, önceki belirteçler göz önüne alındığında sıradaki bir sonraki token’i tahmin etmeyi öğrenecektir. Örneğin, token “en akıllı”yı tahmin ederken, model tahminini “Kime”, “tarih” ve “the” belirteçlerine göre koşullandıracaktır. Bu işlem dizinin tamamı oluşturulana kadar devam eder. <img src="figures/auto-regressive.gif" class="img-fluid"></p>
+<p>Yukarıdaki animasyon transformatörlerin otomatik gerileyen doğasını göstermektedir.</p>
+<p>Aşağıda başka bir örnek var. Cümlenin robotiğin 2. yasası olduğunu varsayalım: “Bir robot, insanlar tarafından verilen emirlere uymalıdır…” Bir transformer’in eğitim hedefi, her bir token’in tahminini yapmak, önceden oluşturulmuş belirteçleri koşullandırmak, vocabulary üzerinde adım adım bir olasılık dağılımı oluşturmak olacaktır. <img src="figures/auto-regressive.png" class="img-fluid"></p>
+<p>transformer mimarisi, katmanlar halinde yığılmış birden fazla aynı yapı bloğunu uygulayarak girdileri işler. Her blok, verilerin dahili temsilini aşamalı olarak iyileştiren bir dönüşüm gerçekleştirir.</p>
+<p>Spesifik olarak, her blok iki ana alt katmandan oluşur: bir attention layer <a href="#sec-self-attention" class="quarto-xref"><span>Bölüm 9.4</span></a> ​​ve bir feed-forward network (veya multi-layer perceptron) <a href="neural_networks.html" class="quarto-xref"><span>Bölüm 6</span></a>. Attention katmanları, sırayla farklı konumlardaki (veya “parçalar”) bilgileri karıştırır ve model’in mesafeden bağımsız olarak bağımlılıkları etkili bir şekilde yakalamasına olanak tanır. Bu arada feed-forward network, her konuma bağımsız olarak doğrusal olmayan dönüşümler uygulayarak bu temsillerin anlamlılığını önemli ölçüde artırır.</p>
+<p>Transformatörlerin dikkate değer bir gücü, paralel işleme kapasiteleridir. Transformatörler, sıralı olarak token-by-token yerine tüm dizileri eşzamanlı olarak işler. Bu paralelleştirme, hesaplama verimliliğini önemli ölçüde artırır ve daha büyük ve daha derin modellerin eğitilmesini mümkün kılar.</p>
+<p>Bu genel bakışta, transformatörlerin otomatik gerilemeli doğasını, gösterimleri dönüştürmeye yönelik katmanlı yaklaşımlarını, paralel işleme avantajını ve ileri besleme katmanlarının ifade güçlerini arttırmadaki kritik rolünü vurguluyoruz.</p>
+<p>Transformatörleri daha da güçlendiren nedensel attention mekanizmaları ve positional encoding gibi ek temel bileşenler ve geliştirmeler vardır. Sonraki tartışmalarda bu “çanlar ve ıslıkları” daha derinlemesine inceleyeceğiz.</p>
+</section>
+<section id="sec-embeddings" class="level2 page-columns page-full" data-number="9.2">
+<h2 data-number="9.2" class="anchored" data-anchor-id="sec-embeddings"><span class="header-section-number">9.2</span> Embedding ve Temsilcilikler</h2>
+<p>Dilin yaygın olarak nasıl temsil edildiğini açıklayarak başlıyoruz, ardından bir sırayla sonraki öğeleri (örneğin, kelimeler/belirteçler) tahmin etmenin neden yararlı olabileceğine dair kısa bir açıklama sunuyoruz.</p>
+<p>Bir hatırlatma olarak, herhangi bir ML sisteminin iki key bileşeni şunlardır: (1) verilerin temsili; ve (2) istenen bazı görevleri gerçekleştirmek için gerçek modelleme. Bilgisayarların varsayılan olarak insan dilini temsil etmenin doğal bir yolu yoktur. Modern bilgisayarlar Von Neumann mimarisine dayanmaktadır ve herhangi bir karakter dizisinin biz insanlar için ne anlama geldiğine dair doğal bir anlayışa sahip olmayan, esasen çok güçlü hesap makineleridir. Dilin zengin karmaşıklıkları göz önüne alındığında (örneğin mizah, alaycılık, sosyal ve kültürel referanslar ve imalar, argo, eş anlamlılar, vb.), bilgisayarların model ve dili “anlama” konusundaki zorluklarının yanı sıra, dilleri uygun şekilde temsil etmenin doğuştan gelen zorluklarını da hayal edebilirsiniz.</p>
+<p>NLP alanı, sözcükleri kayan nokta sayılarının vektörleriyle (aka sözcük yerleştirmeleri) anlamsal anlamı yakalayacak şekilde temsil etmeyi amaçlamaktadır. Daha doğrusu, herhangi iki kelimenin ‘gerçek dünya’da biz insanlarla ne kadar ilişkili olduğu, onlara karşılık gelen vektörler (sayısal değerleri açısından) tarafından yansıtılmalıdır. Dolayısıyla ’köpek’ ve ‘kedi’ gibi kelimeler, örneğin ‘kedi’ ve ’masa’ya göre birbirine daha çok benzeyen vektörlerle temsil edilmelidir.</p>
+<p>Herhangi iki kelime yerleştirmesinin (sayısal değerleri açısından) ne kadar benzer olduğunu ölçmek için metrik olarak bazı benzerliklerin kullanılması yaygındır; <a href="representation.html" class="quarto-xref"><span>Bölüm 8</span></a>’te gördüğümüz nokta çarpım benzerliği.</p>
+<p>Böylece, her word embedding’in <span class="math inline">\(d\)</span> boyutlu uzayda çizilmesi ve doğal kümelerin oluşmasının gözlemlenmesi, böylece benzer kelimelerin (örneğin, eşanlamlıların) birbirine yakın konumlandırılması hayal edilebilir. Tek tek kelimelerin nasıl ayrıştırılacağını (başka bir deyişle tokenleştirileceğini) belirleme sorunu, <em>tokenization</em> olarak bilinir. Bu başlı başına bir konudur, dolayısıyla burada tüm ayrıntılara dalmayacağız. Bununla birlikte, üst düzey tokenizasyon fikri basittir: model tarafından temsil edilen ve işlenen bireysel veri girişlerine token adı verilir. Ve her bir kelimeyi bir bütün olarak işlemek yerine, kelimeler genellikle split daha küçük, anlamlı parçalara (hecelere benzer) bölünür. Örneğin, “değerlendirme” sözcüğü input olabilir ve bir model’e 3 ayrı token (değerlendirme + değerlendirme + tion) olarak dönüştürülebilir. Dolayısıyla tokenlardan bahsettiğimizde bu alt kelime birimlerinden bahsettiğimizi bilin. Herhangi bir uygulama/model için, tüm dil verilerinin, geçerli belirteçlerden oluşan sınırlı bir vocabulary (genellikle 40.000 farklı belirteç düzeyinde) tarafından önceden tanımlanması gerekir.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Bu tür tokenlerin optimal vocabulary’ini nasıl tanımlayabiliriz? vocabulary’imizde kaç farklı tokena sahip olmalıyız? Rakamları veya diğer noktalama işaretlerini nasıl ele almalıyız? Bu, İngilizce dışındaki diller için, özellikle de sözcük sınırlarının daha az belirgin olduğu alfabe tabanlı diller için (örneğin, Çince veya Japonca) nasıl çalışır? Bunların tümü, son zamanlarda artan attention alan açık NLP araştırma problemleridir.</p>
+</div></div></section>
+<section id="sec-qkv" class="level2" data-number="9.3">
+<h2 data-number="9.3" class="anchored" data-anchor-id="sec-qkv"><span class="header-section-number">9.3</span> Query, Key, Value ve Attention Output</h2>
+<p>Attention mekanizmaları, input’in en ilgili kısımlarına seçici bir şekilde odaklanarak küresel bilgileri verimli bir şekilde işler. Bir input cümlesi verildiğinde, her bir token sonraki belirteçleri tahmin etmek için sırayla işlenir. Daha fazla içerik (önceki belirteçler) biriktikçe, bu bağlam ideal olarak giderek daha faydalı hale gelir; tabii model’in onu uygun şekilde kullanabilmesi şartıyla. Transformatörler, <strong>attention</strong> olarak bilinen ve modellerin bağlamsal olarak ilgili belirteçleri tanımlamasına ve önceliklendirmesine olanak tanıyan bir mekanizma kullanır.</p>
+<p>Örneğin şu kısmi cümleyi düşünün: “Anqi ___’i unuttu”. Bu noktada model, “Anqi” ve “unuttum” tokenlerini işledi ve bir sonraki token’i tahmin etmeyi hedefliyor. Makaleler (“the”, “an”), edatlar (“to”, “about”) veya iyelik zamirleri (“her”, “onun”, “onların”) gibi çok sayıda geçerli tamamlama mevcuttur. İyi eğitilmiş bir model, dişil ilişkili “Anqi” ismine dayalı olarak “her” gibi bağlamsal olarak alakalı belirteçlere daha yüksek olasılıklar atamalıdır. Attention mekanizmaları, query, key ve value vektörlerini kullanarak bu ilgili bağlamsal ipuçlarına seçici bir şekilde odaklanmak için model’e rehberlik eder.</p>
+<section id="query-vektörleri" class="level3" data-number="9.3.1">
+<h3 data-number="9.3.1" class="anchored" data-anchor-id="query-vektörleri"><span class="header-section-number">9.3.1</span> Query Vektörleri</h3>
+<p>Amacımız, her input token için, sıradaki diğer token’lere ne kadar attention vermesi gerektiğini öğrenmektir. Bunu başarmak için her token’e, alaka düzeyini belirlemek amacıyla kendisi de dahil olmak üzere diğer belirteçleri “araştırmak” veya değerlendirmek için kullanılan benzersiz bir <strong>query vector</strong> atanır.</p>
+<p>Bir token’in query vector <span class="math inline">\(q_i\)</span>’i, input token <span class="math inline">\(x_i\)</span>’in (bir <span class="math inline">\(d\)</span> boyutlu vector) öğrenilebilir bir değerle çarpılmasıyla hesaplanır. query weight matrix <span class="math inline">\(W_q\)</span> (<span class="math inline">\(d \times d_k\)</span> boyutunda, <span class="math inline">\(d_k\)</span>, tipik olarak <span class="math inline">\(d_k &lt; d\)</span> olacak şekilde seçilen bir hyperparameter’tir):</p>
+<p><span class="math display">\[
+q_i = W_q^T x_i
+\]</span></p>
+<p>Böylece, bir <span class="math inline">\(n\)</span> token dizisi için <span class="math inline">\(n\)</span>’e özgü query vektörleri üretiyoruz.</p>
+</section>
+<section id="key-vektörleri" class="level3" data-number="9.3.2">
+<h3 data-number="9.3.2" class="anchored" data-anchor-id="key-vektörleri"><span class="header-section-number">9.3.2</span> Key Vektörleri</h3>
+<p>query vektörlerini tamamlamak için, belirteçlerin alaka düzeyine ilişkin sorguları “cevaplamak” için kullandığı <strong>key vektörlerini</strong>’i tanıtıyoruz. Spesifik olarak, token <span class="math inline">\(x_3\)</span> değerlendirilirken, query vector <span class="math inline">\(q_3\)</span>, her bir token’in key vector <span class="math inline">\(k_j\)</span>’i ile karşılaştırılır. attention weight. Her key vector <span class="math inline">\(k_i\)</span>, öğrenilebilir bir key weight matrix <span class="math inline">\(W_k\)</span> kullanılarak benzer şekilde hesaplanır:</p>
+<p><span class="math display">\[
+k_i = W_k^T x_i
+\]</span></p>
+<p>attention mekanizması, vector benzerliğini verimli bir şekilde ölçen dot product’i kullanarak benzerliği hesaplar:</p>
+<p><span class="math display">\[
+a_i = \text{softmax}\left(\frac{[q_i^T k_1, q_i^T k_2, \dots, q_i^T k_n]}{\sqrt{d_k}}\right) \in \mathbb{R}^{1\times n}
+\]</span></p>
+<p>vector <span class="math inline">\(a_i\)</span> (softmax’d attention puanları), attention token <span class="math inline">\(q_i\)</span>’in dizideki her bir token’e ne kadar ödeme yapması gerektiğini belirler ve öğelerin toplamı 1 olacak şekilde normalleştirilir. <span class="math inline">\(\sqrt{d_k}\)</span> büyük nokta çarpım büyüklüklerini önleyerek eğitimi dengeler.</p>
+</section>
+<section id="value-vektörleri" class="level3" data-number="9.3.3">
+<h3 data-number="9.3.3" class="anchored" data-anchor-id="value-vektörleri"><span class="header-section-number">9.3.3</span> Value Vektörleri</h3>
+<p>Katılan belirteçlerden anlamlı katkıları dahil etmek için, attention çıktılarına katkı için farklı temsiller sağlayan <strong>value vektörlerini </strong> (<span class="math inline">\(v_i\)</span>) kullanıyoruz. Her token’in value vector’i başka bir öğrenilebilir matrix <span class="math inline">\(W_v\)</span> ile hesaplanır:</p>
+<p><span class="math display">\[
+v_i = W_v^T x_i
+\]</span></p>
+</section>
+<section id="attention-output" class="level3" data-number="9.3.4">
+<h3 data-number="9.3.4" class="anchored" data-anchor-id="attention-output"><span class="header-section-number">9.3.4</span> Attention Output</h3>
+<p>Son olarak, attention çıktıları, softmax’d attention puanları kullanılarak value vektörlerinin ağırlıklı toplamları olarak hesaplanır:</p>
+<p><span class="math display">\[
+z_i = \sum_{j=1}^n a_{ij} v_j \in \mathbb{R}^{d_k}
+\]</span></p>
+<p>Bu vector <span class="math inline">\(z_i\)</span>, token <span class="math inline">\(x_i\)</span>’in zenginleştirilmiş embedding’ini temsil eder, dizi boyunca bağlamı birleştirir ve öğrenilen attention ile ağırlıklandırılır.</p>
+</section>
+</section>
+<section id="sec-self-attention" class="level2" data-number="9.4">
+<h2 data-number="9.4" class="anchored" data-anchor-id="sec-self-attention"><span class="header-section-number">9.4</span> Self-attention Layer</h2>
+<p>Self-attention, anahtarların, değerlerin ve sorguların tamamının aynı input’ten oluşturulduğu bir attention mekanizmasıdır.</p>
+<p>Çok yüksek bir düzeyde, self-attention katmanlarına sahip tipik bir transformer, <span class="math inline">\(\mathbb{R}^{n\times d} \longrightarrow \mathbb{R}^{n\times d}\)</span>’i eşler. Özellikle, transformer, her biri feature <span class="math inline">\(d,\)</span> boyutuna sahip olan ve birçok dönüşüm katmanı (bunlardan en önemlisi self-attention katmanlarıdır) yoluyla <span class="math inline">\(n\)</span> belirteçlerini alır; transformer, sonunda her biri <span class="math inline">\(d\)</span> boyutlu hareketsiz olan bir dizi <span class="math inline">\(n\)</span> belirteci çıktısı verir.</p>
+<p>Bir self-attention layer ile birden fazla attention kafası bulunabilir. Tek bir kafayı anlamakla başlıyoruz.</p>
+<section id="a-tekli-self-attention-kafası" class="level3" data-number="9.4.1">
+<h3 data-number="9.4.1" class="anchored" data-anchor-id="a-tekli-self-attention-kafası"><span class="header-section-number">9.4.1</span> A Tekli Self-attention Kafası</h3>
+<p>Tek bir self-attention kafası, <a href="#sec-qkv" class="quarto-xref"><span>Bölüm 9.3</span></a>’teki tartışmamızla büyük ölçüde aynıdır. Bu bölümde tanıtılan ana ek bilgi, kompakt bir matrix formudur. layer, her biri feature <span class="math inline">\(d\)</span> boyutuna sahip olan <span class="math inline">\(n\)</span> tokenlerini alır. Böylece, tüm belirteçler toplu olarak <span class="math inline">\(X\in \mathbb{R}^{n\times d}\)</span> olarak yazılabilir; burada <span class="math inline">\(X\)</span>’in <span class="math inline">\(i\)</span>’inci satırı, <span class="math inline">\(x_i\in\mathbb{R}^{1\times d}\)</span> olarak gösterilen <span class="math inline">\(i\)</span>-th token’i saklar. Her token <span class="math inline">\(x_i\)</span> için self-attention, (<a href="#sec-qkv" class="quarto-xref"><span>Bölüm 9.3</span></a>’te tartışılan öğrenilmiş projeksiyon matrisleri aracılığıyla) bir query <span class="math inline">\(q_i \in \mathbb{R}^{d_q}\)</span>, key <span class="math inline">\(k_{i} \in \mathbb{R}^{d_k}\)</span> ve value <span class="math inline">\(v_{i} \in \mathbb{R}^{d_v}\)</span> ve genel olarak <span class="math inline">\(n\)</span> sorgularına, <span class="math inline">\(n\)</span> anahtarlarına ve <span class="math inline">\(n\)</span> değerlerine sahip olacağız; bu vektörlerin tümü pratikte aynı boyutta yaşar ve genellikle üç embedding boyutunun tamamını birleşik bir <span class="math inline">\(d_k\)</span> aracılığıyla belirtiriz.</p>
+<p>self-attention output ağırlıklı toplam olarak hesaplanır:</p>
+<p><span class="math display">\[
+{z}_i = \sum_{j=1}^n  a_{ij} v_{j}\in\mathbb{R}^{d_k }
+\]</span></p>
+<p>burada <span class="math inline">\(a_{ij}\)</span>, <span class="math inline">\(a_i\)</span>’teki <span class="math inline">\(j\)</span>’inci öğedir.</p>
+<p>Şu ana kadar tek bir token input-output’e odaklanarak self-attention’i tartıştık. Aslında matrix formunu kullanarak tüm <span class="math inline">\(z_i\)</span> (<span class="math inline">\(i=1,2,\ldots,n\)</span>) çıkışlarını aynı anda hesaplayabiliriz. Anlaşılır olması açısından, öncelikle <span class="math inline">\(Q\in\mathbb{R}^{n\times d_k}\)</span> query matrix, <span class="math inline">\(K\in\mathbb{R}^{n\times d_k}\)</span> key matrix ve <span class="math inline">\(V\in\mathbb{R}^{n\times d_k}\)</span> value matrix’i tanıtıyoruz:</p>
+<p><span class="math display">\[
+\begin{aligned}
+Q &amp;= \begin{bmatrix}
+q_1^\top \\
+q_2^\top \\
+\vdots \\
+q_n^\top
+\end{bmatrix} \in \mathbb{R}^{n \times d_k}, \quad
+K = \begin{bmatrix}
+k_1^\top \\
+k_2^\top \\
+\vdots \\
+k_n^\top
+\end{bmatrix} \in \mathbb{R}^{n \times d_k}, \quad
+V = \begin{bmatrix}
+v_1^\top \\
+v_2^\top \\
+\vdots \\
+v_n^\top
+\end{bmatrix} \in \mathbb{R}^{n \times d_k}
+\end{aligned}
+\]</span></p>
+<p><span class="math inline">\(Q\)</span>, <span class="math inline">\(K\)</span>, <span class="math inline">\(V\)</span> matrislerinin sırasıyla <span class="math inline">\(q_i\)</span>, <span class="math inline">\(k_i\)</span> ve <span class="math inline">\(v_i\)</span>’i satır bazında istiflediğini anlamak kolay olmalıdır. Şimdi tam attention matrix <span class="math inline">\(A \in \mathbb{R}^{n \times n}\)</span> şu şekildedir:</p>
+<p><span id="eq-self_softmax"><span class="math display">\[\begin{aligned}
+A = \begin{bmatrix}
+    \text{softmax}\left( \begin{bmatrix}
+                           q_1^\top k_1 &amp; q_1^\top k_2 &amp; \cdots &amp; q_1^\top k_{n}
+                         \end{bmatrix} / \sqrt{d_k} \right) \\
+    \text{softmax}\left( \begin{bmatrix}
+                           q_2^\top k_1 &amp; q_2^\top k_2 &amp; \cdots &amp; q_2^\top k_{n}
+                         \end{bmatrix} / \sqrt{d_k} \right) \\
+    \vdots &amp;                                                                   \\
+    \text{softmax}\left( \begin{bmatrix}
+                           q_{n}^\top k_1 &amp; q_{n}^\top k_2 &amp; \cdots &amp; q_{n}^\top k_{n}
+                         \end{bmatrix} / \sqrt{d_k} \right)
+  \end{bmatrix}
+\end{aligned}
+\tag{9.1}\]</span></span></p>
+<p>genellikle daha kısa ve öz olarak şu şekilde yazılır: <span class="math display">\[\begin{aligned}
+A = \text{softmax}\left(
+\frac{1}{\sqrt{d_k}}
+\begin{bmatrix}
+q_1^\top k_1 &amp; q_1^\top k_2 &amp; \cdots &amp; q_1^\top k_n \\
+q_2^\top k_1 &amp; q_2^\top k_2 &amp; \cdots &amp; q_2^\top k_n \\
+\vdots       &amp; \vdots       &amp; \ddots &amp; \vdots       \\
+q_n^\top k_1 &amp; q_n^\top k_2 &amp; \cdots &amp; q_n^\top k_n
+\end{bmatrix}
+\right)\end{aligned}=\text{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)
+\]</span></p>
+<p>Softmax işleminin satır bazında uygulandığını unutmayın. <span class="math inline">\(A\)</span>’in <span class="math inline">\(i\)</span>’inci satırı, tüm anahtarlar (yani <span class="math inline">\(\alpha_i\)</span>) üzerinden query <span class="math inline">\(q_i\)</span> için hesaplanan softmax’d attention puanlarına karşılık gelir. attention-kafa output daha sonra kompakt bir şekilde şu şekilde yazılabilir:</p>
+<p><span class="math display">\[
+Z =
+\begin{bmatrix}
+z_1^\top \\
+z_2^\top \\
+\vdots \\
+z_n^\top
+\end{bmatrix}
+= AV
+\in \mathbb{R}^{n \times d_k}
+\]</span></p>
+<p>burada <span class="math inline">\(V\in \mathbb{R}^{n \times d_k}\)</span>, satır bazında yığılmış value vektörlerinin matrix’idir ve <span class="math inline">\(Z \in \mathbb{R}^{n \times d_k}\)</span>, <span class="math inline">\(i\)</span>’inci satırı attention output’e karşılık gelen output’tir. <span class="math inline">\(i\)</span>th query (yani <span class="math inline">\(z_i\)</span>).</p>
+<p>Ayrıca literatürde <span class="math inline">\(Q\)</span>, <span class="math inline">\(K\)</span> ve <span class="math inline">\(V\)</span> bağımsız değişkenlerinin bir işlemi olan bu kompakt <code>Attention</code> gösterimini de göreceksiniz (ve softmax’in her satırda gerçekleştirildiğini vurguluyoruz):</p>
+<p><span class="math display">\[
+\text{Attention}(Q, K, V) = \text{softmax}_{row}\left(\frac{Q K^\top}{\sqrt{d_k}}\right)V
+\]</span></p>
+</section>
+<section id="çok-kafalı-self-attention" class="level3" data-number="9.4.2">
+<h3 data-number="9.4.2" class="anchored" data-anchor-id="çok-kafalı-self-attention"><span class="header-section-number">9.4.2</span> Çok kafalı Self-attention</h3>
+<p>İnsan dili çok incelikli olabilir. Bir insanın herhangi bir cümleyi anlamasına kolektif olarak katkıda bulunan dilin birçok özelliği vardır. Örneğin, kelimelerin farklı zamanları (geçmiş, şimdiki zaman, gelecek vb.), cinsiyetleri, kısaltmaları, argo referansları, ima edilen kelimeler veya anlamları, kültürel referansları, durumsal alakaları vb. vardır. attention mekanizması, input cümlesindeki belirteçlere uygun şekilde odaklanmamıza izin verirken, tek bir <span class="math inline">\(\{Q,K,V\}\)</span> kümesi beklemek mantıksızdır. Bir cümlenin anlamını tüm karmaşıklığıyla birlikte tam olarak temsil edecek ve model’in yakalayacağı matrisler.</p>
+<p>Bu sınırlamayı gidermek için multi-head attention fikri ortaya atıldı. Yalnızca bir attention kafasına (yani tek bir <span class="math inline">\(\{Q, K, V\}\)</span> matris seti) güvenmek yerine, model, her biri kendi bağımsız olarak öğrenilen <span class="math inline">\(\{Q, K, V\}\)</span> matris setine sahip birden fazla attention kafası kullanır. Bu, her bir kafanın input tokenlerinin farklı bölümlerine ve model farklı türdeki anlamsal ilişkilere katılmasına olanak tanır. Örneğin, bir kafa sözdizimsel yapıya, diğeri ise fiilin zamanına veya duyguya odaklanabilir. Bu farklı “perspektifler” daha sonra birleştirilir ve input’in daha zengin, daha etkileyici bir temsilini üretecek şekilde yansıtılır.</p>
+<p>Şimdi resmi matematik notasyonlarını tanıtıyoruz. Kafa sayısını <span class="math inline">\(H\)</span> olarak gösterelim. <span class="math inline">\(h\)</span>th kafa için, input <span class="math inline">\(X \in \mathbb{R}^{n \times d}\)</span>, <span class="math inline">\(W_q^{h}\in\mathbb{R}^{d\times d_k}\)</span>, <span class="math inline">\(W_k^{h}\in\mathbb{R}^{d\times d_k}\)</span> projeksiyon matrisleri kullanılarak query, key ve value matrislerine doğrusal olarak yansıtılır ve <span class="math inline">\(W_v^{h}\in\mathbb{R}^{d\times d_k}\)</span>:</p>
+<p><span class="math display">\[
+\begin{aligned}
+Q^{h} &amp;= X W_q^{h} \\
+K^{h} &amp;= X W_k^{h} \\
+V^{h} &amp;= X W_v^{h}
+\end{aligned}
+\]</span></p>
+<p><span class="math inline">\(h\)</span>-th başlığının output’i <span class="math inline">\(Z^{h}\)</span>: <span class="math inline">\({Z}^h = \text{Attention}(Q^{h}, K^{h}, V^{h})\in\mathbb{R}^{n\times d_k}\)</span>’tir. Tüm <span class="math inline">\(H\)</span> kafalarını hesapladıktan sonra çıktılarını birleştiriyor ve son bir doğrusal projeksiyon uyguluyoruz: <span class="math display">\[
+\text{MultiHead}(X) = \text{Concat}(Z^1, \dots, Z^H) W^O
+\]</span> burada birleştirme işlemi <span class="math inline">\(Z^h\)</span>’i yatay olarak birleştirerek <span class="math inline">\(n\times Hd_k\)</span> boyutunda bir matrix verir ve <span class="math inline">\(W^O \in \mathbb{R}^{Hd_k \times d}\)</span>, matrix’in son doğrusal projeksiyonudur.</p>
+</section>
+</section>
+<section id="sec-transformers-arch-details" class="level2" data-number="9.5">
+<h2 data-number="9.5" class="anchored" data-anchor-id="sec-transformers-arch-details"><span class="header-section-number">9.5</span> Transformers Mimari Ayrıntıları</h2>
+<section id="konumsal-gömmeler" class="level3" data-number="9.5.1">
+<h3 data-number="9.5.1" class="anchored" data-anchor-id="konumsal-gömmeler"><span class="header-section-number">9.5.1</span> Konumsal Gömmeler</h3>
+<p>Son derece dikkatli bir okuyucu, henüz tartışmadığımız küçük ama çok önemli bir ayrıntıdan şüphelenmiş olabilir: attention mekanizması, şu ana kadar tanıtıldığı şekliyle, input tokenlarının sırasını kodlamaz. Örneğin, softmax’d attention puanlarını hesaplarken ve token temsillerini oluştururken, model temelde permütasyona eşdeğerdir - aynı jeton seti, farklı bir sıraya karıştırılsa bile, aynı çıktıların aynı sırayla permütasyonuna neden olur — Resmi olarak, <span class="math inline">\(\{W_q,W_k,W_v\}\)</span>’i düzelttiğimizde ve input <span class="math inline">\(x_i\)</span>’i <span class="math inline">\(x_j\)</span> ile değiştirin, ardından output <span class="math inline">\(z_i\)</span> ve <span class="math inline">\(z_j\)</span> değiştirilecektir. Ancak doğal dil bir kelime torbası değildir: anlam, kelime sırasına sıkı sıkıya bağlıdır.</p>
+<p>Bu sorunu çözmek için transformatörler, dizideki her bir token’in konumunu kodlayan ek bilgiler olan konumsal yerleştirmeleri içerir. Bu yerleştirmeler, herhangi bir attention katmanı uygulanmadan önce input token yerleştirmelerine eklenir ve sipariş bilgileri etkili bir şekilde model’e enjekte edilir.</p>
+<p>Konumsal yerleştirmeler için iki ana strateji vardır: (i) öğrenilmiş konumsal yerleştirmeler; burada eğitilebilir bir vector <span class="math inline">\(p_i\in\mathbb{R}^d\)</span> her pozisyona atanır (yani, token dizini) <span class="math inline">\(i=0, 1, 2, ..., n\)</span>. Bu vektörler, diğer tüm model parametreleriyle birlikte öğrenilir ve model’in belirli bir görev için konumu en iyi nasıl kodlayacağını keşfetmesine olanak tanır, (ii) orijinal Transformer makalesinde önerilen sinüzoidal konumsal embedding gibi sabit konumsal yerleştirmeler:</p>
+<p><span class="math display">\[
+\begin{aligned}
+p_{(i, 2k)} = \sin\left( \frac{i}{10000^{2k/d}} \right) \\
+p_{(i, 2k+1)} = \cos\left( \frac{i}{10000^{2k/d}} \right)
+\end{aligned}
+\]</span></p>
+<p><span class="math inline">\(i=1,2,..,n\)</span>, token dizini, <span class="math inline">\(k=1,2,...,d\)</span> ise boyut dizini. Yani, bu sinüzoidal konumsal embedding, çift boyut için sinüs ve tek boyut için kosinüs kullanır. Öğrenilebilir veya sabit konumsal embedding’ten bağımsız olarak, attention hesaplamasına input konumunda girecektir: <span class="math inline">\(x_i^*=x_i+p_i~,\)</span>​; burada <span class="math inline">\(x_i\)</span>, <span class="math inline">\(i\)</span>’inci orijinal input token’tir ve <span class="math inline">\(p_i\)</span>, konumsal embedding’tir. <span class="math inline">\(x_i^*\)</span> artık attention layer’e gerçekten beslediğimiz şey olacak, böylece input’ten attention mekanizmasına giden yol artık hem token’in ne olduğu hem de dizide nerede göründüğü hakkında bilgi taşıyor.</p>
+<p>Bu basit eklemeli tasarım, attention katmanlarının nereye odaklanılacağına karar verirken hem anlamsal içerikten hem de sıralama yapısından yararlanmasını sağlar. Uygulamada bu ekleme, transformer yığınının ilk layer’inde gerçekleşir ve sonraki tüm katmanlar, konuma duyarlı gösterimler üzerinde çalışır. Bu, transformatörlerin metin, ses ve hatta image yamaları (Vision Transformers’ta olduğu gibi) dizileriyle etkili bir şekilde çalışmasına olanak tanıyan bir key tasarım seçeneğidir.</p>
+</section>
+<section id="sec-causal-attention" class="level3" data-number="9.5.2">
+<h3 data-number="9.5.2" class="anchored" data-anchor-id="sec-causal-attention"><span class="header-section-number">9.5.2</span> Nedensel Self-attention</h3>
+<p>Daha genel olarak, attention hesaplamasında hangi belirteçlerin kullanıldığını sınırlamak için bir <em>mask</em> uygulanabilir. Örneğin, ortak bir maske, attention hesaplamasını, query için kullanılan belirteçlerle aynı zamanda daha önce ortaya çıkan belirteçlerle sınırlar. Bu, transformer’in aynı anda bir token oluşturmak için kullanıldığı senaryolarda attention mekanizmasının “ileriye bakmasını” engeller. Bu nedensel maskeleme, attention’i yalnızca mevcut ve önceki konumlarla sınırlayan bir matrix <span class="math inline">\(M \in \mathbb{R}^{n \times n}\)</span> maskesinin tanıtılmasıyla yapılır. Tipik bir causal mask, daha düşük üçgen bir matrix’tir:</p>
+<p><span class="math display">\[
+M =
+\begin{bmatrix}
+  0 &amp; -\infty &amp; -\infty &amp; \cdots &amp; -\infty \\
+  0 &amp; 0       &amp; -\infty &amp; \cdots &amp; -\infty \\
+  0 &amp; 0       &amp; 0       &amp; \cdots &amp; -\infty \\
+  \vdots &amp; \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+  0 &amp; 0       &amp; 0       &amp; \cdots &amp; 0
+\end{bmatrix}
+\]</span></p>
+<p>ve artık maskeli attention matrix’e sahibiz:</p>
+<span class="math display">\[\begin{aligned}
+A = \text{softmax}\left(
+\frac{1}{\sqrt{d_k}}
+\begin{bmatrix}
+q_1^\top k_1 &amp; q_1^\top k_2 &amp; \cdots &amp; q_1^\top k_n \\
+q_2^\top k_1 &amp; q_2^\top k_2 &amp; \cdots &amp; q_2^\top k_n \\
+\vdots ve \vdots ve \ddots ve \vdots \\
+q_n^\top k_1 &amp; q_n^\top k_2 &amp; \cdots &amp; q_n^\top k_n
+\end{bmatrix}
++ M \right)\end{aligned}\]</span>
+<p>softmax her satırda bağımsız olarak gerçekleştirilir. attention output hala <span class="math inline">\(Y= A V\)</span>’tir. Temel olarak, <span class="math inline">\(M\)</span>’in alt üçgen özelliği, <span class="math inline">\(j\)</span>-th query için self-attention işleminin yalnızca <span class="math inline">\(0,1,...,j\)</span> belirteçlerini dikkate almasını sağlar. softmax’i gerçekleştirmeden önce maskelemeyi uygulamamız gerektiğini unutmayın; böylece attention matrix düzgün bir şekilde normalleştirilebilir (yani her satırın toplamı 1’e eşit olur).</p>
+<p>Her self-attention aşaması, input’in belirli bir feature’ine belirli attention ödemesine yol açan key, value ve query yerleştirmelerine sahip olacak şekilde eğitilmiştir. Genellikle attention’i input’teki birçok farklı özellik türüne ödemek istiyoruz; örneğin çeviride bir feature fiiller, diğeri ise nesneler veya özneler olabilir. Bir transformer, birçok farklı özelliğe ödenen attention kombinasyonlarına izin vermek için her biri “attention kafası” olarak bilinen birden fazla self-attention örneğini kullanır.</p>
+<!--
+### Variations of Training Scheme
+
+Instead of auto-regressive training, one can do masked training. 
+
+Many variants on this transformer structure exist. For example, the $\text{LayerNorm}$ may be moved to other stages of the neural network. Or a more sophisticated attention function may be employed instead of the simple dot product used in @eq-xfm_softmax. Transformers may also be used in pairs, for example, one to process the input and a separate one to generate the output given the transformed input. Self-attention may also be replaced with cross-attention, where some input data are used to generate queries and other input data generate keys and values. Positional encoding and masking are also common, though they are left implicit in the above equations for simplicity.
+
+How are transformers trained? The number of parameters in $\theta$ can be very large; modern transformer models like GPT4 have tens of billions of parameters or more. A great deal of data is thus necessary to train such models, else the models may simply overfit small datasets.
+
+Training large transformer models is thus generally done in two stages. A first "pre-training" stage employs a very large dataset to train the model to extract patterns. This is done with unsupervised (or self-supervised) learning and unlabelled data. For example, the well-known BERT model was pre-trained using sentences with words masked. The model was trained to predict the masked words. BERT was also trained on sequences of sentences, where the model was trained to predict whether two sentences are likely to be contextually close together or not. The pre-training stage is generally very expensive.
+
+The second "fine-tuning" stage trains the model for a specific task, such as classification or question answering. This training stage can be relatively inexpensive, but it generally requires labeled data -->
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Kopyalandı");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Kopyalandı");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./representation.html" class="pagination-link" aria-label="Representation Learning">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Representation Learning</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./non_parametric.html" class="pagination-link" aria-label="Non-parametric Models">
+        <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Non-parametric Models</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+    <script type="text/javascript">
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        let pseudocodeOptions = {
+          indentSize: el.dataset.indentSize || "1.2em",
+          commentDelimiter: el.dataset.commentDelimiter || "//",
+          lineNumber: el.dataset.lineNumber === "true" ? true : false,
+          lineNumberPunc: el.dataset.lineNumberPunc || ":",
+          noEnd: el.dataset.noEnd === "true" ? true : false,
+          titlePrefix: el.dataset.captionPrefix || "Algorithm"
+        };
+        pseudocode.renderElement(el.querySelector(".pseudocode"), pseudocodeOptions);
+      });
+    })(document);
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        let captionSpan = el.querySelector(".ps-root > .ps-algorithm > .ps-line > .ps-keyword")
+        if (captionSpan !== null) {
+          let captionPrefix = el.dataset.captionPrefix + " ";
+          let captionNumber = "";
+          if (el.dataset.pseudocodeNumber) {
+            captionNumber = el.dataset.pseudocodeNumber + " ";
+            if (el.dataset.chapterLevel) {
+              captionNumber = el.dataset.chapterLevel + "." + captionNumber;
+            }
+          }
+          captionSpan.innerHTML = captionPrefix + captionNumber;
+        }
+      });
+    })(document);
+    </script>
+  
+
+
+
+
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

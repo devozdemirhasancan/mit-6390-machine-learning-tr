@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+
+<html lang="tr" xml:lang="tr" xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta charset="utf-8"/>
+<meta content="quarto-1.10.18" name="generator"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=yes" name="viewport"/>
+<title>11  Markov Karar Süreçleri – 6.390 - Machine Learning'e Giriş</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta content="./" name="quarto:offset"/>
+<link href="./reinforcement_learning.html" rel="next"/>
+<link href="./non_parametric.html" rel="prev"/>
+<link href="./assets/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet"/>
+<link class="quarto-color-scheme" href="site_libs/quarto-html/quarto-syntax-highlighting-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<link class="quarto-color-scheme quarto-color-alternate" href="site_libs/quarto-html/quarto-syntax-highlighting-dark-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<link class="quarto-color-scheme-extra" href="site_libs/quarto-html/quarto-syntax-highlighting-cd5a5e2e1b6543c3d002122cbcf2b4f2.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet"/>
+<link append-hash="true" class="quarto-color-scheme" data-mode="light" href="site_libs/bootstrap/bootstrap-c0d695abc4efa72cfba88dcf11645824.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<link append-hash="true" class="quarto-color-scheme quarto-color-alternate" data-mode="dark" href="site_libs/bootstrap/bootstrap-dark-ad73eeac00dcd6e430ad3806ef4d1812.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<link append-hash="true" class="quarto-color-scheme-extra" data-mode="light" href="site_libs/bootstrap/bootstrap-c0d695abc4efa72cfba88dcf11645824.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<script src="site_libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.js"></script>
+<link href="site_libs/quarto-contrib/pseudocode-2.4.1/pseudocode.min.css" rel="stylesheet"/>
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Sonuç yok",
+    "search-matching-documents-text": "eşleşen belgeler",
+    "search-copy-link-title": "Aramak için bağlantıyı kopyalayın",
+    "search-hide-matches-text": "Ek eşleşmeleri gizle",
+    "search-more-match-text": "bu belgede bir tane daha eşleşme",
+    "search-more-matches-text": "bu belgede daha fazla eşleşme",
+    "search-clear-button-title": "Temizle",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "İptal et",
+    "search-submit-button-title": "Gönder",
+    "search-label": "Ara"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+<script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+<link href="assets/style.css" rel="stylesheet"/>
+<meta content="11  Markov Karar Süreçleri – 6.390 - Machine Learning’e Giriş" name="twitter:title"/>
+<meta content="" name="twitter:description"/>
+<meta content="summary" name="twitter:card"/>
+</head>
+<body class="nav-sidebar floating slimcontent quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+<div id="quarto-search-results"></div>
+<header class="headroom fixed-top" id="quarto-header">
+<nav class="quarto-secondary-nav">
+<div class="container-fluid d-flex">
+<button aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Kenar çubuğunu değiştir" class="quarto-btn-toggle btn" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="button" type="button">
+<i class="bi bi-layout-text-sidebar-reverse"></i>
+</button>
+<nav aria-label="breadcrumb" class="quarto-page-breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./mdp.html"><span class="chapter-number">11</span>  <span class="chapter-title">Markov Karar Süreçleri</span></a></li></ol></nav>
+<a aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Kenar çubuğunu değiştir" class="flex-grow-1" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="navigation">
+</a>
+<button aria-label="Ara" class="btn quarto-search-button" onclick="window.quartoOpenSearch();" type="button">
+<i class="bi bi-search"></i>
+</button>
+</div>
+</nav>
+</header>
+<!-- content -->
+<div class="quarto-container page-columns page-rows-contents page-layout-article" id="quarto-content">
+<!-- sidebar -->
+<nav class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" id="quarto-sidebar">
+<div class="pt-lg-2 mt-2 text-left sidebar-header">
+<div class="sidebar-title mb-0 py-0">
+<a href="./">6.390 - Machine Learning’e Giriş</a>
+<div class="sidebar-tools-main tools-wide">
+<a aria-label="English Original" class="quarto-navigation-tool px-1" href="https://introml.mit.edu/notes/" title="English Original"><i class="bi bi-translate"></i></a>
+<a aria-label="Accessibility" class="quarto-navigation-tool px-1" href="https://accessibility.mit.edu/" title="Accessibility"><i class="bi bi-universal-access"></i></a>
+<a aria-label="Kaynak Kodu" class="quarto-navigation-tool px-1" href="https://github.com/390introml/notes" title="Kaynak Kodu"><i class="bi bi-github"></i></a>
+<div class="dropdown">
+<a aria-expanded="false" aria-label="Share" class="quarto-navigation-tool dropdown-toggle px-1" data-bs-toggle="dropdown" href="" id="quarto-navigation-tool-dropdown-0" role="link" title="Share"><i class="bi bi-share"></i></a>
+<ul aria-labelledby="quarto-navigation-tool-dropdown-0" class="dropdown-menu">
+<li>
+<a class="dropdown-item sidebar-tools-main-item" href="https://twitter.com/intent/tweet?url=|url|">
+<i class="bi bi-twitter pe-1"></i>
+            Twitter
+            </a>
+</li>
+<li>
+<a class="dropdown-item sidebar-tools-main-item" href="https://www.linkedin.com/sharing/share-offsite/?url=|url|">
+<i class="bi bi-linkedin pe-1"></i>
+            LinkedIn
+            </a>
+</li>
+</ul>
+</div>
+<a class="quarto-color-scheme-toggle quarto-navigation-tool px-1" href="" onclick="window.quartoToggleColorScheme(); return false;" title="Karanlık modu değiştir"><i class="bi"></i></a>
+<a class="quarto-reader-toggle quarto-navigation-tool px-1" href="" onclick="window.quartoToggleReader(); return false;" title="Okuyucu modunu değiştir">
+<div class="quarto-reader-toggle-btn">
+<i class="bi"></i>
+</div>
+</a>
+</div>
+</div>
+</div>
+<div class="mt-2 flex-shrink-0 align-items-center">
+<div class="sidebar-search">
+<div class="" id="quarto-search" title="Ara"></div>
+</div>
+</div>
+<div class="sidebar-menu-container">
+<ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./index.html">
+<span class="menu-text"><span class="chapter-number">1</span>  <span class="chapter-title">Giriş</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./regression.html">
+<span class="menu-text"><span class="chapter-number">2</span>  <span class="chapter-title">Regression</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./gradient_descent.html">
+<span class="menu-text"><span class="chapter-number">3</span>  <span class="chapter-title">Gradient Descent</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./classification.html">
+<span class="menu-text"><span class="chapter-number">4</span>  <span class="chapter-title">Classification</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./feature_representation.html">
+<span class="menu-text"><span class="chapter-number">5</span>  <span class="chapter-title">Feature Representation</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./neural_networks.html">
+<span class="menu-text"><span class="chapter-number">6</span>  <span class="chapter-title">Sinir Ağları</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./convolutional_neural_networks.html">
+<span class="menu-text"><span class="chapter-number">7</span>  <span class="chapter-title">Evrişimsel Sinir Ağları</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./representation.html">
+<span class="menu-text"><span class="chapter-number">8</span>  <span class="chapter-title">Representation Learning</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./transformers.html">
+<span class="menu-text"><span class="chapter-number">9</span>  <span class="chapter-title">Transformatörler</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./non_parametric.html">
+<span class="menu-text"><span class="chapter-number">10</span>  <span class="chapter-title">Non-parametric Models</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link active" href="./mdp.html">
+<span class="menu-text"><span class="chapter-number">11</span>  <span class="chapter-title">Markov Karar Süreçleri</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./reinforcement_learning.html">
+<span class="menu-text"><span class="chapter-number">12</span>  <span class="chapter-title">Reinforcement Learning</span></span></a>
+</div>
+</li>
+<li class="sidebar-item sidebar-item-section">
+<div class="sidebar-item-container">
+<a aria-expanded="true" class="sidebar-item-text sidebar-link text-start" data-bs-target="#quarto-sidebar-section-1" data-bs-toggle="collapse" role="navigation">
+<span class="menu-text">Ekler</span></a>
+<a aria-expanded="true" aria-label="Bölümü değiştir" class="sidebar-item-toggle text-start" data-bs-target="#quarto-sidebar-section-1" data-bs-toggle="collapse" role="navigation">
+<i class="bi bi-chevron-right ms-2"></i>
+</a>
+</div>
+<ul class="collapse list-unstyled sidebar-section depth1 show" id="quarto-sidebar-section-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./matrix_calculus.html">
+<span class="menu-text"><span class="chapter-number">A</span>  <span class="chapter-title">Matrix Calculus</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./neural_network_appendix.html">
+<span class="menu-text"><span class="chapter-number">B</span>  <span class="chapter-title">Sinir Ağlarını Optimize Etme</span></span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./nutshell.html">
+<span class="menu-text"><span class="chapter-number">C</span>  <span class="chapter-title">Genel durum</span></span></a>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="quarto-sidebar-footer"><div class="sidebar-footer-item">
+<p><small>© MIT ve 6.390 (eski adıyla 6.036) ders ekibi. <a href="https://introml.mit.edu/notes/">English original</a>. Hasan için hazırlanmış Türkçe çeviri/uyarlamadır; MIT tarafından onaylandığı anlamına gelmez. <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> ile lisanslanmıştır.</small></p>
+</div></div></nav>
+<div class="quarto-sidebar-collapse-item" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" id="quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+<div class="sidebar margin-sidebar" id="quarto-margin-sidebar">
+<nav class="toc-active" id="TOC" role="doc-toc">
+<h2 id="toc-title">İçindekiler</h2>
+<ul>
+<li><a class="nav-link active" data-scroll-target="#sec_mdps" href="#sec_mdps" id="toc-sec_mdps"><span class="header-section-number">11.1</span> Tanımı ve value işlevleri</a>
+<ul>
+<li><a class="nav-link" data-scroll-target="#sec-mdp_finite_horizon" href="#sec-mdp_finite_horizon" id="toc-sec-mdp_finite_horizon"><span class="header-section-number">11.1.1</span> Finite-horizon value işlevleri</a></li>
+<li><a class="nav-link" data-scroll-target="#sec-mdp_infinite_horizon" href="#sec-mdp_infinite_horizon" id="toc-sec-mdp_infinite_horizon"><span class="header-section-number">11.1.2</span> Infinite-horizon value işlevleri</a></li>
+</ul></li>
+<li><a class="nav-link" data-scroll-target="#mdps-sec-finding_mdp_policies-için-bulma-politikaları" href="#mdps-sec-finding_mdp_policies-için-bulma-politikaları" id="toc-mdps-sec-finding_mdp_policies-için-bulma-politikaları"><span class="header-section-number">11.2</span> MDPs {#sec-finding_mdp_policies} için bulma politikaları</a>
+<ul>
+<li><a class="nav-link" data-scroll-target="#sec-mdp_finite_horizon_optimal" href="#sec-mdp_finite_horizon_optimal" id="toc-sec-mdp_finite_horizon_optimal"><span class="header-section-number">11.2.1</span> Optimal sonlu horizon politikalarını bulma</a></li>
+<li><a class="nav-link" data-scroll-target="#sec-mdp_infinite_horizon_optimal" href="#sec-mdp_infinite_horizon_optimal" id="toc-sec-mdp_infinite_horizon_optimal"><span class="header-section-number">11.2.2</span> Optimal sonsuz horizon politikalarını bulma</a></li>
+</ul></li>
+</ul>
+</nav>
+</div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+<header class="quarto-title-block default" id="title-block-header">
+<div class="quarto-title">
+<h1 class="title"><span class="quarto-section-identifier" id="sec-mdps"><span class="chapter-number">11</span>  <span class="chapter-title">Markov Karar Süreçleri</span></span></h1>
+</div>
+<div class="quarto-title-meta">
+</div>
+</header>
+<p>Bir labirentte gezinmeyi öğrenen bir robotu, oyun oynayan bir AI’in kendi kendine oyun yoluyla stratejiler geliştirmesini veya gerçek zamanlı olarak sürüş kararları veren sürücüsüz bir arabayı düşünün. Bu sorunların ortak bir zorluğu var: agent, her seçimin gelecekteki olasılıkları ve ödülleri etkilediği bir dizi karar vermek zorunda. Girdilerden çıktılara tek seferlik haritalamayı öğrendiğimiz statik tahmin görevlerinden farklı olarak, bu problemler eylemlerin zaman içindeki sonuçları hakkında akıl yürütmeyi gerektirir.</p>
+<p>Bu sıralı ve dinamik yapı, daha statik denetimli veya unsupervised learning yaklaşımlarının ötesinde matematiksel araçlar gerektirir. Bu tür sorunlara yönelik en genel çerçeve, agent’in zaman içinde kümülatif ödülleri en üst düzeye çıkarmak için bilinmeyen bir environment’te eylemde bulunmayı öğrendiği <em>reinforcement learning</em>’tir (RL).</p>
+<p>Bu bölümde ilk olarak RL gibi sıralı karar verme problemlerini anlamak ve çözmek için matematiksel temel sağlayan <em>Markov karar süreçlerini</em> (MDPs) inceleyeceğiz. MDPs, bir agent ile environment’i arasındaki etkileşimi resmileştirir ve key’in durum, eylem, ödül ve geçiş öğelerini yakalar.</p>
+<section class="level2 page-columns page-full" data-number="11.1" id="sec_mdps">
+<h2 class="anchored" data-anchor-id="sec_mdps" data-number="11.1"><span class="header-section-number">11.1</span> Tanımı ve value işlevleri</h2>
+<p>Resmi olarak, bir Markov decision process bir tuple <span class="math inline">\(\langle \mathcal S, \mathcal A, \mathrm{T}, \mathrm{R}'tir,
+  \gamma\rangle\)</span> where <span class="math inline">\(\mathcal{S}\)</span> is the state space, <span class="math inline">\(\mathcal{A}\)</span>, action alanıdır ve:</p>
+<ul>
+<li><span class="math inline">\(\mathrm{T} : \mathcal S \times \mathcal A \times \mathcal S \to [0, 1]\)</span>, bir <em>transition model</em>’tir; burada <span class="math display">\[
+\mathrm{T}(s, a, s') = \Pr(S_{t + 1} = s'|S_t = s,
+          A_t = a)\;\;,
+\]</span> state <span class="math inline">\(s\)</span>’te action <span class="math inline">\(a\)</span> seçildiğinde state <span class="math inline">\(s'\)</span>’e ulaşma olasılığıdır.</li>
+</ul>
+<div class="no-row-height column-margin column-container"><div class="">
+<p><span class="math inline">\(S_t = s'\)</span> notasyonu, şu anlama gelmek üzere büyük <span class="math inline">\(S\)</span> harfini kullanır: bir rastgele değişken ve somut bir value’i temsil eden küçük <span class="math inline">\(s\)</span> harfi. Yani burada <span class="math inline">\(S_t\)</span> elemanlarını alabilen rastgele bir değişkendir. Değerler olarak <span class="math inline">\(\mathcal S\)</span>.</p>
+</div></div><ul>
+<li><p><span class="math inline">\(\mathrm{R}: \mathcal S \times \mathcal A \rightarrow \mathbb{R}\)</span> bir <em>reward işlevidir</em>; burada <span class="math inline">\(\mathrm{R}(s, a)\)</span>, action <span class="math inline">\(a\)</span>’i almak için anında bir reward belirtir. state <span class="math inline">\(s\)</span>; Ve</p></li>
+<li><p><span class="math inline">\(\gamma \in [0, 1]\)</span>, gelecekteki ödüllerin ağırlığını azaltan bir <em>discount factor</em>’tir ve bunu <a class="quarto-xref" href="#sec-mdp_infinite_horizon"><span>Bölüm 11.1.2</span></a>’te tartışacağız.</p></li>
+</ul>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Standart varsayım <span class="math inline">\(0 \leq \gamma &lt; 1\)</span>’tir. <span class="math inline">\(\gamma = 1\)</span>’in (indirim yok) ayarlanması, sonsuz horizon ayarında sorunlu olabilir ve getirilerin birbirinden ayrılmasına veya hatalı tanımlanmasına neden olabilir. Her zaman reward 1 veren tek bir state ve transition’e sahip bir MDP düşünün. action <span class="math inline">\(a\)</span>’i alan bir policy altındaki return, <span class="math inline">\(1 + 1 + 1 + \cdots\)</span>’tir ve bu, birbirinden farklıdır sonsuza kadar.</p>
+</div></div><p>MDPs, Markov özelliğini karşılar: sonraki state dağıtımı geçmişe değil, yalnızca mevcut state ve action’e bağlıdır. Resmi olarak tüm <span class="math inline">\(t \geq 0\)</span> için,</p>
+<p><span class="math display">\[\Pr(S_{t + 1}|S_t, A_t, S_{t - 1}, A_{t - 1}, \ldots, S_0, A_0) = \Pr(S_{t + 1}|S_t, A_t)\;\;.
+\]</span></p>
+<p>Yani gelecek, tüm geçmişe değil, yalnızca mevcut state ve action’e bağlıdır.</p>
+<p>Basitlik açısından, bu class’te, ödüllerin deterministik olduğunu ve state ve action alanlarının sınırlı olduğunu varsayacağız.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Not</span>Örnek
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Basit bir state makinesinin Markov decision process olarak aşağıdaki açıklaması, MDP’in somut bir örneğini sağlar.</p>
+<p>state makinesinin üç olası işlemi vardır (<em>actions</em>): <code>wash</code>, <code>paint</code> ve <code>eject</code> (her biri karşılık gelen bir düğmeye sahiptir). Nesneler makineye konuluyor ve her düğmeye bastığınızda nesneye bir şeyler yapılıyor. Ancak eski bir makine olduğundan pek güvenilir değildir. Makinenin içinde, nesnede neler olup bittiğini açıkça algılayabilen ve nesnenin state’ini output yapacak bir kamera bulunmaktadır: <code>dirty</code>, <code>clean</code>, <code>painted</code> veya <code>ejected</code>.</p>
+<p>Her action için nesneye yapılan şey budur:</p>
+<p><strong>Yıkama</strong></p>
+<ul>
+<li><code>wash</code> işlemini herhangi bir nesne üzerinde gerçekleştirirseniz (kirli, temiz veya boyalı olsun), 0,9 olasılıkla <code>clean</code> ve aksi halde <code>dirty</code> ile sonuçlanacaktır.</li>
+</ul>
+<p><strong>Boya</strong></p>
+<ul>
+<li><code>paint</code> işlemini temiz bir nesne üzerinde gerçekleştirirseniz, 0,8 olasılıkla güzel bir şekilde <code>painted</code> haline gelecektir. 0,1 olasılıkla boya ıskalıyor ancak nesne temiz kalıyor ve 0,1 olasılıkla makine nesnenin her yerine paslı toz döküyor ve bu da onu <code>dirty</code> yapıyor.</li>
+<li><code>paint</code> işlemini bir <code>painted</code> nesnesi üzerinde gerçekleştirirseniz, 1,0 olasılıkla <code>painted</code> olarak kalır.</li>
+<li><code>paint</code> işlemini bir <code>dirty</code> nesnesi üzerinde gerçekleştirirseniz, 1,0 olasılıkla <code>dirty</code> olarak kalır.</li>
+</ul>
+<p><strong>Eject</strong></p>
+<ul>
+<li>Herhangi bir nesne üzerinde <code>eject</code> işlemi gerçekleştirirseniz nesne makineden çıkar ve işlem sonlandırılır. Nesne, başka herhangi bir eyleme bakılmaksızın <code>ejected</code> olarak kalır.</li>
+</ul>
+<p>Bu açıklamalar transition model <span class="math inline">\(\mathrm{T}\)</span>’i belirtir ve her action için transition işlevi bir state makine şeması olarak gösterilebilir. Örneğin, burada <code>wash</code> diyagramı verilmiştir:</p>
+<div class="imagify">
+<p><a class="lightbox" data-gallery="quarto-lightbox-gallery-1" href="data:image/svg+xml,%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0D%0A%3Csvg%20version%3D%271.1%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20xmlns%3Axlink%3D%27http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%27%20width%3D%27224.304239pt%27%20height%3D%27265.238107pt%27%20viewBox%3D%27-72.000004%20-72.000009%20149.536159%20176.825405%27%3E%0D%0A%3Cstyle%20type%3D%27text%2Fcss%27%3E%0D%0A%3C%21%5BCDATA%5B%40font-face%7Bfont-family%3Aec-lmr10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAm4AA0AAAAADOwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnkv09TLzIAAAFMAAAAQgAAAFZWSl7JY21hcAAAAZAAAACVAAABmi%2F%2FQNNjdnQgAAACKAAAAAQAAAAEACECeWdhc3AAAAIsAAAACAAAAAj%2F%2FwADZ2x5ZgAAAjQAAAW0AAAHlHsWt5hoZWFkAAAH6AAAADMAAAA2LmFI82hoZWEAAAgcAAAAHgAAACQFAQFzaG10eAAACDwAAABEAAAATB4WAjlsb2NhAAAIgAAAACgAAAAoD4ARuG1heHAAAAioAAAAHwAAACAAWQBwbmFtZQAACMgAAAC7AAABJoE7oSZwb3N0AAAJhAAAADEAAABIAgsCDnjaY2BgYGQAgsvb7s0A0c9WNgvDaABWZwdLAAB42mNgZNzKOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqT0GCqZpf%2BbMEQxbWM4C1MDAODrCr8AAHjazY%2FNCgFxFMV%2FfzMG49tSnmFi6XEkC5IkC97DxsJn8TZ2PM9xZ0zKlLJ06n6cc8%2FtdgGPV3RwxNgYcwn3WVlt0zAlJKJHnwEjJkyZMWfBkrVknohuMhsy%2Fpzpobtuuuqis0466qC9dtqmt77ABbwNLmcplzVkNzz8fNoG%2FIYCxVJotVyhSo26vdmM9RZ%2FgSdpPSMnAAAAACECeQAAAAH%2F%2FwACeNptVF9sU1UcPud0a9d2bXfbe%2B7tLb29bW9v27Vrt94%2FvR20XbvC5hyRyTZWZA6CDAMBBoR%2FGtBoholBBV1Eg4k88KCJD8oeDPFBeTBEEnzhiQcTH3gwGnjyD8bA5jl33RyJSe%2FNOae5v%2B%2F7fr%2FvOwCBGACwG10BNuAA%2BesQ9JYXHW3goXrd3v5TedGGyBJct9Hjdnq86LDDx%2BVFSM81JsakNEaOwY5fbt1CV57sj6EmAAjsAADcBAdJxQ4Ainoybmc51bwp9UhrPwOANpBa%2Fg3eIdh%2BEADdIEOY6Kk8kuMOO2b5CNRUs2ikWIcXyvFkKmnoZtWmqRzPYXgnjbcUQ6%2FqSk7clTtTVMbdrkZaaXS6OxxSOuyRhzwuWPtwsqfoPT228Om4mT8x9kHnxVq9XKqXP3qzmClxHXq9dIFw3UlQrxEOHOABiBkEyWD0pGyXsWoyrD0LcVHl4bVoTbQz1TPb9MhAVF6SJX8EFfwdNSn05J%2BIX7LZANWTIXpuk1oKSAIdGFSPJccLMcsRNZj1km1KLRoEIW63DqlCOzmk8ggS0XY7OTCoTJVj0omJyXSsqApbRJEP%2BxlxtDZ7ebpSqUp%2BHJ%2BPdMGRPReGpYHEiDHzxr7o%2BKkSnwj7uSAXUjd%2B%2F8n08OEB5aVZZWBbdq%2FFLbr8J7wPbwIVaKACqgAohoxZIrdCSMLUOj5kKxdJn0Vop4Ogcyia1nuFKmFaNDG8LyRwF2IYc%2FtAM8RioV3A8kh3%2FWx5X2lzoneLz5aJhUqfjWYUY8%2FczlKppnh%2BCIs9jFkrcEKIdTJsfrCqOMTcZFL1F5KxQsbQavU%2BRW%2B27aMeihO%2BVwnfJEgRrjo1hRzPI4KtqXyroa0%2B0mXVZsCrHpcttpfL5cMT2nBiAytgNjRdmT73ejNZkYMdp12uA2x2ov%2FwHgWJPjYkcIWNb387L8hpoR1YPSKYyIe%2BtryQJo4kfqB2cGDajLUOmdgkplybGaFD%2FkU%2BPXRJD6lbXzj%2F2o7t%2BsKCu%2BfZelqUskONbrcUUNBu%2Br5Xnd89Mz846D7FMkO1%2FIszfbUyw%2F5IscMtvREgkSRkW5q9Ngsm9pRlqshIyTQKEYQt0Z2ZPt41nIlAnunY1Zx6Zb6ZGUoEBh8iMSN3JQrYcbrTm8gzbY2%2B%2FXbf9uNvzew9L%2FemnOf10Zi3u96LKT65B8Aj9D5gSBopB6CtacckBzI2Vd623raPCvidgiAYR9B%2BU%2BKCEevxRuCcW%2FIrS79HPSQVaBpHYyx9aH%2BX7y1r4C7B2ADCK%2F3lV%2BtbuahCg94VrfrMerC7H%2FeL7V6JD4e8WMgIjXz%2F2CqmCh%2FQ1i6dwMncBk8b72dDIVbJNhvovf%2FArXsOLJPZdhGF6%2Bba0saDZUMg8xOMuTnJE0UHacknf1siqDcQiJIXD78BPSBnfZ9HJDhJmhuHsb6QYSVqJT8rJ4gP4qDTyUVGZ3vfpRDHjhrCuJ6V6EqC7R73d8%2BUBOXAAUvGHxYm4XBjZKqs%2FdpiQP1RRU6CL5Lp5ECe%2BuN%2FsdFKUmXrUsnDCqySPYeR8%2BzkWPmSQQZ29Jgh2Bvqrvnxqf562tXGbU6Z2%2B5ZtpSY2FLPKoHPnQFtfnfzZKXL7fs5mTk5YfUhTG61Q4SHNT9ozegpEipvyKst4L2oNT94KBMtlL0XqPzjU2msBwdMJ7I53YK%2FawM8JyQa2SPr5fvFK88dgdAR6GR5jqO4AZKPrehlgi%2B27i4i0GA0QzZkL3JgjWEjyILaKiTFxsWLAsSV%2FKSYT%2FgL6tl%2B09h0CHLSjfxYHXFLD7Kbgs7niyt1NfgYfgn6QIHoMexyCnOY9UEbCbdmOOIpTGLGBxyWQ9en0AwUyZfx7qle%2B%2BycvXRYz3EBvrP9suDDfZFwIBX0M0IxOdb3VagBL1FNqNvl%2FQt6fLYQ3UGH17O0sCmZ6fG3KwFy78d7j8MvagD8C9MVWe142mNgZGBgAOI2o%2Fnr4vltvjJwMz8HijA8W9ksDKP%2F3%2FhvzCTOtA3I5WBgAokCAGS5DMoAeNpjYGRgYNr235ghiknn%2Fw0gW5wBKIIChAF1iQR4AAB42mPMZlBkAAJGXyAWYwhj%2FMKgDsSRQKwFxAqMexiUmHQYlIC0DFBekdHo%2Fw0QDRRTAGIZxg4gbmUQZhJgEAYA7s0MZAAAACoAKgAqAD4AgACmAPQBTAGGAcQCBAI2AnQClALUAxgDVAOAA8p42mNgZGBgEGawZ2BhAAEmIGZkAIk5MOiBBAALowDKAHjaXY1NCsIwFIQ%2FrS3%2BLcSF6yzcpjRZqHgA8QSu3JVYBNtC2gt4DA%2FgGbyerzWCGHi8L5PJDDDmwoDuDImZB45Ycw4cM%2BMROBH%2FS14Ho4n4p72z44gjy8AxK%2B6BExY8uVHiMWRwK72RdaCmou23p8ChsKTiUOxlHDn6599HNWxF3clY0SwbCaqr9lD7wimbZmqvXK77CkGz1TttMyuukwR6Gq59bRfUVXFyvrnWlTKpXP4r%2BUbxBoN0J2UAeNpjYGLAD4SBmJGBiUEQyBJhkGFwYXBjcGfwYPBh8GXwZwhkCGYIZQhniAEANv8EGgAAAA%3D%3D%29%20format%28%27woff%27%29%3B%7D%0D%0Atext.f0%20%7Bfont-family%3Aec-lmr10%3Bfont-size%3A9.96264px%7D%0D%0A%5D%5D%3E%0D%0A%3C%2Fstyle%3E%0D%0A%3Cg%20id%3D%27page1%27%3E%0D%0A%3Cg%20stroke-miterlimit%3D%2710%27%20transform%3D%27matrix%28.996264%200%200%20-.996264%20-46.326824%20-20.060363%29%27%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cpath%20d%3D%27M%20-25.56946%20-125.15408%20M%20-25.56946%20-125.15408%20L%20-25.56946%2051.93442%20L%20124.12747%2051.93442%20L%20124.12747%20-125.15408%20Z%20M%20124.12747%2051.93442%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%2015.88843%200.0%20C%2015.88843%208.77504%208.77504%2015.88843%200.0%2015.88843%20C%20-8.77504%2015.88843%20-15.88843%208.77504%20-15.88843%200.0%20C%20-15.88843%20-8.77504%20-8.77504%20-15.88843%200.0%20-15.88843%20C%208.77504%20-15.88843%2015.88843%20-8.77504%2015.88843%200.0%20Z%20M%200.0%200.0%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-10.56956%20-2.47215%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3Edirt%3Ctspan%20x%3D%27-30.524932%27%3Ey%3C%2Ftspan%3E%0D%0A%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20115.52286%200.0%20C%20115.52286%208.80255%20108.38718%2015.93823%2099.58463%2015.93823%20C%2090.78207%2015.93823%2083.6464%208.80255%2083.6464%200.0%20C%2083.6464%20-8.80255%2090.78207%20-15.93823%2099.58463%20-15.93823%20C%20108.38718%20-15.93823%20115.52286%20-8.80255%20115.52286%200.0%20Z%20M%2099.58463%200.0%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%2888.4735%20-3.44437%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3Eclean%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2021.06396%20-99.58463%20C%2021.06396%20-87.95117%2011.63345%20-78.52066%200.0%20-78.52066%20C%20-11.63345%20-78.52066%20-21.06396%20-87.95117%20-21.06396%20-99.58463%20C%20-21.06396%20-111.21808%20-11.63345%20-120.64859%200.0%20-120.64859%20C%2011.63345%20-120.64859%2021.06396%20-111.21808%2021.06396%20-99.58463%20Z%20M%200.0%20-99.58463%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-16.24998%20-102.05678%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3Epain%3Ctspan%20x%3D%27-27.78539%27%3Eted%3C%2Ftspan%3E%0D%0A%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20119.62198%20-99.58463%20C%20119.62198%20-88.51816%20110.6511%20-79.54727%2099.58463%20-79.54727%20C%2088.51816%20-79.54727%2079.54727%20-88.51816%2079.54727%20-99.58463%20C%2079.54727%20-110.6511%2088.51816%20-119.62198%2099.58463%20-119.62198%20C%20110.6511%20-119.62198%20119.62198%20-110.6511%20119.62198%20-99.58463%20Z%20M%2099.58463%20-99.58463%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%2884.44562%20-102.05678%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3Eejected%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20-4.1635%2015.54024%20C%20-10.75798%2040.15096%2010.06163%2040.62335%204.51953%2016.95744%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.21744%20-.97601%20.97601%20-.21744%204.51135%2016.95505%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-6.38887%2037.8925%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E0.1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2013.93277%208.04396%20C%2038.1345%2022.02763%2061.39761%2022.0363%2085.60872%208.06886%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%2843.37834%2022.07101%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E0.9%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2095.40823%2015.58835%20C%2088.79306%2040.2762%20109.67926%2040.74895%20104.11737%2017.00659%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.21764%20-.97598%20.97598%20-.21764%20104.10973%2017.0061%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2893.19572%2037.9987%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E0.9%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2085.60872%20-8.06886%20C%2061.39761%20-22.0363%2038.1345%20-22.02763%2013.93277%20-8.04396%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%2843.37834%20-28.36826%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E0.1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%200.0%20-78.32066%20L%200.0%20-16.08842%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-16.31071%20-50.35316%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E0.1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2015.0359%20-84.54872%20L%2088.17317%20-11.41145%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%2855.13751%20-51.12871%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-43.005949%27%20y%3D%27-20.060363%27%3E0.9%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2094.34743%20-80.03683%20C%2086.01799%20-48.95131%20112.45757%20-48.48029%20105.18178%20-78.62376%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.22643%20-.974%20.974%20-.22643%20105.17593%20-78.62352%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2893.19574%20-52.83101%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E1.0%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke-width%3D%270.4%27%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E"><img class="img-fluid" src="data:image/svg+xml,%3C%3Fxml%20version%3D%271.0%27%20encoding%3D%27UTF-8%27%3F%3E%0D%0A%3Csvg%20version%3D%271.1%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20xmlns%3Axlink%3D%27http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%27%20width%3D%27224.304239pt%27%20height%3D%27265.238107pt%27%20viewBox%3D%27-72.000004%20-72.000009%20149.536159%20176.825405%27%3E%0D%0A%3Cstyle%20type%3D%27text%2Fcss%27%3E%0D%0A%3C%21%5BCDATA%5B%40font-face%7Bfont-family%3Aec-lmr10%3Bsrc%3Aurl%28data%3Aapplication%2Fx-font-woff%3Bbase64%2Cd09GRgABAAAAAAm4AA0AAAAADOwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAcoQnkv09TLzIAAAFMAAAAQgAAAFZWSl7JY21hcAAAAZAAAACVAAABmi%2F%2FQNNjdnQgAAACKAAAAAQAAAAEACECeWdhc3AAAAIsAAAACAAAAAj%2F%2FwADZ2x5ZgAAAjQAAAW0AAAHlHsWt5hoZWFkAAAH6AAAADMAAAA2LmFI82hoZWEAAAgcAAAAHgAAACQFAQFzaG10eAAACDwAAABEAAAATB4WAjlsb2NhAAAIgAAAACgAAAAoD4ARuG1heHAAAAioAAAAHwAAACAAWQBwbmFtZQAACMgAAAC7AAABJoE7oSZwb3N0AAAJhAAAADEAAABIAgsCDnjaY2BgYGQAgsvb7s0A0c9WNgvDaABWZwdLAAB42mNgZNzKOIGBlYGBqZNpNwMDQzeEZrzPYMjIBBRlYGVmgAFGBiQQkOaaAqT0GCqZpf%2BbMEQxbWM4C1MDAODrCr8AAHjazY%2FNCgFxFMV%2FfzMG49tSnmFi6XEkC5IkC97DxsJn8TZ2PM9xZ0zKlLJ06n6cc8%2FtdgGPV3RwxNgYcwn3WVlt0zAlJKJHnwEjJkyZMWfBkrVknohuMhsy%2Fpzpobtuuuqis0466qC9dtqmt77ABbwNLmcplzVkNzz8fNoG%2FIYCxVJotVyhSo26vdmM9RZ%2FgSdpPSMnAAAAACECeQAAAAH%2F%2FwACeNptVF9sU1UcPud0a9d2bXfbe%2B7tLb29bW9v27Vrt94%2FvR20XbvC5hyRyTZWZA6CDAMBBoR%2FGtBoholBBV1Eg4k88KCJD8oeDPFBeTBEEnzhiQcTH3gwGnjyD8bA5jl33RyJSe%2FNOae5v%2B%2F7fr%2FvOwCBGACwG10BNuAA%2BesQ9JYXHW3goXrd3v5TedGGyBJct9Hjdnq86LDDx%2BVFSM81JsakNEaOwY5fbt1CV57sj6EmAAjsAADcBAdJxQ4Ainoybmc51bwp9UhrPwOANpBa%2Fg3eIdh%2BEADdIEOY6Kk8kuMOO2b5CNRUs2ikWIcXyvFkKmnoZtWmqRzPYXgnjbcUQ6%2FqSk7clTtTVMbdrkZaaXS6OxxSOuyRhzwuWPtwsqfoPT228Om4mT8x9kHnxVq9XKqXP3qzmClxHXq9dIFw3UlQrxEOHOABiBkEyWD0pGyXsWoyrD0LcVHl4bVoTbQz1TPb9MhAVF6SJX8EFfwdNSn05J%2BIX7LZANWTIXpuk1oKSAIdGFSPJccLMcsRNZj1km1KLRoEIW63DqlCOzmk8ggS0XY7OTCoTJVj0omJyXSsqApbRJEP%2BxlxtDZ7ebpSqUp%2BHJ%2BPdMGRPReGpYHEiDHzxr7o%2BKkSnwj7uSAXUjd%2B%2F8n08OEB5aVZZWBbdq%2FFLbr8J7wPbwIVaKACqgAohoxZIrdCSMLUOj5kKxdJn0Vop4Ogcyia1nuFKmFaNDG8LyRwF2IYc%2FtAM8RioV3A8kh3%2FWx5X2lzoneLz5aJhUqfjWYUY8%2FczlKppnh%2BCIs9jFkrcEKIdTJsfrCqOMTcZFL1F5KxQsbQavU%2BRW%2B27aMeihO%2BVwnfJEgRrjo1hRzPI4KtqXyroa0%2B0mXVZsCrHpcttpfL5cMT2nBiAytgNjRdmT73ejNZkYMdp12uA2x2ov%2FwHgWJPjYkcIWNb387L8hpoR1YPSKYyIe%2BtryQJo4kfqB2cGDajLUOmdgkplybGaFD%2FkU%2BPXRJD6lbXzj%2F2o7t%2BsKCu%2BfZelqUskONbrcUUNBu%2Br5Xnd89Mz846D7FMkO1%2FIszfbUyw%2F5IscMtvREgkSRkW5q9Ngsm9pRlqshIyTQKEYQt0Z2ZPt41nIlAnunY1Zx6Zb6ZGUoEBh8iMSN3JQrYcbrTm8gzbY2%2B%2FXbf9uNvzew9L%2FemnOf10Zi3u96LKT65B8Aj9D5gSBopB6CtacckBzI2Vd623raPCvidgiAYR9B%2BU%2BKCEevxRuCcW%2FIrS79HPSQVaBpHYyx9aH%2BX7y1r4C7B2ADCK%2F3lV%2BtbuahCg94VrfrMerC7H%2FeL7V6JD4e8WMgIjXz%2F2CqmCh%2FQ1i6dwMncBk8b72dDIVbJNhvovf%2FArXsOLJPZdhGF6%2Bba0saDZUMg8xOMuTnJE0UHacknf1siqDcQiJIXD78BPSBnfZ9HJDhJmhuHsb6QYSVqJT8rJ4gP4qDTyUVGZ3vfpRDHjhrCuJ6V6EqC7R73d8%2BUBOXAAUvGHxYm4XBjZKqs%2FdpiQP1RRU6CL5Lp5ECe%2BuN%2FsdFKUmXrUsnDCqySPYeR8%2BzkWPmSQQZ29Jgh2Bvqrvnxqf562tXGbU6Z2%2B5ZtpSY2FLPKoHPnQFtfnfzZKXL7fs5mTk5YfUhTG61Q4SHNT9ozegpEipvyKst4L2oNT94KBMtlL0XqPzjU2msBwdMJ7I53YK%2FawM8JyQa2SPr5fvFK88dgdAR6GR5jqO4AZKPrehlgi%2B27i4i0GA0QzZkL3JgjWEjyILaKiTFxsWLAsSV%2FKSYT%2FgL6tl%2B09h0CHLSjfxYHXFLD7Kbgs7niyt1NfgYfgn6QIHoMexyCnOY9UEbCbdmOOIpTGLGBxyWQ9en0AwUyZfx7qle%2B%2BycvXRYz3EBvrP9suDDfZFwIBX0M0IxOdb3VagBL1FNqNvl%2FQt6fLYQ3UGH17O0sCmZ6fG3KwFy78d7j8MvagD8C9MVWe142mNgZGBgAOI2o%2Fnr4vltvjJwMz8HijA8W9ksDKP%2F3%2FhvzCTOtA3I5WBgAokCAGS5DMoAeNpjYGRgYNr235ghiknn%2Fw0gW5wBKIIChAF1iQR4AAB42mPMZlBkAAJGXyAWYwhj%2FMKgDsSRQKwFxAqMexiUmHQYlIC0DFBekdHo%2Fw0QDRRTAGIZxg4gbmUQZhJgEAYA7s0MZAAAACoAKgAqAD4AgACmAPQBTAGGAcQCBAI2AnQClALUAxgDVAOAA8p42mNgZGBgEGawZ2BhAAEmIGZkAIk5MOiBBAALowDKAHjaXY1NCsIwFIQ%2FrS3%2BLcSF6yzcpjRZqHgA8QSu3JVYBNtC2gt4DA%2FgGbyerzWCGHi8L5PJDDDmwoDuDImZB45Ycw4cM%2BMROBH%2FS14Ho4n4p72z44gjy8AxK%2B6BExY8uVHiMWRwK72RdaCmou23p8ChsKTiUOxlHDn6599HNWxF3clY0SwbCaqr9lD7wimbZmqvXK77CkGz1TttMyuukwR6Gq59bRfUVXFyvrnWlTKpXP4r%2BUbxBoN0J2UAeNpjYGLAD4SBmJGBiUEQyBJhkGFwYXBjcGfwYPBh8GXwZwhkCGYIZQhniAEANv8EGgAAAA%3D%3D%29%20format%28%27woff%27%29%3B%7D%0D%0Atext.f0%20%7Bfont-family%3Aec-lmr10%3Bfont-size%3A9.96264px%7D%0D%0A%5D%5D%3E%0D%0A%3C%2Fstyle%3E%0D%0A%3Cg%20id%3D%27page1%27%3E%0D%0A%3Cg%20stroke-miterlimit%3D%2710%27%20transform%3D%27matrix%28.996264%200%200%20-.996264%20-46.326824%20-20.060363%29%27%20fill%3D%27%23000%27%20stroke%3D%27%23000%27%20stroke-width%3D%270.4%27%3E%0D%0A%3Cpath%20d%3D%27M%20-25.56946%20-125.15408%20M%20-25.56946%20-125.15408%20L%20-25.56946%2051.93442%20L%20124.12747%2051.93442%20L%20124.12747%20-125.15408%20Z%20M%20124.12747%2051.93442%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%2015.88843%200.0%20C%2015.88843%208.77504%208.77504%2015.88843%200.0%2015.88843%20C%20-8.77504%2015.88843%20-15.88843%208.77504%20-15.88843%200.0%20C%20-15.88843%20-8.77504%20-8.77504%20-15.88843%200.0%20-15.88843%20C%208.77504%20-15.88843%2015.88843%20-8.77504%2015.88843%200.0%20Z%20M%200.0%200.0%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-10.56956%20-2.47215%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3Edirt%3Ctspan%20x%3D%27-30.524932%27%3Ey%3C%2Ftspan%3E%0D%0A%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20115.52286%200.0%20C%20115.52286%208.80255%20108.38718%2015.93823%2099.58463%2015.93823%20C%2090.78207%2015.93823%2083.6464%208.80255%2083.6464%200.0%20C%2083.6464%20-8.80255%2090.78207%20-15.93823%2099.58463%20-15.93823%20C%20108.38718%20-15.93823%20115.52286%20-8.80255%20115.52286%200.0%20Z%20M%2099.58463%200.0%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%2888.4735%20-3.44437%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3Eclean%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2021.06396%20-99.58463%20C%2021.06396%20-87.95117%2011.63345%20-78.52066%200.0%20-78.52066%20C%20-11.63345%20-78.52066%20-21.06396%20-87.95117%20-21.06396%20-99.58463%20C%20-21.06396%20-111.21808%20-11.63345%20-120.64859%200.0%20-120.64859%20C%2011.63345%20-120.64859%2021.06396%20-111.21808%2021.06396%20-99.58463%20Z%20M%200.0%20-99.58463%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-16.24998%20-102.05678%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3Epain%3Ctspan%20x%3D%27-27.78539%27%3Eted%3C%2Ftspan%3E%0D%0A%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%20119.62198%20-99.58463%20C%20119.62198%20-88.51816%20110.6511%20-79.54727%2099.58463%20-79.54727%20C%2088.51816%20-79.54727%2079.54727%20-88.51816%2079.54727%20-99.58463%20C%2079.54727%20-110.6511%2088.51816%20-119.62198%2099.58463%20-119.62198%20C%20110.6511%20-119.62198%20119.62198%20-110.6511%20119.62198%20-99.58463%20Z%20M%2099.58463%20-99.58463%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%2884.44562%20-102.05678%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3Eejected%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cpath%20d%3D%27M%20-4.1635%2015.54024%20C%20-10.75798%2040.15096%2010.06163%2040.62335%204.51953%2016.95744%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.21744%20-.97601%20.97601%20-.21744%204.51135%2016.95505%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%28-6.38887%2037.8925%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E0.1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2013.93277%208.04396%20C%2038.1345%2022.02763%2061.39761%2022.0363%2085.60872%208.06886%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%2843.37834%2022.07101%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E0.9%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2095.40823%2015.58835%20C%2088.79306%2040.2762%20109.67926%2040.74895%20104.11737%2017.00659%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.21764%20-.97598%20.97598%20-.21764%20104.10973%2017.0061%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2893.19572%2037.9987%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E0.9%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2085.60872%20-8.06886%20C%2061.39761%20-22.0363%2038.1345%20-22.02763%2013.93277%20-8.04396%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%2843.37834%20-28.36826%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E0.1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%200.0%20-78.32066%20L%200.0%20-16.08842%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%28-16.31071%20-50.35316%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E0.1%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2015.0359%20-84.54872%20L%2088.17317%20-11.41145%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27translate%2855.13751%20-51.12871%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-43.005949%27%20y%3D%27-20.060363%27%3E0.9%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cpath%20d%3D%27M%2094.34743%20-80.03683%20C%2086.01799%20-48.95131%20112.45757%20-48.48029%20105.18178%20-78.62376%27%20fill%3D%27none%27%2F%3E%0D%0A%3Cg%20transform%3D%27matrix%28-.22643%20-.974%20.974%20-.22643%20105.17593%20-78.62352%29%27%20stroke-width%3D%270.31999%27%20stroke-dasharray%3D%27none%27%20stroke-dashoffset%3D%270.0%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%0D%0A%20%3Cpath%20d%3D%27%20M%20-1.19998%201.59998%20C%20-1.09998%200.99998%200.0%200.09999%200.29999%200.0%20C%200.0%20-0.09999%20-1.09998%20-0.99998%20-1.19998%20-1.59998%20%20%27%20fill%3D%27none%27%2F%3E%0D%0A%20%3C%2Fg%3E%0D%0A%3Cg%20transform%3D%27translate%2893.19574%20-52.83101%29matrix%281.00375%200%200%20-1.00375%2046.50055%20-20.135589%29%27%20stroke%3D%27none%27%20fill%3D%27%23000%27%3E%0D%0A%3Ctext%20class%3D%27f0%27%20x%3D%27-46.326824%27%20y%3D%27-20.060363%27%3E1.0%3C%2Ftext%3E%0D%0A%3C%2Fg%3E%0D%0A%3Cg%20stroke-width%3D%270.4%27%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fg%3E%0D%0A%3C%2Fsvg%3E" style="display:block; margin: .5em auto;" title="\begin{tikzpicture}[-&gt; background rectangle/.style={fill=white}, show background rectangle]
+  \node[state] (dirty) {dirty};
+  \node[state, right of=dirty, xshift=2.5cm] (clean) {clean};
+  \node[state, below of=dirty, yshift=-2.5cm] (painted) {painted};
+  \node[state, below of=clean, yshift=-2.5cm] (ejected) {ejected};
+  \draw (dirty) edge[loop above] node{0.1} (dirty)
+  (dirty) edge[bend left, above] node{0.9} (clean)
+  (clean) edge[loop above] node{0.9} (clean)
+  (clean) edge[bend left, below] node{0.1} (dirty)
+  (painted) edge[left] node{0.1} (dirty)
+  (painted) edge[right] node{~0.9} (clean)
+  (ejected) edge[loop above] node{1.0} (ejected);
+\end{tikzpicture}"/></a></p>
+</div>
+<p>Boyalı bir nesneyi çıkarmak için reward +10, boyalı bir nesneyi çıkarmak için reward 0 alırsınız. boyanmamış bir nesnenin çıkarılması, “çıkarılan” bir nesnedeki herhangi bir action için reward 0 nesne ve aksi takdirde reward -3. MDP açıklaması şu şekilde olacaktır: discount factor de belirtilerek tamamlanır.</p>
+</div>
+</div>
+<p><em>policy</em>, her state’te hangi action’in alacağını belirten bir <span class="math inline">\(\pi\)</span> işlevidir. policy öğrenmek isteyeceğimiz şeydir; bir oyuncunun belirli bir oyunu kazanmak için kullandığı stratejiye benzer. Aşağıda bu nihai hedefe doğru yalnızca ilk adımları atıyoruz. Bir policy’in ne kadar iyi olduğunu nasıl değerlendireceğimizi, ilk olarak transition adımlarının toplam sayısı sonlu olduğunda <em>finite horizon</em> durumunda <a class="quarto-xref" href="#sec-mdp_finite_horizon"><span>Bölüm 11.1.1</span></a>’te açıklıyoruz. Sonlu horizon durumunda, policy’i genellikle <span class="math inline">\(\pi_h(s)\)</span> olarak belirtiriz; burada <span class="math inline">\(h\)</span>, kalan adım sayısını belirten negatif olmayan bir tam sayıdır ve <span class="math inline">\(s \in \mathcal S\)</span>, geçerli state’tir. Daha sonra oyunun ne zaman biteceğini bilmediğiniz durumlarda <em>infinite horizon</em> <a class="quarto-xref" href="#sec-mdp_infinite_horizon"><span>Bölüm 11.1.2</span></a> kasasını ele alıyoruz.</p>
+<section class="level3" data-number="11.1.1" id="sec-mdp_finite_horizon">
+<h3 class="anchored" data-anchor-id="sec-mdp_finite_horizon" data-number="11.1.1"><span class="header-section-number">11.1.1</span> Finite-horizon value işlevleri</h3>
+<p>policy’in hedefi, etki alanının yaptığı stokastik geçişler üzerinden ortalaması alınan beklenen toplam reward’i en üst düzeye çıkarmaktır. Öncelikle, agent’in MDP ile sahip olacağı toplam etkileşim adımı sayısını gösteren sonlu bir <em>horizon</em> <span class="math inline">\(h\)</span>’in olduğu durumu ele alalım.</p>
+<p>Bir policy’in iyiliğini ölçmeye çalışıyoruz. Bunu, belirli bir horizon <span class="math inline">\(h\)</span> ve MDP policy <span class="math inline">\(\pi_h\)</span> için “horizon <span class="math inline">\(h\)</span>” tanımlayarak yaparız. state, <span class="math inline">\(\mathrm{V}_h^{\pi}(s)\)</span>’in <em>value</em>”. Bunu, <em>gitmeye kalan adım sayısı</em> olan horizon üzerinde tümevarımla yapıyoruz.</p>
+<p>Temel durum, hiçbir adımın kalmadığı durumdur; bu durumda, hangi state’te olursak olalım, value 0’dır, yani</p>
+<p><span id="eq-finite_val_0"><span class="math display">\[
+\mathrm{V}_0^{\pi}(s) = 0\;\;.
+\tag{11.1}\]</span></span></p>
+<p>Daha sonra, state <span class="math inline">\(s\)</span>’teki horizon <span class="math inline">\(h + 1\)</span>’teki bir policy’in value’i, state <span class="math inline">\(s\)</span> artı sonrakinde alacağı reward’e eşittir. state’in beklenen horizon <span class="math inline">\(h\)</span> value’i, <span class="math inline">\(\gamma\)</span> faktörüyle indirimli. Böylece ufuk 1 ve 2’den başlayıp genel duruma geçerek şunu elde ederiz: <span id="eq-finite_val_1"><span class="math display">\[
+\mathrm{V}_1^{\pi}(s) = \mathrm{R}(s, \pi_1(s)) + 0
+\tag{11.2}\]</span></span></p>
+<p><span id="eq-finite_val_2"><span class="math display">\[
+\mathrm{V}_2^{\pi}(s) = \mathrm{R}(s, \pi_2(s)) +  \gamma \sum_{s'}\mathrm{T}(s, \pi_2(s), s')  \mathrm{V}_1^{\pi}(s')
+\tag{11.3}\]</span></span></p>
+<p><span class="math display">\[
+\vdots
+\]</span></p>
+<p><span id="eq-finite_value"><span class="math display">\[
+\mathrm{V}_h^{\pi}(s) = \mathrm{R}(s, \pi_h(s)) + \gamma \sum_{s'}\mathrm{T}(s, \pi_h(s), s')  \mathrm{V}_{h - 1}^{\pi}(s')
+\tag{11.4}\]</span></span></p>
+<p><span class="math inline">\(s'\)</span> üzerinden toplam bir <em>beklenti</em>’tir: <span class="math inline">\(s'\)</span>’in tüm olası sonraki durumlarını dikkate alır ve bunların <span class="math inline">\((h-1)\)</span>-horizon değerlerinin ortalamasını hesaplar; transition işlevinin aşağıdaki olasılıklarla ağırlıklandırılmasıyla hesaplanır: state <span class="math inline">\(s\)</span>, policy <span class="math inline">\(\pi_h(s)\)</span> tarafından seçilen action ile state <span class="math inline">\(s'\)</span>’e varmayı atar ve <span class="math inline">\(\gamma\)</span> tarafından indirim yapılır.</p>
+<div class="study-question-callout">
+<p>Herhangi bir state–action çifti <span class="math inline">\((s, a)\)</span> için <span class="math inline">\(\sum_{s'} \mathrm{T}(s, a, s')\)</span>’in value’i nedir?</p>
+</div>
+<div class="study-question-callout">
+<p><a class="quarto-xref" href="#eq-finite_val_1">Eşitlik <span>11.2</span></a> ve <a class="quarto-xref" href="#eq-finite_val_2">Eşitlik <span>11.3</span></a>’teki tanımların, <a class="quarto-xref" href="#eq-finite_value">Eşitlik <span>11.4</span></a>’teki daha genel formülasyonun özel durumları olduğuna kendinizi ikna edin.</p>
+</div>
+<p>O zaman bir policy <span class="math inline">\(\pi\)</span>’in, horizon <span class="math inline">\(h\)</span> için policy <span class="math inline">\(\bar{\pi}\)</span>’ten ancak ve ancak tüm <span class="math inline">\(s \in \mathcal S\)</span>, <span class="math inline">\(\mathrm{V}_h^{\pi}(s) \geq \mathrm{V}_h^{\bar{\pi}}(s)\)</span> için ve en az bir tane varsa daha iyi olduğunu söyleyebiliriz. <span class="math inline">\(s \in \mathcal S\)</span> öyle ki <span class="math inline">\(\mathrm{V}_h^{\pi}(s) &gt; \mathrm{V}_h^{\bar{\pi}}(s)\)</span>.</p>
+</section>
+<section class="level3 page-columns page-full" data-number="11.1.2" id="sec-mdp_infinite_horizon">
+<h3 class="anchored" data-anchor-id="sec-mdp_infinite_horizon" data-number="11.1.2"><span class="header-section-number">11.1.2</span> Infinite-horizon value işlevleri</h3>
+<p>Daha genel olarak, gerçek sonlu horizon bilinmez, yani oyunun ne zaman biteceğini bilmediğinizde! Sabit bir terminal süresi olmadan model kararı verdiğimizde, <em>infinite-horizon</em> ayarını kullanırız. Sonsuz horizon durumunda bir policy’in iyiliği nasıl değerlendirilir?</p>
+<p>Yukarıdaki tanımlarımızı basitçe alıp sonsuz bir horizon için kullanmaya çalışırsak başımız belaya girebilir. Bir policy altında her adımda bir reward ve farklı bir policy altında her adımda bir reward 2 elde ettiğimizi hayal edin. Daha sonra reward her durumda adım sayısı arttıkça giderek daha fazla adım sınırında sonsuz hale gelecek şekilde büyümeye devam eder. İkinci policy’in daha iyi olması gerektiği sezgisel görünse de, bunu <span class="math inline">\(\infty &lt; \infty\)</span> diyerek haklı çıkaramayız.</p>
+<p>Bu sorunla başa çıkmak için standart bir yaklaşım, <em>discounted</em> sonsuz horizon’i dikkate almaktır. Bir discount factor ekleyerek sonlu-horizon durumundan genelleme yapacağız.</p>
+<p>Sonlu-horizon durumunda, policy’i beklenen sonlu-horizon value’e dayalı olarak değerlendirdik:</p>
+<p><span id="eq-exp_finite"><span class="math display">\[\mathbb{E}\left[\sum_{t = 0}^{h-1} \gamma^t \mathrm{R}_t \mid \pi, s_0\right]\;\;,
+\tag{11.5}\]</span></span> burada <span class="math inline">\(\mathrm{R}_t\)</span>, <span class="math inline">\(t\)</span> zamanında alınan reward’tir.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Not</span>Not
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><span class="math inline">\(\mathbb{E}\left[ \cdot \right ]\)</span> nedir? Bu matematiksel gösterim bir <em>beklenti</em>’i, yani argüman için ortaya çıkabilecek tüm rastgele olasılıklar üzerinden alınan bir ortalamayı gösterir. Burada beklenti, <em>koşullu olasılık</em> <span class="math inline">\(\Pr(\mathrm{R}_t = r \mid \pi, s_0)\)</span> üzerinden alınır; burada <span class="math inline">\(\mathrm{R}_t\)</span>, reward için rastgele değişkendir; policy’in <span class="math inline">\(\pi\)</span> olması ve state’in olması koşuluyla <span class="math inline">\(s_0\)</span>. <span class="math inline">\(\pi\)</span> bir fonksiyon olduğundan, bu gösterim, policy <span class="math inline">\(\pi\)</span> ve MDP’in stokastik geçişlerinin ima ettiği tüm rastgele değişkenler üzerinde koşullandırmanın kısaltmasıdır.</p>
+<p>Çok önemli bir nokta, <span class="math inline">\(\mathrm{R}(s,a)\)</span>’in herhangi bir <span class="math inline">\(s\)</span> ve <span class="math inline">\(a\)</span> için her zaman deterministik olmasıdır (bu class’te). Burada <span class="math inline">\(\mathrm{R}_t\)</span>, <span class="math inline">\(t\)</span> ​​zaman adımındaki tüm olası <span class="math inline">\(\mathrm{R}(s_t,a)\)</span> kümesini temsil eder; bu <span class="math inline">\(\mathrm{R}_t\)</span> rastgele bir değişkendir çünkü <span class="math inline">\(t\)</span> adımında bulunduğumuz state’in kendisi, <span class="math inline">\(t\)</span> adımına kadar olan ancak bu adım dahil olmayan önceki stokastik state geçişleri ve policy tarafından belirlenen önceki (deterministik) eylemler nedeniyle bir rastgele değişkendir. <span class="math inline">\(\pi.\)</span></p>
+</div>
+</div>
+<p>Şimdi, sonsuz horizon durumu için, genellikle bir discount factor <span class="math inline">\(0 \leq \gamma &lt; 1\)</span> seçiyoruz ve bir policy’i, beklenen <em>infinite horizon value</em>’e göre değerlendiriyoruz:</p>
+<p><span id="eq-exp_infinite"><span class="math display">\[
+\mathbb{E}\left[\sum_{t = 0}^{\infty}\gamma^t\mathrm{R}_t \mid \pi, s_0\right]
+  = \mathbb{E}\left[\mathrm{R}_0  + \gamma \mathrm{R}_1 + \gamma^2 \mathrm{R}_2 + \ldots \mid \pi,  s_0\right] \;\;.
+\tag{11.6}\]</span></span></p>
+<p>Buradaki <span class="math inline">\(t\)</span> endekslerinin gidilecek adım sayısı değil, aslında başlangıç ​​state’ten ileriye doğru atılan adım sayısı olduğunu unutmayın (sonsuz horizon durumunda “gitilecek adımlar” konusunda anlamlı bir kavram yoktur).</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Not
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><a class="quarto-xref" href="#eq-exp_finite">Eşitlik <span>11.5</span></a> ve <a class="quarto-xref" href="#eq-exp_infinite">Eşitlik <span>11.6</span></a> kavramsal bir basamaktır. <a class="quarto-xref" href="#eq-inf_horiz_value">Eşitlik <span>11.8</span></a>, <a class="quarto-xref" href="#eq-finite_value">Eşitlik <span>11.4</span></a>’in sonsuz horizon analogudur.</p>
+</div>
+</div>
+<p>İndirim yapmanın iki iyi sezgisel motivasyonu vardır. Bunlardan biri ekonomik teori ve mevcut value parayla ilgilidir: genellikle gelecek hafta aynı miktarda paraya sahip olmaktansa bugün biraz paraya sahip olmayı tercih edersiniz (çünkü onu şimdi kullanabilir veya yatırım yapabilirsiniz). Diğeri ise etkileşimin her adımında <span class="math inline">\(1-\gamma\)</span> olasılığıyla tüm sürecin sona erdiğini düşünmektir. (Her seferinde adım, hayatta kaldığınız göz önüne alındığında, beklenen gelecek yaşamınız şimdiye kadar <span class="math inline">\(1 / (1 - \gamma)\)</span>’tir.) Bu value, agent’in bu sonlandırıcı model kapsamında kazanacağı beklenen reward miktarıdır.</p>
+<!-- :::{.study-question-callout}
+Verify this fact: if, on every day you wake up, there is a
+  probability of $1 - \gamma$ that today will be your last day, then
+  your expected lifetime is $1 / (1 - \gamma)$ days.
+::: -->
+<p>Şimdi bir policy’i, policy’i çalıştırırsa agent’in MDP’te alacağı beklenen indirimli sonsuz horizon value açısından değerlendirelim. policy <span class="math inline">\(\pi\)</span> altında bir state <span class="math inline">\(s\)</span>’in sonsuz-horizon value’ini şu şekilde tanımlarız: <span id="eq-vpi-expanded"><span class="math display">\[
+\begin{align}
+\mathrm{V}_{\infty}^{\pi}(s) &amp;= \mathbb{E}[\mathrm{R}_0 + \gamma \mathrm{R}_1 + \gamma^2 \mathrm{R}_2 +
+    \dots \mid \pi, S_0 = s] \\
+    &amp;= \mathbb{E}[\mathrm{R}_0 + \gamma(\mathrm{R}_1 + \gamma(\mathrm{R}_2 + \gamma
+    \dots))) \mid \pi, S_0 = s] \;\;.
+\end{align}
+\tag{11.7}\]</span></span></p>
+<p>Rastgele değişkenlerin doğrusal birleşiminin beklentisi, beklentilerin doğrusal birleşimi olduğundan,</p>
+<p><span id="eq-inf_horiz_value"><span class="math display">\[\begin{aligned}
+  \mathrm{V}_{\infty}^{\pi}(s) &amp; = \mathbb{E}[\mathrm{R}_0 \mid \pi, S_0 = s] + \gamma  \mathbb{E}[
+    \mathrm{R}_1 + \gamma(\mathrm{R}_2 + \gamma \dots))) \mid \pi, S_0 = s]
+  \nonumber
+  \\
+             &amp; = \mathrm{R}(s, \pi(s)) + \gamma\sum_{s'}\mathrm{T}(s, \pi(s), s')\mathrm{V}_{\infty}^{\pi}(s') \; .
+\end{aligned}
+\tag{11.8}\]</span></span></p>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Bu <em>so</em> harika! İndirimli bir model’te, bu turda hayatta kaldığınızı ve bazı state <span class="math inline">\(s'\)</span>’e ulaştığınızı fark ederseniz, daha önce yaptığınız gibi aynı beklenen gelecek ömrüne sahip olursunuz. Yani value state ile ilgili olan işlev, state <span class="math inline">\(s\)</span> ile tamamen aynıdır.</p>
+</div></div><p><a class="quarto-xref" href="#eq-inf_horiz_value">Eşitlik <span>11.8</span></a>’te tanımlanan denklem Bellman Equation olarak bilinir ve value function’i mevcut reward ve (indirimli) gelecekteki value function’e ayırır. <span class="math inline">\(n = |\mathcal S|\)</span> durumlarının her biri için bu denklemlerden birini yazabilirsiniz. <span class="math inline">\(n\)</span> bilinmeyenleri var <span class="math inline">\(\mathrm{V}^{\pi}(s)\)</span>. Bunlar doğrusal denklemlerdir ve standart yazılım (örneğin, Gauss eliminasyonu veya diğer doğrusal cebirsel yöntemleri kullanan), çoğu durumda bu policy altındaki her state’in value’ini bulmamızı sağlayacaktır.</p>
+</section>
+</section>
+<section class="level2 page-columns page-full" data-number="11.2" id="mdps-sec-finding_mdp_policies-için-bulma-politikaları">
+<h2 class="anchored" data-anchor-id="mdps-sec-finding_mdp_policies-için-bulma-politikaları" data-number="11.2"><span class="header-section-number">11.2</span> MDPs {#sec-finding_mdp_policies} için bulma politikaları</h2>
+<p>Bir MDP göz önüne alındığında hedefimiz tipik olarak, alanın yaptığı stokastik geçişler beklentisiyle mümkün olduğu kadar toplam reward elde etmesi açısından optimal olan bir policy bulmaktır. Bir policy’in (<a class="quarto-xref" href="#sec-mdp_infinite_horizon"><span>Bölüm 11.1.2</span></a>) iyiliğini değerlendirme hakkında öğrendiklerimizi temel alıyoruz ve sonlu horizon durumu (<a class="quarto-xref" href="#sec-mdp_finite_horizon_optimal"><span>Bölüm 11.2.1</span></a>), ardından sonsuz horizon durumu (<a class="quarto-xref" href="#sec-mdp_infinite_horizon_optimal"><span>Bölüm 11.2.2</span></a>) için en uygun politikaları buluyoruz.</p>
+<section class="level3 page-columns page-full" data-number="11.2.1" id="sec-mdp_finite_horizon_optimal">
+<h3 class="anchored" data-anchor-id="sec-mdp_finite_horizon_optimal" data-number="11.2.1"><span class="header-section-number">11.2.1</span> Optimal sonlu horizon politikalarını bulma</h3>
+<p>Bir MDP için en uygun policy’i nasıl bulabiliriz? Önceki bölümde olduğu gibi tüm olası politikaları listelediğimizi ve value işlevlerini hesapladığımızı ve en iyisini seçtiğimizi hayal edebiliriz - ancak bu çok fazla iş!</p>
+<p>Yapılması gereken ilk gözlem, sonlu bir horizon probleminde alınacak en iyi action’in mevcut state’e ve aynı zamanda horizon’e bağlı olmasıdır: reward 5 ile bir state’e tek adımda veya bir adımda ulaşabileceğiniz bir durumda olduğunuzu hayal edin. İki adımda reward 100 ile state. Gitmeniz gereken en az iki adım varsa, o zaman reward 100 state’e doğru ilerleyebilirsiniz, ancak yalnızca bir adımınız kaldıysa, 5 kazanmanızı sağlayacak yöne gitmelisiniz! <!-- 
+One way to find an optimal policy is to compute an *optimal action-value function*, $\mathrm{Q}$. To better understand optimal action values, we first consider the action value functions for a fixed policy $\pi$, denoted as $\mathrm{Q}^*(s,a).$ 
+
+$\mathrm{Q}^*(s,a)$ represents the expected sum of discounted rewards obtained when taking an action $a$ in state $s$ and following the optimal policy thereafter. Formally, we can define this as:
+  
+$$
+\mathrm{Q}_h^*(s,a) = \mathrm{R}(s,a)+\mathbb{E} \left[ \sum_{t=1}^{h} \gamma^t \mathrm{R}_t \,\Big|~ \pi \right],
+$$
+where $\mathrm{R}_t$ is the stage reward realized at time $t$ and the expectation is with respect to both the uncertainty of state transitions under policy $\pi$ and the initial condition $s_1$ which materializes from taking action $a$ in state $s_0=s$. 
+
+The definition for the infinite horizon case is analogous with the upper limit in the summation replaced with the $\infty$, and we may use $\mathrm{Q}_{\infty}^*(s,a)$ to make the horizon explicit. 
+
+Similar to $\mathrm{V}^*(s),$ $\mathrm{Q}^*(s,a)$ satisfy the Bellman recursion or Bellman equations introduced earlier. In fact, the two value functions are closely related: for a deterministic policy $\pi$:
+$$
+\mathrm{Q}^*(s,\pi(s)) = \mathrm{V}^*(s).
+$$
+
+One natural question arises: so why bother introducing another value function? The answer is: by comparing $\mathrm{Q}^*(s,a)$ for actions other than $\pi(s)$, one can determine whether an alternative action might yield a higher expected return. 
+
+Specifically, if there exists an action $a'$ such that $\mathrm{Q}^*(s,a') > \mathrm{Q}^*(s,\pi(s)),$ it suggests that deviating from the current policy $\pi$ in state $s$ could lead to an improvement. --></p>
+<p>Sonlu-horizon durumu için, <span class="math inline">\(\mathrm{Q}_h^{*}(s, a)\)</span>’i beklenen value olarak tanımlarız.</p>
+<ul>
+<li><p>state ile başlayan <span class="math inline">\(s\)</span>,</p></li>
+<li><p>action <span class="math inline">\(a\)</span>’in çalıştırılması ve</p></li>
+<li><p><span class="math inline">\(h - 1\)</span> için daha fazla adım devam ediyor ve her adımda uygun horizon için optimum policy yürütülüyor.</p></li>
+</ul>
+<div class="no-row-height column-margin column-container"><div class="">
+<p><span class="math inline">\(\mathrm{Q}^{\pi}_h(s,a)\)</span> ile gösterilen sabit bir policy <span class="math inline">\(\pi\)</span> için action-value function’i de tanımlayabiliriz. Bu miktar, state <span class="math inline">\(s\)</span>’te action <span class="math inline">\(a\)</span> alınarak ve ardından <span class="math inline">\(h - 1\)</span> adımlarının kalan horizon’i üzerinde policy <span class="math inline">\(\pi\)</span>’i takip ederek elde edilen indirimli ödüllerin beklenen toplamını temsil eder.</p>
+<p><span class="math inline">\(\mathrm{V}^{\pi}_h(s)\)</span>’e benzer şekilde <span class="math inline">\(\mathrm{Q}^{\pi}_h(s,a)\)</span>, daha önce tanıtılan Bellman yinelemesini/denklemlerini karşılar. Aslında, deterministik bir sonlu-horizon policy <span class="math inline">\(\pi_h\)</span> için:</p>
+<p><span class="math display">\[
+\mathrm{Q}^{\pi}_h(s,\pi_h(s)) = \mathrm{V}^{\pi}_h(s).
+\]</span></p>
+<p>Ancak, action değerleriyle ilgilenirken birincil hedefimiz genellikle bir <em>optimal</em> policy tanımlamak olduğundan, (<span class="math inline">\(\mathrm{Q}^{\pi}_h(s,a)\)</span>) üzerinde kapsamlı bir şekilde durmayacağız. Bunun yerine, optimum action-value işlevleri <span class="math inline">\(\mathrm{Q}^{*}_h(s,a)\)</span>’e daha fazla vurgu yapacağız.</p>
+</div></div><p>Bir policy’i değerlendirmek için yaptığımız <span class="math inline">\(\mathrm{V}_h^{*}\)</span> tanımımıza benzer şekilde, <span class="math inline">\(\mathrm{Q}_h^{*}\)</span> işlevini horizon’e göre yinelemeli olarak tanımlarız. Tek fark, horizon <span class="math inline">\(h\)</span> ile her adımda, belirli bir policy tarafından belirtilen bir action seçmek yerine, beklenen <span class="math inline">\(\mathrm{Q}_h^{*}\)</span> value’i maksimuma çıkaracak <span class="math inline">\(a\)</span>’in value’ini seçmemizdir. sonraki state.</p>
+<p><span class="math display">\[\begin{aligned}
+  \mathrm{Q}_0^{*}(s, a) &amp; = 0                                                                 \\
+  \mathrm{Q}_1^{*}(s, a) &amp; = \mathrm{R}(s, a) + 0                                                       \\
+  \mathrm{Q}_2^{*}(s, a) &amp; = \mathrm{R}(s, a) + \gamma \sum_{s'}\mathrm{T}(s, a, s') \max_{a'} \mathrm{Q}_1^{*}(s', a')       \\
+  \vdots
+  \nonumber                                                                       \\
+  \mathrm{Q}_h^{*}(s, a) &amp; = \mathrm{R}(s, a) + \gamma \sum_{s'}\mathrm{T}(s, a, s') \max_{a'} \mathrm{Q}_{h - 1}^{*}(s', a')
+\end{aligned}
+\]</span> burada <span class="math inline">\((s',a')\)</span> bir sonraki zaman adımı state/action çiftini belirtir. <span class="math inline">\(\mathrm{Q}_h^{*}\)</span> değerlerini, <em>finite-horizon value iteration</em> adı verilen ve yalnızca horizon 0’dan başlayıp istenen horizon’e doğru geriye doğru çalışan <span class="math inline">\(\mathrm{Q}_h^{*}\)</span>’i hesaplayan basit bir yinelemeli algorithm ile çözebiliriz. <span class="math inline">\(h\)</span>. <span class="math inline">\(\mathrm{Q}_h^{*}\)</span> göz önüne alındığında, optimal bir <span class="math inline">\(\pi_h^*\)</span> şu şekilde bulunabilir: <span class="math display">\[\pi_h^*(s) = \arg\max_{a}\mathrm{Q}_h^{*}(s, a) \;\;.\]</span>, <em>anında</em>’e <span class="math inline">\(h\)</span> adımları kaldığında atılacak en iyi action’leri verir; daha sonra <span class="math inline">\(\pi_{h-1}^*(s)\)</span>, <span class="math inline">\((h-1)\)</span> adımları kaldığında en iyi action’leri verir ve bu şekilde devam eder. Birden fazla en iyi eylemin olduğu durumda, genellikle bağları rastgele koparabiliriz.</p>
+<p>Ek olarak, böyle bir optimal policy’in hesaplanması için reward fonksiyonunun <span class="math inline">\(\mathrm{R}(s,a)\)</span>’in tüm olası (state, action) çiftleri kümesine bağlı olduğunu varsaydığımızı belirtmekte fayda var. Ayrıca mümkün olan tüm eylemlerin kümesinin sonlu olduğunu varsayacağız.</p>
+<div class="study-question-callout">
+<p>Optimum value function benzersizdir ancak optimum policy benzersiz değildir. Birden fazla optimal policy’in olduğu bir durumu düşünün.</p>
+</div>
+<!-- 
+:::{.callout-note}
+**Dynamic programming** (somewhat counter-intuitively, dynamic programming is neither really "dynamic" nor a type of "programming" as we typically understand it) is a technique for designing efficient algorithms. Most methods for solving MDPs or computing value functions rely on dynamic programming to be efficient. The *principle of dynamic programming* is to compute and store the solutions to simple sub-problems that can be re-used later in the computation. It is a very important tool in our algorithmic toolbox.
+
+Let's consider what would happen if we tried to compute $\mathrm{Q}_4^{*}(s, a)$ for all $(s, a)$ by directly using the definition:
+
+-   To compute $\mathrm{Q}_4^{*}(s_i, a_j)$ for any one $(s_i, a_j)$, we would need to compute $\mathrm{Q}_3^{*}(s, a)$ for all $(s, a)$ pairs.
+
+-   To compute $\mathrm{Q}_3^{*}(s_i, a_j)$ for any one $(s_i, a_j)$, we'd need to compute $\mathrm{Q}_2^{*}(s, a)$ for all $(s, a)$ pairs.
+
+-   To compute $\mathrm{Q}_2^{*}(s_i, a_j)$ for any one $(s_i, a_j)$, we'd need to compute $\mathrm{Q}_1^{*}(s, a)$ for all $(s, a)$ pairs.
+
+-   Luckily, those are just our $\mathrm{R}(s, a)$ values.
+
+So, if we have $n$ states and $m$ actions, this is $O((mn)^3)$ work --- that seems like way too much, especially as the horizon increases! But observe that we really only have $mnh$ values that need to be computed: $\mathrm{Q}_h^{*}(s, a)$ for all $h, s, a$. If we start with $h=1$, compute and store those values, then using and reusing the $\mathrm{Q}_{h-1}^{*}(s, a)$ values to compute the $\mathrm{Q}_h^{*}(s, a)$ values, we can do all this computation in time $O(mnh)$, which is much better!
+::: -->
+</section>
+<section class="level3 page-columns page-full" data-number="11.2.2" id="sec-mdp_infinite_horizon_optimal">
+<h3 class="anchored" data-anchor-id="sec-mdp_infinite_horizon_optimal" data-number="11.2.2"><span class="header-section-number">11.2.2</span> Optimal sonsuz horizon politikalarını bulma</h3>
+<p>Sonlu-horizon durumunun aksine, sonsuz-horizon indirimli MDP’te davranmanın en iyi yolu zamana bağlı değildir. Yani, <span class="math inline">\(t = 0\)</span> zamanında sonsuzluğu dört gözle bekleyerek verdiğiniz kararlar, <span class="math inline">\(t = T\)</span> zamanında herhangi bir pozitif <span class="math inline">\(T\)</span> için de sonsuzluğu dört gözle bekleyerek verdiğiniz kararlarla aynı olacaktır.</p>
+<p>MDPs ile ilgili önemli bir teorem şudur: sonsuz horizon durumunda, sabit bir optimal policy <span class="math inline">\(\pi^*\)</span> vardır (birden fazla olabilir), öyle ki tüm <span class="math inline">\(s \in \mathcal S\)</span> ve diğer tüm <span class="math inline">\(\pi\)</span> politikaları için elimizde <span class="math display">\[\mathrm{V}^{\pi}(s) \le \mathrm{V}^{\pi^*}(s) \;\;.\]</span></p>
+<p>Bir MDP için en uygun policy’i bulmanın birçok yöntemi vardır. finite-horizon value iteration durumunu zaten görmüştük. Burada sonsuz horizon durumu için çok popüler ve kullanışlı bir yöntem olan <em>infinite-horizon value iteration</em>’i inceleyeceğiz. Bu aynı zamanda bizim için de önemlidir çünkü birçok <em>takviye-öğrenme</em> yönteminin temelini oluşturur.</p>
+<p>Yine reward fonksiyonunun <span class="math inline">\(\mathrm{R}(s,a)\)</span>’in tüm olası (state, action) çiftleri kümesine bağlı olduğunu ve ayrıca action alanındaki eylem sayısının sonlu olduğunu varsayacağız. <span class="math inline">\(\mathrm{Q}_{\infty}^{*}(s, a)\)</span>’i, state <span class="math inline">\(s\)</span>’te olmanın, action <span class="math inline">\(a\)</span>’in yürütülmesinin ve optimal bir policy’in yürütülmesinin beklenen sonsuz horizon value’i olacak şekilde tanımlayın. Bundan sonra <span class="math inline">\(\pi^*\)</span>. <span class="math inline">\(\mathrm{V}^{\pi},\)</span>’in özyinelemeli tanımına benzer bir akıl yürütme kullanarak, bu value’i yinelemeli olarak şu şekilde ifade edebiliriz:</p>
+<p><span class="math display">\[\mathrm{Q}_{\infty}^{*}(s, a) = \mathrm{R}(s, a) + \gamma\sum_{s'}\mathrm{T}(s, a, s')\max_{a'}\mathrm{Q}_{\infty}^{*}(s', a')\;\;.\]</span></p>
+<p>Bu aynı zamanda her <span class="math inline">\((s, a)\)</span> çifti için bir denklem setidir. Ancak bu sefer doğrusal değiller (<span class="math inline">\(\max\)</span> işlemi nedeniyle) ve dolayısıyla çözülmesi kolay değil. Ancak benzersiz bir çözüme sahip olduklarını söyleyen bir teorem var!</p>
+<p>Optimum action-value function <span class="math inline">\(\mathrm{Q}_{\infty}^{*}(s, a)\)</span>’i bildiğimizde, optimal policy <span class="math inline">\(\pi^*\)</span>’i şu şekilde çıkarabiliriz: <span class="math display">\[
+\pi^*(s) = \arg\max_{a}\mathrm{Q}_{\infty}^{*}(s, a)
+\]</span></p>
+<p>Aşağıda gösterilen infinite-horizon value iteration algorithm ile <span class="math inline">\(\mathrm{Q}^*\)</span> değerlerini yinelemeli olarak çözebiliriz:</p>
+<div class="pseudocode-container quarto-float" data-caption-prefix="Algorithm" data-chapter-level="11" data-comment-delimiter="//" data-indent-size="1.2em" data-line-number="true" data-line-number-punc=":" data-no-end="false" data-pseudocode-number="1">
+<div class="pseudocode">
+\begin{algorithm} \caption{Infinite-Horizon-Value-Iteration}\begin{algorithmic} \REQUIRE $\mathcal{S}$, $\mathcal{A}$, $T$, $R$, $\gamma$, $\epsilon$ \STATE \textbf{Initialization:} \FOR{each $s \in \mathcal{S}$ and $a \in \mathcal{A}$} \STATE $\mathrm{Q}_{\text{old}}(s,a) \gets 0$ \ENDFOR \WHILE{not converged} \FOR{each $s \in \mathcal{S}$ and $a \in \mathcal{A}$} \STATE $\mathrm{Q}_{\text{new}}(s,a) \gets \mathrm{R}(s,a) + \gamma \displaystyle\sum_{s'} \mathrm{T}(s,a,s')\, \max_{a'} \mathrm{Q}_{\text{old}}(s',a')$ \ENDFOR \IF{$\displaystyle\max_{s,a}\left|\mathrm{Q}_{\text{old}}(s,a)-\mathrm{Q}_{\text{new}}(s,a)\right| &lt; \epsilon$} \STATE \textbf{return} $\mathrm{Q}_{\text{new}}$ \ENDIF \STATE $\mathrm{Q}_{\text{old}} \gets \mathrm{Q}_{\text{new}}$ \ENDWHILE \end{algorithmic} \end{algorithm}
+</div>
+</div>
+<section class="level5 unnumbered page-columns page-full" id="theory">
+<h5 class="unnumbered anchored" data-anchor-id="theory">Teorisi</h5>
+<p>infinite-horizon value iteration hakkında pek çok güzel teorik sonuç var. Verilen bazı (mutlaka optimal olması gerekmeyen) <span class="math inline">\(\mathrm{Q}\)</span> işlevi için <span class="math inline">\(\pi_{\mathrm{Q}}(s) = \arg\max_{a}\mathrm{Q}(s, a)\)</span>’i tanımlayın.</p>
+<ul>
+<li>infinite-horizon value iteration, <span class="math inline">\(\Vert \mathrm{Q}_{\text{old}} - \mathrm{Q}_{\text{new}} \rVert_{\infty} &lt; \epsilon\)</span> ile durduktan sonra, <span class="math display">\[\lVert  \mathrm{V}^{\pi_{\mathrm{Q}_{\text{new}}}} - \mathrm{V}^{\pi^*} \rVert_{\infty} \le \frac{2\gamma\epsilon}{(1-\gamma)^2}\;\; . \]</span></li>
+</ul>
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Recall, sonsuzluk normunun, vector’teki bir öğenin en büyük mutlak value’ini döndürdüğünü gösterir.</p>
+</div></div><ul>
+<li><p>Eğer her state’in benzersiz bir optimal action’i varsa ve optimal action boşluğu eşit derecede pozitifse (<span class="math inline">\(\Delta(s) = Q^*(s, a^*) - \max_{a \neq a^*} Q^*(s, a) &gt; 0\)</span>), o zaman <span class="math inline">\(\epsilon\)</span>’in bir value’i vardır: <span class="math display">\[\Vert \mathrm{Q}_{\text{old}} - \mathrm{Q}_{\text{new}} \rVert_{\infty} &lt; \epsilon \Longrightarrow \pi_{\mathrm{Q}_{\text{new}}} = \pi^*
+\]</span></p></li>
+<li><p>algorithm yürütülürken, <span class="math inline">\(\lVert \mathrm{Q}_{\text{new}} - \mathrm{Q}^{*} \Vert_{\infty}\)</span> her yinelemede monoton bir şekilde azalır.</p></li>
+<li><p>algorithm eşzamansız, paralel olarak yürütülebilir: tüm <span class="math inline">\((s, a)\)</span> çiftleri sonsuz bir çalışmada sonsuz sıklıkta güncellendiği sürece, yine de optimum value’e yakınsar.</p></li>
+</ul>
+</section>
+</section>
+</section>
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Kopyalandı");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Kopyalandı");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+<div class="nav-page nav-page-previous">
+<a aria-label="Non-parametric Models" class="pagination-link" href="./non_parametric.html">
+<i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">10</span>  <span class="chapter-title">Non-parametric Models</span></span>
+</a>
+</div>
+<div class="nav-page nav-page-next">
+<a aria-label="Reinforcement Learning" class="pagination-link" href="./reinforcement_learning.html">
+<span class="nav-page-text"><span class="chapter-number">12</span>  <span class="chapter-title">Reinforcement Learning</span></span> <i class="bi bi-arrow-right-short"></i>
+</a>
+</div>
+</nav>
+</div> <!-- /content -->
+<script type="text/javascript">
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        let pseudocodeOptions = {
+          indentSize: el.dataset.indentSize || "1.2em",
+          commentDelimiter: el.dataset.commentDelimiter || "//",
+          lineNumber: el.dataset.lineNumber === "true" ? true : false,
+          lineNumberPunc: el.dataset.lineNumberPunc || ":",
+          noEnd: el.dataset.noEnd === "true" ? true : false,
+          titlePrefix: el.dataset.captionPrefix || "Algorithm"
+        };
+        pseudocode.renderElement(el.querySelector(".pseudocode"), pseudocodeOptions);
+      });
+    })(document);
+    (function(d) {
+      d.querySelectorAll(".pseudocode-container").forEach(function(el) {
+        let captionSpan = el.querySelector(".ps-root > .ps-algorithm > .ps-line > .ps-keyword")
+        if (captionSpan !== null) {
+          let captionPrefix = el.dataset.captionPrefix + " ";
+          let captionNumber = "";
+          if (el.dataset.pseudocodeNumber) {
+            captionNumber = el.dataset.pseudocodeNumber + " ";
+            if (el.dataset.chapterLevel) {
+              captionNumber = el.dataset.chapterLevel + "." + captionNumber;
+            }
+          }
+          captionSpan.innerHTML = captionPrefix + captionNumber;
+        }
+      });
+    })(document);
+    </script>
+<script src="site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>
